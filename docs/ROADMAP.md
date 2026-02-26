@@ -750,7 +750,7 @@ Track which spec documents have been written and when.
 | Doc | Status | Session Date | Notes |
 |-----|--------|-------------|-------|
 | 01 - Project Setup | Complete | 2026-02-26 | XcodeGen project, 54 stubs, SwiftLint, CLAUDE.md, CHECKLIST.md |
-| 02 - Data Models | Not started | — | — |
+| 02 - Data Models | Complete | 2026-02-26 | Full Python→Swift translation spec |
 | 03 - Sprite Pipeline | Not started | — | — |
 | 04 - Game Engine | Not started | — | — |
 | 05 - Behavior AI | Not started | — | — |
