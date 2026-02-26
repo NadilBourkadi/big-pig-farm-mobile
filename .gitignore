@@ -29,6 +29,8 @@ playground.xcworkspace
 
 # AI agent config (per-machine, not tracked)
 CLAUDE.md
+.claude/*
+!.claude/skills/
 
 # IDE
 *.xccheckout
