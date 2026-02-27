@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "WebSearch",
+      "Bash(xcodegen:*)",
+      "Bash(swift:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(git:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(bd stats:*)",
+      "Bash(bd ready:*)",
+      "Bash(bd dep:*)",
+      "Bash(bd show:*)",
+      "Bash(bd list:*)",
+      "Bash(bd update:*)",
+      "Bash(python3:*)",
+      "Bash(poetry run:*)",
+      "Bash(bd close:*)",
+      "Skill(code-review)",
+      "Bash(bd export:*)",
+      "Bash(bd sync:*)",
+      "Bash(bd ls:*)",
+      "Bash(bd create:*)",
+      "Bash(bd:*)",
+      "Bash(git show *|*)",
+      "Bash(git diff *|*)",
+      "Bash(git log *|*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(swiftlint lint:*)",
+      "Bash(.tmp/commit-msg.txt:*)",
+      "Bash(xcodebuild:*)"
+    ]
+  },
+  "outputStyle": "Explanatory"
+}
