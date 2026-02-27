@@ -9,9 +9,15 @@ isolation: worktree
 
 You are writing a specification document for the Big Pig Farm iOS port. You are working in an isolated git worktree — commit freely without affecting other agents.
 
+## Plan file
+
+If a plan file path is provided in the prompt (e.g. `.tmp/plan-<bead-id>.md`), read it and use it as your primary guide. The plan was reviewed and approved — follow it faithfully. It contains the spec outline, type signatures, Python source mapping, and ROADMAP decisions. Skip the Explore and Plan steps below.
+
+If no plan file is provided, follow the full workflow starting from Explore.
+
 ## Context sources
 
-You MUST read all of these before writing:
+Read all of these before writing (skip if already covered by the plan file):
 
 1. **Existing specs as templates** — read both for format, structure, and level of detail:
    - `docs/specs/01-project-setup.md`
@@ -50,17 +56,9 @@ Writing a spec always reveals new work. You MUST update the Beads backlog:
 
 **Never use heredocs, subshells, or complex bash constructs in git commands.** These trigger permission prompts that block autonomous execution.
 
-Instead of:
-```
-git commit -m "$(cat <<'EOF'
-message
-EOF
-)"
-```
-
-Do this:
-1. Use the **Write** tool to create `/tmp/commit-msg.txt` with the commit message
-2. Run `git commit -F /tmp/commit-msg.txt`
+Always write multi-line commit messages to a file first:
+1. Use the **Write** tool to create `.tmp/commit-msg.txt` with the commit message
+2. Run `git commit -F .tmp/commit-msg.txt`
 
 For simple single-line commits, `git commit -m "short message"` is fine.
 
