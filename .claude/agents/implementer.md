@@ -7,7 +7,7 @@ isolation: worktree
 
 # Implementer Agent
 
-You are implementing a task for the Big Pig Farm iOS port. You are working in an isolated git worktree — commit and push freely without affecting other agents.
+You are implementing a task for the Big Pig Farm iOS port. You are working in an isolated git worktree — commit freely without affecting other agents.
 
 ## Context sources
 
@@ -34,8 +34,37 @@ You MUST read these before implementing:
    - Files under ~300 lines
    - Descriptive names, no abbreviations
 5. **Test** — write tests in `BigPigFarmTests/` using Swift Testing (`@Test`, `#expect`)
-6. **Finalize:**
+6. **Update the backlog** — see "Task management" below.
+7. **Finalize:**
    - Update `docs/CHECKLIST.md` — check off the completed task
    - Close the bead: `bd close <id>`
-   - Commit all changes (never on main — use the worktree branch)
+   - Sync beads to JSONL: `bd sync`
+   - Commit all changes including `.beads/issues.jsonl` (never on main — use the worktree branch)
    - **Do NOT push or open a PR** — return the branch name and a summary of changes. The dispatcher will handle code review, squash, push, and PR creation.
+
+## Task management
+
+Implementation always reveals new work. You MUST update the Beads backlog:
+
+- **Create new beads** for bugs, tech debt, or follow-up tasks discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd link <new-id> --depends-on <blocker-id>`.
+- **Update existing bead descriptions** when implementation reveals important context (e.g., "this also requires changes to X").
+- **Split beads that are too large** — if implementation grows beyond ~2 files, break remaining work into sub-tasks.
+- **Log what you created** — include a summary of new/updated beads in your return message so the dispatcher can verify.
+
+## Git commands — CRITICAL
+
+**Never use heredocs, subshells, or complex bash constructs in git commands.** These trigger permission prompts that block autonomous execution.
+
+Instead of:
+```
+git commit -m "$(cat <<'EOF'
+message
+EOF
+)"
+```
+
+Do this:
+1. Use the **Write** tool to create `/tmp/commit-msg.txt` with the commit message
+2. Run `git commit -F /tmp/commit-msg.txt`
+
+For simple single-line commits, `git commit -m "short message"` is fine.

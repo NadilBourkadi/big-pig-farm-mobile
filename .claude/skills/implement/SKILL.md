@@ -30,9 +30,23 @@ The implementer agent runs in an isolated worktree and handles: claim → explor
 After the agent returns:
 
 1. **Switch to the worktree** — `cd` into the worktree path returned by the agent
-2. **Run `/code-review swift`** — the pre-push quality gate
-3. **Fix findings** — edit files in the worktree to address review issues
-4. **Re-review** — run `/code-review swift` again until clean
-5. **Squash to clean history** — `git reset --soft main && git add <files> && git commit`
-6. **Push and open PR** — `git push -u origin <branch> && gh pr create`
-7. **Return to main working directory**
+2. **Sync beads** — run `bd sync` to export ephemeral state to `issues.jsonl`
+3. **Run `/code-review swift`** — the pre-push quality gate
+4. **Fix findings** — edit files in the worktree to address review issues
+5. **Re-review** — run `/code-review swift` again until clean
+6. **Squash to clean history:**
+   - `git reset --soft main`
+   - `git reset HEAD .`
+   - Stage specific files: `git add <swift files> docs/ .beads/issues.jsonl` (and any other changed files — never `git add -A`)
+   - Write commit message with the **Write** tool to `/tmp/commit-msg.txt`
+   - Commit with `git commit -F /tmp/commit-msg.txt`
+7. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
+8. **Return to main working directory**
+
+### Git commands — CRITICAL
+
+**Never use heredocs, subshells, or complex bash constructs.** These trigger permission prompts.
+
+Always write multi-line commit messages to a file first:
+1. Use the **Write** tool to create `/tmp/commit-msg.txt`
+2. Run `git commit -F /tmp/commit-msg.txt`

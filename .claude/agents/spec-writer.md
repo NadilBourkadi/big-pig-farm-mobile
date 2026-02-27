@@ -7,7 +7,7 @@ isolation: worktree
 
 # Spec Writer Agent
 
-You are writing a specification document for the Big Pig Farm iOS port. You are working in an isolated git worktree — commit and push freely without affecting other agents.
+You are writing a specification document for the Big Pig Farm iOS port. You are working in an isolated git worktree — commit freely without affecting other agents.
 
 ## Context sources
 
@@ -29,11 +29,40 @@ You MUST read all of these before writing:
 2. **Explore** — read the context sources above. Use subagents aggressively to analyze the Python source in parallel with reading the existing specs.
 3. **Plan** — design the spec structure and outline. Present the outline for user approval before writing.
 4. **Write the spec** — create the file at `docs/specs/NN-<name>.md` following the established format.
-5. **Finalize:**
+5. **Update the backlog** — see "Task management" below.
+6. **Finalize:**
    - Update `docs/CHECKLIST.md` — check off the spec document
    - Close the bead: `bd close <id>`
-   - Commit all changes (never on main — use the worktree branch)
+   - Sync beads to JSONL: `bd sync`
+   - Commit all changes including `.beads/issues.jsonl` (never on main — use the worktree branch)
    - **Do NOT push or open a PR** — return the branch name and a summary of changes. The dispatcher will handle code review, squash, push, and PR creation.
+
+## Task management
+
+Writing a spec always reveals new work. You MUST update the Beads backlog:
+
+- **Update existing bead descriptions** when the spec provides more detail than the original bead had. Use `bd update <id> --description "..."`.
+- **Create new beads** for implementation tasks that emerge from the spec. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd link <new-id> --depends-on <blocker-id>`.
+- **Split beads that are too large** — any task spanning more than ~2 files should be broken into sub-tasks.
+- **Log what you created** — include a summary of new/updated beads in your return message so the dispatcher can verify.
+
+## Git commands — CRITICAL
+
+**Never use heredocs, subshells, or complex bash constructs in git commands.** These trigger permission prompts that block autonomous execution.
+
+Instead of:
+```
+git commit -m "$(cat <<'EOF'
+message
+EOF
+)"
+```
+
+Do this:
+1. Use the **Write** tool to create `/tmp/commit-msg.txt` with the commit message
+2. Run `git commit -F /tmp/commit-msg.txt`
+
+For simple single-line commits, `git commit -m "short message"` is fine.
 
 ## Quality bar
 
