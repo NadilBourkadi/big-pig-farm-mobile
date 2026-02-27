@@ -83,7 +83,6 @@ Write a brief implementation summary to `.tmp/summary-<bead-id>.md` capturing: w
    - Only squash WIP/fixup commits into their logical parent
    - Write messages with the **Write** tool to `.tmp/commit-msg.txt`, then `git commit -F .tmp/commit-msg.txt`
 6. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
-7. **Discard stale beads state** — `git checkout -- .beads/issues.jsonl` in the main repo
 
 ### Git commands — CRITICAL
 
