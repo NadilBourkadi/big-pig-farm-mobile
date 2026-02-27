@@ -13,15 +13,11 @@ import GameplayKit
 struct Pathfinding: @unchecked Sendable {
     private let graph: GKGridGraph<GKGridGraphNode>
     private let builtGeneration: Int
-    private let gridWidth: Int
-    private let gridHeight: Int
 
     /// Build a pathfinding graph from the current FarmGrid state.
     /// Non-walkable cells are removed from the graph in a single batch operation.
     init(farm: FarmGrid) {
         builtGeneration = farm.gridGeneration
-        gridWidth = farm.width
-        gridHeight = farm.height
 
         let graph = GKGridGraph<GKGridGraphNode>(
             fromGridStartingAt: vector_int2(0, 0),
@@ -53,6 +49,8 @@ struct Pathfinding: @unchecked Sendable {
     /// Returns an empty array if no path exists.
     /// If goal is non-walkable, finds the nearest walkable cell to goal instead.
     func findPath(from start: GridPosition, to goal: GridPosition) -> [GridPosition] {
+        if start == goal { return [start] }
+
         guard let startNode = graph.node(
             atGridPosition: vector_int2(Int32(start.x), Int32(start.y))
         ) else { return [] }
@@ -66,11 +64,16 @@ struct Pathfinding: @unchecked Sendable {
         }
 
         guard let target = targetNode else { return [] }
-        if startNode === target { return [start] }
+        // If the nearest-walkable fallback resolved to the start cell, return early.
+        let targetPos = GridPosition(x: Int(target.gridPosition.x), y: Int(target.gridPosition.y))
+        if start == targetPos { return [start] }
 
         let pathNodes = graph.findPath(from: startNode, to: target)
         return pathNodes.compactMap { node -> GridPosition? in
-            guard let gridNode = node as? GKGridGraphNode else { return nil }
+            guard let gridNode = node as? GKGridGraphNode else {
+                assertionFailure("GKGridGraph returned unexpected node type in path")
+                return nil
+            }
             return GridPosition(x: Int(gridNode.gridPosition.x), y: Int(gridNode.gridPosition.y))
         }
     }
