@@ -92,7 +92,7 @@ final class CollisionHandler {
         targetX: Double,
         targetY: Double,
         excludePig: GuineaPig,
-        minDistance: Double
+        minDistance: Double = GameConfig.Behavior.blockingDefault
     ) -> Bool {
         // TODO(pfw): Return true if another pig is within minDistance of target
         false
