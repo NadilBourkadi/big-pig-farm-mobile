@@ -6,7 +6,8 @@
 
 ## Shell Commands
 
-- The working directory is always the repo root — never `cd` to a different directory. This includes absolute paths like `/Users/…` which escape the sandbox and trigger permission prompts. In worktrees, the working directory is the worktree root — stay there.
+- **Never chain commands** (`cmd1 && cmd2`, `cd … && cmd`). Chaining causes permission escalation — even pre-approved commands require re-prompting when chained. Run each command as a separate Bash tool call instead.
+- **Never prepend `cd`** to commands. The working directory is always the repo root (or the worktree root when in a worktree).
 - Never use inline env vars; use `export` on a separate line
 - **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
 - Use explicit file lists over `git add -A`

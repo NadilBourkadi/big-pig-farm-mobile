@@ -59,7 +59,7 @@ When the plan is approved, write the final version to `.tmp/plan-<bead-id>.md` u
 
 ## Phase 4 — Enter Worktree & Implement
 
-Use **EnterWorktree** to create an isolated worktree.
+**Always create a fresh worktree** via `EnterWorktree`. Never reuse a worktree from a previous session — stale branches cause merge conflicts when commits have already been merged to main via a separate PR.
 
 **From this point forward, your primary reference is the plan file at `.tmp/plan-<bead-id>.md`.** Read it and work through it systematically:
 
