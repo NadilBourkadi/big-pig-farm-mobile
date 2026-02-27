@@ -11,7 +11,7 @@
 - [x] 03 — Sprite Pipeline → [`docs/specs/03-sprite-pipeline.md`](specs/03-sprite-pipeline.md)
 - [x] 04 — Game Engine → [`docs/specs/04-game-engine.md`](specs/04-game-engine.md)
 - [x] 05 — Behavior AI → [`docs/specs/05-behavior-ai.md`](specs/05-behavior-ai.md)
-- [ ] 06 — Farm Scene
+- [x] 06 — Farm Scene → [`docs/specs/06-farm-scene.md`](specs/06-farm-scene.md)
 - [ ] 07 — SwiftUI Screens
 - [ ] 08 — Persistence & Polish
 
