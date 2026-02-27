@@ -38,4 +38,4 @@ You MUST read these before implementing:
    - Update `docs/CHECKLIST.md` — check off the completed task
    - Close the bead: `bd close <id>`
    - Commit all changes (never on main — use the worktree branch)
-   - Push and open a PR
+   - **Do NOT push or open a PR** — return the branch name and a summary of changes. The dispatcher will handle code review, squash, push, and PR creation.

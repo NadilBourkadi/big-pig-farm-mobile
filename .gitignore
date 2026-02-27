@@ -27,11 +27,14 @@ Package.resolved
 timeline.xctimeline
 playground.xcworkspace
 
-# AI agent config (per-machine, not tracked)
+# AI agent config
 CLAUDE.md
+!.claude/
 .claude/*
 !.claude/skills/
+!.claude/skills/**
 !.claude/agents/
+!.claude/agents/**
 
 # IDE
 *.xccheckout
