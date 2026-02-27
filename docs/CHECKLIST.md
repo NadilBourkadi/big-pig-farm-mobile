@@ -53,7 +53,7 @@
 - [ ] Implement `GridExpansion` tier system
 - [ ] Implement `AutoArrange` zone-based layout
 - [x] Implement `NeedsSystem` (decay/recovery)
-- [ ] Implement `SimulationRunner` tick orchestration
+- [x] Implement `SimulationRunner` tick orchestration
 - [ ] Implement `BehaviorController` + decision tree
 - [ ] Implement `BehaviorMovement` + seeking
 - [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
