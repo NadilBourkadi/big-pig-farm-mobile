@@ -18,7 +18,7 @@ Claim the task: `bd update <id> --status in_progress`
 
 ## Phase 2 — Planning (Subagent)
 
-Launch a **Plan** subagent (via Task tool, `subagent_type=Plan`) to research and design the spec structure. Give it a detailed prompt that includes:
+Launch a **Plan** subagent (via Task tool, `subagent_type=Plan`, `model: "opus"`) to research and design the spec structure. Give it a detailed prompt that includes:
 
 - The bead ID, title, and spec number
 - Instructions to read:
@@ -47,7 +47,7 @@ Review the plan returned by the subagent. Check for:
 3. **Scope** — does it match the CHECKLIST.md tasks this spec should cover?
 4. **Quality bar** — is it detailed enough that an agent could implement from it without clarifying questions?
 
-If the plan has issues, launch another Plan subagent with specific feedback. Use the `resume` parameter to preserve the planner's research context. Iterate until satisfied.
+If the plan has issues, launch another Plan subagent (`subagent_type=Plan`, `model: "opus"`) with specific feedback. Use the `resume` parameter to preserve the planner's research context. Iterate until satisfied.
 
 When the plan is approved, write the final version to `.tmp/plan-<bead-id>.md` using the Write tool.
 
