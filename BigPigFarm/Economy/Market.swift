@@ -1,9 +1,14 @@
-/// Market — Pig selling and value calculation.
+/// Market -- Pig selling result data type.
 /// Maps from: economy/market.py
-// TODO: Implement in doc 04
 import Foundation
 
-/// Calculates pig market value based on genetics and rarity.
-struct Market: Sendable {
-    // TODO: Implement in doc 04
+// MARK: - SaleResult
+
+/// Result of selling a guinea pig, with value breakdown.
+struct SaleResult: Sendable {
+    let baseValue: Int
+    let contractBonus: Int
+    let matchedContract: BreedingContract?
+
+    var total: Int { baseValue + contractBonus }
 }
