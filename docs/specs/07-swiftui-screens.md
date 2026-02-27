@@ -553,7 +553,7 @@ private struct FacilitiesTab: View {
             return
         }
 
-        _ = Shop.purchaseItem(item, at: position, state: gameState)
+        _ = Shop.purchaseItem(state: gameState, item: item, position: position)
     }
 }
 ```
@@ -822,7 +822,7 @@ private struct UpgradesTab: View {
                     .foregroundStyle(.secondary)
 
                 // Requirements
-                let reqs = Shop.checkTierRequirements(state: gameState, tier: nextTier)
+                let reqs = Shop.checkTierRequirements(state: gameState, upgrade: nextTier)
                 ForEach(Array(reqs.keys.sorted()), id: \.self) { key in
                     HStack(spacing: 4) {
                         Image(systemName: reqs[key] == true
@@ -872,7 +872,7 @@ private struct UpgradesTab: View {
     ///
     /// Maps from: shop.py action_purchase() tier-upgrade branch.
     private func purchaseTierUpgrade(_ tier: TierUpgrade) {
-        let reqs = Shop.checkTierRequirements(state: gameState, tier: tier)
+        let reqs = Shop.checkTierRequirements(state: gameState, upgrade: tier)
         guard reqs.values.allSatisfy({ $0 }) else {
             purchaseErrorMessage = "Requirements not met"
             showPurchaseError = true
@@ -894,6 +894,51 @@ private struct UpgradesTab: View {
         }
         _ = Shop.purchaseNewRoom(state: gameState, biome: biome)
     }
+}
+```
+
+### Shop Interface Extensions Required by This Spec
+
+> **Note:** The following five methods are called by the views above but are **not** defined in spec 04's `Shop` interface. They must be added to `Economy/Shop.swift` when implementing this spec. They are listed here as forward declarations to make the call sites above unambiguous.
+
+```swift
+enum Shop {
+    // --- Extensions beyond spec 04 ---
+
+    /// Find the best available grid position to auto-place a newly purchased facility.
+    /// Returns nil if no valid position exists in any area.
+    ///
+    /// Called by: ShopView `purchaseFacility(_:)` before `purchaseItem(state:item:position:)`
+    static func findPlacementPosition(
+        for facilityType: FacilityType,
+        in state: GameState
+    ) -> GridPosition?
+
+    /// Return all upgrade perks whose required tier is <= `farmTier` and whose
+    /// id is not already in `purchased`.
+    ///
+    /// Called by: PerksTab body
+    static func getAvailablePerks(
+        farmTier: Int,
+        purchased: Set<String>
+    ) -> [UpgradeDefinition]
+
+    /// Purchase a perk by ID. Deducts cost and adds the perk to
+    /// `state.purchasedUpgrades`. Returns true if successful.
+    ///
+    /// Called by: PerksTab `purchasePerk(_:)`
+    static func purchasePerk(perkID: String, state: GameState) -> Bool
+
+    /// Return metadata describing the next room expansion slot, or nil when
+    /// the farm is already at maximum room count for the current tier.
+    ///
+    /// Called by: UpgradesTab `roomAdditionRow`
+    static func getFarmUpgradeInfo(state: GameState) -> RoomUpgradeInfo?
+
+    /// Return the base cost of a facility type (used when computing sell refunds).
+    ///
+    /// Called by: FarmSceneCoordinator `farmScene(_:didRemoveFacility:)`
+    static func facilityCost(_ facilityType: FacilityType) -> Int
 }
 ```
 
@@ -978,7 +1023,7 @@ struct PigListView: View {
             titleVisibility: .visible
         ) {
             if let pigID = pigToSell, let pig = gameState.getGuineaPig(pigID) {
-                let value = Market.calculatePigValue(pig, state: gameState)
+                let value = Market.calculatePigValue(pig: pig, state: gameState)
                 Button("Sell for \(Currency.format(value))", role: .destructive) {
                     sellPig(pigID)
                 }
@@ -1059,7 +1104,7 @@ extension PigListView {
             // calculatePigValue inside the sort comparator.
             let values = Dictionary(
                 uniqueKeysWithValues: pigs.map {
-                    ($0.id, Market.calculatePigValue($0, state: gameState))
+                    ($0.id, Market.calculatePigValue(pig: $0, state: gameState))
                 }
             )
             sorted = pigs.sorted {
@@ -1159,7 +1204,7 @@ extension PigListView {
     /// Maps from: pig_list.py action_sell_pig()
     private func sellPig(_ pigID: UUID) {
         guard let pig = gameState.getGuineaPig(pigID) else { return }
-        let result = Market.sellPig(pig, state: gameState)
+        let result = Market.sellPig(state: gameState, pig: pig)
         // Market.sellPig handles removing the pig, adding money, and logging
         _ = result
         selectedPigID = nil
@@ -1180,7 +1225,7 @@ extension PigListView {
               let pig = gameState.getGuineaPig(pigID) else {
             return "Sell pig?"
         }
-        let value = Market.calculatePigValue(pig, state: gameState)
+        let value = Market.calculatePigValue(pig: pig, state: gameState)
         return "Sell \(pig.name) for \(Currency.format(value))?"
     }
 }
@@ -1319,7 +1364,7 @@ extension PigDetailView {
             }
 
             // Sale value
-            let breakdown = Market.calculatePigValueBreakdown(pig, state: gameState)
+            let breakdown = Market.calculatePigValueBreakdown(pig: pig, state: gameState)
             infoRow("Sale Value", Currency.format(breakdown.total))
 
             if let tag = pig.originTag {
@@ -1910,7 +1955,7 @@ private struct BreedingPigRow: View {
     }
 
     private var isAutoPaired: Bool {
-        isPaired && gameState.breedingProgram.shouldAutoPair
+        isPaired && gameState.breedingProgram.shouldAutoPair()
     }
 }
 ```
