@@ -39,5 +39,14 @@ struct Cell: Codable, Sendable {
 
 /// The 2D grid underlying the farm layout.
 struct FarmGrid: Codable, Sendable {
-    // TODO: Implement in doc 04
+    // TODO: Full implementation in FarmGrid bead (5jp)
+
+    /// Pig capacity for the current farm tier. Stub returns tier-1 default.
+    var capacity: Int { 8 }
+
+    /// Place a facility on the grid. Stub always succeeds.
+    mutating func placeFacility(_ facility: Facility) -> Bool { true }
+
+    /// Remove a facility from the grid. Stub is a no-op.
+    mutating func removeFacility(_ facility: Facility) {}
 }
