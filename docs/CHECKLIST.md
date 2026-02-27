@@ -34,7 +34,7 @@
 
 - [x] Create Xcode project scaffolding (XcodeGen + folder structure)
 - [x] Translate all 21 enums to Swift
-- [ ] Translate all 19 Pydantic models to Swift structs
+- [x] Translate all 19 Pydantic models to Swift structs
 - [ ] Port genetics system (`breed()`, mutations, rarity calculation)
 - [ ] Write genetics comparison tests (Python vs Swift output parity)
 - [ ] Port `GameConfig` constants (all 90+ tuning values)
