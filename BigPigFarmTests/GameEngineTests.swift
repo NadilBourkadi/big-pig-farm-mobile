@@ -1,0 +1,249 @@
+/// GameEngineTests -- Unit tests for the GameEngine tick loop.
+import Testing
+import Foundation
+@testable import BigPigFarm
+
+// MARK: - Lifecycle
+
+@Test @MainActor func engineInitDoesNotStartTimer() {
+    let engine = GameEngine(state: GameState())
+    #expect(!engine.isRunning)
+}
+
+@Test @MainActor func engineStartSetsRunning() {
+    let engine = GameEngine(state: GameState())
+    engine.start()
+    #expect(engine.isRunning)
+    engine.stop()
+}
+
+@Test @MainActor func engineStartIdempotent() {
+    let engine = GameEngine(state: GameState())
+    engine.start()
+    engine.start()
+    #expect(engine.isRunning)
+    engine.stop()
+}
+
+@Test @MainActor func engineStopClearsRunning() {
+    let engine = GameEngine(state: GameState())
+    engine.start()
+    engine.stop()
+    #expect(!engine.isRunning)
+}
+
+@Test @MainActor func engineStopIdempotent() {
+    let engine = GameEngine(state: GameState())
+    engine.stop()
+    #expect(!engine.isRunning)
+}
+
+// MARK: - Pause / Resume
+
+@Test @MainActor func pauseSetsFlag() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    engine.pause()
+    #expect(state.isPaused)
+}
+
+@Test @MainActor func resumeClearsFlag() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    engine.pause()
+    engine.resume()
+    #expect(!state.isPaused)
+}
+
+@Test @MainActor func togglePauseFlips() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    let firstToggle = engine.togglePause()
+    #expect(firstToggle == true)
+    #expect(state.isPaused)
+    let secondToggle = engine.togglePause()
+    #expect(secondToggle == false)
+    #expect(!state.isPaused)
+}
+
+// MARK: - Speed
+
+@Test @MainActor func setSpeedUpdatesState() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    engine.setSpeed(.fast)
+    #expect(state.speed == .fast)
+}
+
+@Test @MainActor func defaultSpeedIsNormal() {
+    let state = GameState()
+    #expect(state.speed == .normal)
+}
+
+@Test @MainActor func cycleSpeedProgression() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    #expect(state.speed == .normal)
+
+    let speed1 = engine.cycleSpeed()
+    #expect(speed1 == .fast)
+
+    let speed2 = engine.cycleSpeed()
+    #expect(speed2 == .faster)
+
+    let speed3 = engine.cycleSpeed()
+    #expect(speed3 == .fastest)
+
+    let speed4 = engine.cycleSpeed()
+    #expect(speed4 == .normal)
+}
+
+@Test @MainActor func cycleSpeedWithDebug() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    state.speed = .fastest
+
+    let speed1 = engine.cycleSpeed(debug: true)
+    #expect(speed1 == .debug)
+
+    let speed2 = engine.cycleSpeed(debug: true)
+    #expect(speed2 == .debugFast)
+
+    let speed3 = engine.cycleSpeed(debug: true)
+    #expect(speed3 == .normal)
+}
+
+@Test @MainActor func cycleSpeedSkipsPaused() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    state.speed = .paused
+    let result = engine.cycleSpeed()
+    #expect(result == .paused)
+    #expect(state.speed == .paused)
+}
+
+// MARK: - Speed Raw Values
+
+@Test func speedMultiplierValues() {
+    #expect(GameSpeed.paused.rawValue == 0)
+    #expect(GameSpeed.normal.rawValue == 3)
+    #expect(GameSpeed.fast.rawValue == 6)
+    #expect(GameSpeed.faster.rawValue == 15)
+    #expect(GameSpeed.fastest.rawValue == 60)
+    #expect(GameSpeed.debug.rawValue == 300)
+    #expect(GameSpeed.debugFast.rawValue == 900)
+}
+
+@Test func speedDisplayLabels() {
+    #expect(GameSpeed.paused.displayLabel == "0x")
+    #expect(GameSpeed.normal.displayLabel == "1x")
+    #expect(GameSpeed.fast.displayLabel == "2x")
+    #expect(GameSpeed.faster.displayLabel == "5x")
+    #expect(GameSpeed.fastest.displayLabel == "20x")
+    #expect(GameSpeed.debug.displayLabel == "100x")
+    #expect(GameSpeed.debugFast.displayLabel == "300x")
+}
+
+// MARK: - Tick Callback Registration
+
+@Test @MainActor func tickCallbackInvoked() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    var receivedMinutes: Double?
+    engine.registerTickCallback { minutes in
+        receivedMinutes = minutes
+    }
+    engine.tick(1.0)
+    #expect(receivedMinutes != nil)
+}
+
+@Test @MainActor func multipleCallbacksInvoked() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    var count = 0
+    engine.registerTickCallback { _ in count += 1 }
+    engine.registerTickCallback { _ in count += 1 }
+    engine.tick(1.0)
+    #expect(count == 2)
+}
+
+// MARK: - Tick Logic
+
+@Test @MainActor func tickAdvancesGameTime() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    let initialMinutes = state.gameTime.totalGameMinutes
+
+    // 1 real second at speed multiplier already applied = 1 game minute
+    // (since realSecondsPerGameMinute = 1.0)
+    engine.tick(1.0)
+
+    let elapsed = state.gameTime.totalGameMinutes - initialMinutes
+    #expect(elapsed == 1.0)
+}
+
+@Test @MainActor func tickPassesGameMinutesToCallbacks() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    var receivedMinutes: Double?
+    engine.registerTickCallback { minutes in
+        receivedMinutes = minutes
+    }
+
+    // With realSecondsPerGameMinute = 1.0, passing 3.0 delta seconds
+    // should yield 3.0 game minutes
+    engine.tick(3.0)
+
+    #expect(receivedMinutes == 3.0)
+}
+
+@Test @MainActor func tickWithSmallDelta() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    let initialMinutes = state.gameTime.totalGameMinutes
+
+    // Typical tick: 100ms * speed 3 = 0.3 delta seconds
+    engine.tick(0.3)
+
+    let elapsed = state.gameTime.totalGameMinutes - initialMinutes
+    let expected = 0.3 / GameConfig.Time.realSecondsPerGameMinute
+    #expect(abs(elapsed - expected) < 0.001)
+}
+
+// MARK: - GameTime Advancement
+
+@Test func gameTimeAdvanceMinutes() {
+    var time = GameTime()
+    time.hour = 8
+    time.minute = 0
+    time.advance(minutes: 30)
+    #expect(time.hour == 8)
+    #expect(time.minute == 30)
+}
+
+@Test func gameTimeAdvanceRollsOverHour() {
+    var time = GameTime()
+    time.hour = 8
+    time.minute = 0
+    time.advance(minutes: 90)
+    #expect(time.hour == 9)
+    #expect(time.minute == 30)
+}
+
+@Test func gameTimeAdvanceRollsOverDay() {
+    var time = GameTime()
+    time.day = 1
+    time.hour = 23
+    time.minute = 0
+    time.advance(minutes: 120)
+    #expect(time.day == 2)
+    #expect(time.hour == 1)
+    #expect(time.minute == 0)
+}
+
+@Test func gameTimeTracksTotalMinutes() {
+    var time = GameTime()
+    time.advance(minutes: 100)
+    time.advance(minutes: 50)
+    #expect(time.totalGameMinutes == 150)
+}
