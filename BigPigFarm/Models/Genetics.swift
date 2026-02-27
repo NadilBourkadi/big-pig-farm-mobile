@@ -214,7 +214,8 @@ struct Phenotype: Codable, Sendable, Hashable {
 // MARK: - Phenotype Calculation
 
 /// Determine base coat color from E, B, and D locus dominance flags.
-private func determineBaseColor(hasE: Bool, hasB: Bool, hasD: Bool) -> BaseColor {
+/// Internal visibility: used by GeneticsPrediction.swift for analytical probability.
+func determineBaseColor(hasE: Bool, hasB: Bool, hasD: Bool) -> BaseColor {
     if hasE && hasB {
         return hasD ? .black : .blue
     } else if hasE && !hasB {
