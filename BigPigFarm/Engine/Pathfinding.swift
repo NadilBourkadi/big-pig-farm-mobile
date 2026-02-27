@@ -43,7 +43,8 @@ struct Pathfinding: @unchecked Sendable {
     }
 
     /// Returns true if this graph matches the current grid generation.
-    /// When false, callers should rebuild with a fresh Pathfinding(farm:).
+    /// When false, callers must rebuild with a fresh Pathfinding(farm:) before
+    /// calling findPath(from:to:). FacilityManager enforces this convention.
     func isValid(for farm: FarmGrid) -> Bool {
         builtGeneration == farm.gridGeneration
     }
@@ -86,6 +87,10 @@ struct Pathfinding: @unchecked Sendable {
     // MARK: - Private
 
     /// Searches expanding Manhattan-distance shells for the nearest walkable node.
+    /// Among equidistant cells, returns the first found (top-left to bottom-right
+    /// iteration order) — direction preference is unspecified and intentional.
+    /// GKGridGraph.node(atGridPosition:) returns nil for out-of-bounds positions,
+    /// so no explicit bounds check is needed.
     private func findNearestWalkableNode(
         to pos: GridPosition,
         maxDistance: Int = 5
