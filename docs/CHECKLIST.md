@@ -8,7 +8,7 @@
 
 - [x] 01 — Project Setup → [`docs/specs/01-project-setup.md`](specs/01-project-setup.md)
 - [x] 02 — Data Models → [`docs/specs/02-data-models.md`](specs/02-data-models.md)
-- [ ] 03 — Sprite Pipeline
+- [x] 03 — Sprite Pipeline → [`docs/specs/03-sprite-pipeline.md`](specs/03-sprite-pipeline.md)
 - [ ] 04 — Game Engine
 - [ ] 05 — Behavior AI
 - [ ] 06 — Farm Scene
