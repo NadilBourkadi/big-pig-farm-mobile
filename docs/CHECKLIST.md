@@ -13,7 +13,7 @@
 - [x] 05 — Behavior AI → [`docs/specs/05-behavior-ai.md`](specs/05-behavior-ai.md)
 - [x] 06 — Farm Scene → [`docs/specs/06-farm-scene.md`](specs/06-farm-scene.md)
 - [x] 07 — SwiftUI Screens → [`docs/specs/07-swiftui-screens.md`](specs/07-swiftui-screens.md)
-- [ ] 08 — Persistence & Polish
+- [x] 08 — Persistence & Polish → [`docs/specs/08-persistence-polish.md`](specs/08-persistence-polish.md)
 
 ---
 
