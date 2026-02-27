@@ -33,6 +33,7 @@ playground.xcworkspace
 # AI agent config
 !.claude/
 .claude/*
+!.claude/settings.json
 !.claude/skills/
 !.claude/skills/**
 !.claude/agents/
