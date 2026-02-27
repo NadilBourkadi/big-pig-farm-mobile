@@ -101,6 +101,8 @@ enum BehaviorSeeking {
     @MainActor
     static func seekPlay(controller: BehaviorController, pig: inout GuineaPig) {
         var playTypes: [FacilityType] = [.exerciseWheel, .playArea, .tunnel, .stage]
+        // Therapy garden is only sought when the pig is deeply unhappy — it is a
+        // last-resort happiness booster, not a normal play destination.
         if pig.needs.happiness < 50 { playTypes.append(.therapyGarden) }
 
         for facilityType in playTypes {
