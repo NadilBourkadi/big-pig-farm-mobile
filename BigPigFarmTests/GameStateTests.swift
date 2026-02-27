@@ -43,7 +43,7 @@ import Foundation
 
 @Test @MainActor func addAndGetFacility() {
     let state = GameState()
-    let bowl = Facility.create(type: .foodBowl, x: 0, y: 0)
+    let bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
     let added = state.addFacility(bowl)
     #expect(added)
     #expect(state.getFacility(bowl.id) != nil)
@@ -51,7 +51,7 @@ import Foundation
 
 @Test @MainActor func removeFacility() {
     let state = GameState()
-    let bowl = Facility.create(type: .foodBowl, x: 0, y: 0)
+    let bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
     _ = state.addFacility(bowl)
     let removed = state.removeFacility(bowl.id)
     #expect(removed != nil)
@@ -66,9 +66,9 @@ import Foundation
 
 @Test @MainActor func getFacilitiesByType() {
     let state = GameState()
-    let bowl1 = Facility.create(type: .foodBowl, x: 0, y: 0)
-    let bowl2 = Facility.create(type: .foodBowl, x: 5, y: 0)
-    let water = Facility.create(type: .waterBottle, x: 10, y: 0)
+    let bowl1 = Facility.create(type: .foodBowl, x: 5, y: 5)
+    let bowl2 = Facility.create(type: .foodBowl, x: 15, y: 5)
+    let water = Facility.create(type: .waterBottle, x: 25, y: 5)
     _ = state.addFacility(bowl1)
     _ = state.addFacility(bowl2)
     _ = state.addFacility(water)

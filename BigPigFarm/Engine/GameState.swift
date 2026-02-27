@@ -105,7 +105,7 @@ final class GameState: @unchecked Sendable {
 
     // MARK: - World
 
-    var farm: FarmGrid = FarmGrid()
+    var farm: FarmGrid = FarmGrid.createStarter()
 
     // MARK: - Economy
 
