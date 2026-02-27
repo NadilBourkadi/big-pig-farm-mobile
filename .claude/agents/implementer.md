@@ -33,7 +33,12 @@ You MUST read these before implementing:
    - `Sendable` conformance on all value types
    - Files under ~300 lines
    - Descriptive names, no abbreviations
-5. **Test** — write tests in `BigPigFarmTests/` using Swift Testing (`@Test`, `#expect`)
+5. **Test** — every implementation task MUST include tests. This is not optional:
+   - Create a test file in `BigPigFarmTests/` named `<Module>Tests.swift`
+   - Use Swift Testing framework (`@Test`, `#expect`, `#require`)
+   - Cover the core logic: at least one test per public function/method
+   - Test edge cases for anything involving math, state transitions, or boundary conditions
+   - Do NOT create separate beads for tests — tests are part of the implementation deliverable
 6. **Update the backlog** — see "Task management" below.
 7. **Finalize:**
    - Update `docs/CHECKLIST.md` — check off the completed task
@@ -46,7 +51,7 @@ You MUST read these before implementing:
 
 Implementation always reveals new work. You MUST update the Beads backlog:
 
-- **Create new beads** for bugs, tech debt, or follow-up tasks discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd link <new-id> --depends-on <blocker-id>`.
+- **Create new beads** for bugs, tech debt, or follow-up tasks discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
 - **Update existing bead descriptions** when implementation reveals important context (e.g., "this also requires changes to X").
 - **Split beads that are too large** — if implementation grows beyond ~2 files, break remaining work into sub-tasks.
 - **Log what you created** — include a summary of new/updated beads in your return message so the dispatcher can verify.
