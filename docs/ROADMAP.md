@@ -752,7 +752,7 @@ Track which spec documents have been written and when.
 | 01 - Project Setup | Complete | 2026-02-26 | XcodeGen project, 54 stubs, SwiftLint, CLAUDE.md, CHECKLIST.md |
 | 02 - Data Models | Complete | 2026-02-26 | Full Python→Swift translation spec |
 | 03 - Sprite Pipeline | Complete | 2026-02-27 | Export tool spec, asset catalog layout, pattern system, animation data |
-| 04 - Game Engine | Not started | — | — |
+| 04 - Game Engine | Complete | 2026-02-27 | Full engine spec: GameState, tick loop, FarmGrid, pathfinding, tunnels, areas, expansion, needs, collision, facility manager, economy, auto-arrange |
 | 05 - Behavior AI | Complete | 2026-02-27 | Decision tree, movement, seeking, needs, collision, breeding/birth, culling, acclimation, auto resources, tick orchestration |
 | 06 - Farm Scene | Not started | — | — |
 | 07 - SwiftUI Screens | Not started | — | — |
