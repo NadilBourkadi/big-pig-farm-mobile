@@ -47,7 +47,7 @@
 - [x] Implement `GameState` observable container
 - [ ] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`)
 - [ ] Implement `GameEngine` tick loop
-- [ ] Implement `FarmGrid` with cell types
+- [x] Implement `FarmGrid` with cell types
 - [ ] Implement `Pathfinding` (GKGridGraph integration)
 - [ ] Implement `Tunnels` and `AreaManager`
 - [ ] Implement `GridExpansion` tier system
