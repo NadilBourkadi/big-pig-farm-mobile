@@ -10,7 +10,7 @@ struct GameTime: Codable, Sendable {
     var day: Int = 1
     var hour: Int = 8
     var minute: Int = 0
-    var lastUpdate: Date = Date()
+    var lastUpdate = Date()
     var totalGameMinutes: Double = 0.0
 
     var isDaytime: Bool { 6 <= hour && hour < 20 }
@@ -105,7 +105,7 @@ final class GameState: @unchecked Sendable {
 
     // MARK: - World
 
-    var farm: FarmGrid = FarmGrid.createStarter()
+    var farm = FarmGrid.createStarter()
 
     // MARK: - Economy
 
@@ -113,13 +113,13 @@ final class GameState: @unchecked Sendable {
 
     // MARK: - Time
 
-    var gameTime: GameTime = GameTime()
+    var gameTime = GameTime()
     var speed: GameSpeed = .normal
     var isPaused: Bool = false
 
     // MARK: - Session Tracking
 
-    var sessionStart: Date = Date()
+    var sessionStart = Date()
     var lastSave: Date?
 
     // MARK: - Event Log
@@ -129,12 +129,12 @@ final class GameState: @unchecked Sendable {
 
     // MARK: - Collections
 
-    var pigdex: Pigdex = Pigdex()
-    var contractBoard: ContractBoard = ContractBoard()
+    var pigdex = Pigdex()
+    var contractBoard = ContractBoard()
 
     // MARK: - Breeding
 
-    var breedingProgram: BreedingProgram = BreedingProgram()
+    var breedingProgram = BreedingProgram()
     var breedingPair: BreedingPair?
 
     // MARK: - Social Affinity
@@ -161,6 +161,13 @@ extension GameState {
     // MARK: - Guinea Pig Management
 
     func addGuineaPig(_ pig: GuineaPig) {
+        guineaPigs[pig.id] = pig
+        pigsListCache = nil
+    }
+
+    /// Update an existing pig in place and invalidate the list cache.
+    /// Use instead of direct `guineaPigs[id] = pig` writes in the simulation tick.
+    func updateGuineaPig(_ pig: GuineaPig) {
         guineaPigs[pig.id] = pig
         pigsListCache = nil
     }
@@ -274,9 +281,9 @@ extension GameState {
     // MARK: - Social Affinity
 
     static func affinityKey(_ id1: UUID, _ id2: UUID) -> String {
-        let a = id1.uuidString
-        let b = id2.uuidString
-        return a < b ? "\(a):\(b)" : "\(b):\(a)"
+        let id1Str = id1.uuidString
+        let id2Str = id2.uuidString
+        return id1Str < id2Str ? "\(id1Str):\(id2Str)" : "\(id2Str):\(id1Str)"
     }
 
     func getAffinity(_ id1: UUID, _ id2: UUID) -> Int {
