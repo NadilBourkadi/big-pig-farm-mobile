@@ -23,7 +23,7 @@ Claim the task: `bd update <id> --status in_progress`
 
 ## Phase 2 — Planning (Subagent)
 
-Launch a **Plan** subagent (via Task tool, `subagent_type=Plan`) to research and design the implementation. Give it a detailed prompt that includes:
+Launch a **Plan** subagent (via Task tool, `subagent_type=Plan`, `model: "opus"`) to research and design the implementation. Give it a detailed prompt that includes:
 
 - The bead ID, title, and any description from `bd show <id>`
 - Instructions to read:
@@ -53,7 +53,7 @@ Review the plan returned by the subagent. Check for:
 4. **Conventions** — CLAUDE.md compliance (naming, file size limits, struct vs class, Sendable)?
 5. **Tests** — is the test strategy thorough (edge cases, state transitions, boundaries)?
 
-If the plan has issues, launch another Plan subagent with specific feedback. Use the `resume` parameter to preserve the planner's research context. Iterate until satisfied.
+If the plan has issues, launch another Plan subagent (`subagent_type=Plan`, `model: "opus"`) with specific feedback. Use the `resume` parameter to preserve the planner's research context. Iterate until satisfied.
 
 When the plan is approved, write the final version to `.tmp/plan-<bead-id>.md` using the Write tool.
 
