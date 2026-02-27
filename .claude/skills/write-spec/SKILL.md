@@ -6,13 +6,9 @@ argument-hint: "[spec-number, e.g. 03]"
 
 # Write Spec — Task Dispatcher
 
-## Available spec tasks
-
-```
-!`bd list -l spec --status open 2>&1`
-```
-
 ## Task selection
+
+First, run `bd list -l spec --status open` to see available spec tasks.
 
 If an argument was provided (`$ARGUMENTS`), find the spec task matching that number (e.g. "03" matches "Doc 03"). Otherwise, pick the lowest-numbered unblocked spec.
 
