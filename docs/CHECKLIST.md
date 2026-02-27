@@ -55,7 +55,7 @@
 - [x] Implement `NeedsSystem` (decay/recovery)
 - [x] Implement `SimulationRunner` tick orchestration
 - [ ] Implement `BehaviorController` + decision tree
-- [ ] Implement `BehaviorMovement` + seeking
+- [x] Implement `BehaviorMovement` + seeking
 - [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
 - [ ] Implement `Breeding` + `Birth` systems
 - [ ] Implement `Culling` surplus management
