@@ -38,33 +38,54 @@
 - [ ] Port genetics system (`breed()`, mutations, rarity calculation)
 - [ ] Write genetics comparison tests (Python vs Swift output parity)
 - [ ] Port `GameConfig` constants (all 90+ tuning values)
+- [ ] Port `GameConfig.Behavior` constants (~50 behavior AI values)
+- [ ] Port `GameConfig.Tiers` data tables (TierUpgrade + RoomCost)
 - [ ] Port `PigNames` name generation
+- [ ] Write Phase 0 unit tests (ConfigTests, ModelTests, PigNamesTests)
 
 ### Phase 1 — Headless Simulation (Weeks 3–5)
 
 - [ ] Implement `GameState` observable container
+- [ ] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`)
 - [ ] Implement `GameEngine` tick loop
 - [ ] Implement `FarmGrid` with cell types
 - [ ] Implement `Pathfinding` (GKGridGraph integration)
 - [ ] Implement `Tunnels` and `AreaManager`
 - [ ] Implement `GridExpansion` tier system
+- [ ] Implement `AutoArrange` zone-based layout
 - [ ] Implement `NeedsSystem` (decay/recovery)
 - [ ] Implement `SimulationRunner` tick orchestration
 - [ ] Implement `BehaviorController` + decision tree
 - [ ] Implement `BehaviorMovement` + seeking
-- [ ] Implement `Collision` spatial hash
+- [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
 - [ ] Implement `Breeding` + `Birth` systems
-- [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`
+- [ ] Implement `Culling` surplus management
+- [ ] Implement `Acclimation` biome adoption
+- [ ] Implement `AutoResources` drip/AoE/veggie systems
+- [ ] Implement `BreedingProgram` scoring and carrier-aware filter
+- [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
 - [ ] Implement `FacilityManager` scoring
+- [ ] Write engine unit tests (GameState, FarmGrid, Pathfinding, GridExpansion)
+- [ ] Write simulation unit tests (NeedsSystem, Collision, BehaviorDecision, Breeding)
+- [ ] Write economy unit tests (Economy, Contracts)
 - [ ] Write headless simulation integration tests
 
 ### Phase 2 — Sprite Pipeline (Week 3, parallel)
 
 - [ ] Create Python sprite export tool (PNG from half-block data)
 - [ ] Generate 8 base color variant PNGs
+- [ ] Export indicator sprite PNGs (12 image sets)
+- [ ] Export portrait sprite PNGs (144 image sets)
+- [ ] Export terrain tile PNGs (24 image sets)
+- [ ] Generate pattern mask PNGs (6 image sets)
 - [ ] Create sprite atlas for Xcode (Assets.xcassets)
-- [ ] Implement runtime pattern overlay rendering
 - [ ] Create facility sprite assets
+- [ ] Implement `SpriteAssets` loading API
+- [ ] Implement `AnimationData` timing constants
+- [ ] Implement `PigPalettes` color dictionaries
+- [ ] Implement `SpriteFurMaps` coordinate data
+- [ ] Implement runtime pattern overlay rendering
+- [ ] Write sprite asset tests
 
 ### Phase 3 — Farm Scene (Weeks 6–8)
 
