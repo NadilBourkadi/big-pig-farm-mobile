@@ -198,6 +198,7 @@ extension GameState {
 
     func removeFacility(_ facilityID: UUID) -> Facility? {
         guard let facility = facilities.removeValue(forKey: facilityID) else { return nil }
+        // TODO(5jp): If FarmGrid.removeFacility gains error handling, restore on failure
         farm.removeFacility(facility)
         facilitiesListCache = nil
         facilitiesByTypeCache = nil
