@@ -6,7 +6,7 @@
 
 ## Shell Commands
 
-- Always run commands from the working directory (`/Users/nadilbourkadi/Dev/big-pig-farm-mobile`)
+- The working directory is always the repo root — never prepend `cd` to commands
 - Never use inline env vars; use `export` on a separate line
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
