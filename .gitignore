@@ -27,6 +27,9 @@ Package.resolved
 timeline.xctimeline
 playground.xcworkspace
 
+# Scratch space (commit messages, temp files)
+.tmp/
+
 # AI agent config
 !.claude/
 .claude/*
