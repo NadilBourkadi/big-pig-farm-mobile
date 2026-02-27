@@ -8,6 +8,7 @@
 
 - The working directory is always the repo root — never prepend `cd` to commands
 - Never use inline env vars; use `export` on a separate line
+- **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
@@ -69,6 +70,7 @@ Views (SwiftUI) + Scene (SpriteKit)
 - **Atomic commits** — one logical change per commit. Each commit should be a single, self-contained logical unit.
 - **Preserve logical commits.** Multiple atomic commits in a PR is expected and good. Do NOT squash logically distinct changes into one commit.
 - **Clean up WIP noise before pushing** — use interactive rebase to collapse fixup/WIP commits into their logical parent. Only squash when intermediate commits have no standalone meaning.
+- **Commit messages:** Write to `.tmp/commit-msg.txt` (via the Write tool), then `git commit -F .tmp/commit-msg.txt`. Never use heredocs, subshells, or `/tmp/`.
 
 ## Pre-Push Workflow — CRITICAL
 
