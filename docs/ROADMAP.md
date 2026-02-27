@@ -754,6 +754,6 @@ Track which spec documents have been written and when.
 | 03 - Sprite Pipeline | Complete | 2026-02-27 | Export tool spec, asset catalog layout, pattern system, animation data |
 | 04 - Game Engine | Complete | 2026-02-27 | Full engine spec: GameState, tick loop, FarmGrid, pathfinding, tunnels, areas, expansion, needs, collision, facility manager, economy, auto-arrange |
 | 05 - Behavior AI | Complete | 2026-02-27 | Decision tree, movement, seeking, needs, collision, breeding/birth, culling, acclimation, auto resources, tick orchestration |
-| 06 - Farm Scene | Not started | — | — |
+| 06 - Farm Scene | Complete | 2026-02-27 | FarmScene, PigNode, FacilityNode, CameraController, SpriteView integration, touch handling, edit mode, status indicators |
 | 07 - SwiftUI Screens | Not started | — | — |
 | 08 - Persistence & Polish | Not started | — | — |
