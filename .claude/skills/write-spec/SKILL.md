@@ -38,6 +38,7 @@ After the agent returns:
    - Write any commit messages with the **Write** tool to `/tmp/commit-msg.txt`, then `git commit -F /tmp/commit-msg.txt`
 7. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
 8. **Return to main working directory**
+9. **Discard stale beads state** — run `git checkout -- .beads/issues.jsonl` in the main repo before pulling. The worktree agent's `bd close` updates the shared Dolt DB, which makes the main repo's `issues.jsonl` appear dirty. The PR already contains the correct version, so the local change is always redundant.
 
 ### Git commands — CRITICAL
 
