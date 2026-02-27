@@ -91,6 +91,31 @@ ready → in_progress → closed
     (discover new work → bd create)
 ```
 
+### Agent Skills (Slash Commands)
+
+Two Claude Code skills automate the task pickup workflow. They inject live `bd ready` output and all necessary context pointers so the agent can work autonomously.
+
+**`/write-spec [spec-number]`** — Pick up and write a spec document
+
+```bash
+/write-spec        # picks the lowest-numbered unblocked spec
+/write-spec 03     # targets Doc 03 specifically
+```
+
+The agent reads existing specs as format templates, analyzes the source Python codebase, and follows the ROADMAP's architectural decisions. It enters plan mode for approval before writing.
+
+**`/implement [phase-or-id]`** — Pick up and implement a task
+
+```bash
+/implement         # picks highest-priority unblocked task
+/implement p0      # filters for Phase 0 tasks
+/implement big-pig-farm-mobile-5qe   # targets a specific bead
+```
+
+The agent reads the relevant spec, finds the source Python modules, checks existing Swift stubs, and enters plan mode for approval before coding.
+
+Both skills follow the same lifecycle: claim task → explore context → plan → execute → update checklist → close bead → commit on feature branch → open PR.
+
 ### Relationship to CHECKLIST.md
 
 Both coexist:
