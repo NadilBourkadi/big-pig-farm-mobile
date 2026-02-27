@@ -1,20 +1,22 @@
 /// FarmGrid — 2D grid representation with cell types.
-/// Maps from: game/farm_grid.py
-// TODO: Implement in doc 04
+/// Maps from: game/world.py
 import Foundation
 
-/// Type of content in a grid cell.
+// MARK: - CellType
+
+/// Type of terrain in a grid cell.
 enum CellType: String, Codable, CaseIterable, Sendable {
-    case empty
+    case floor
+    case bedding
+    case grass
     case wall
-    case facility
-    case tunnel
 }
+
+// MARK: - Stubs (implemented in later tasks)
 
 /// A single cell in the farm grid.
 struct Cell: Codable, Sendable {
-    var type: CellType
-    var position: Position
+    // TODO: Implement in struct translation task
 }
 
 /// The 2D grid underlying the farm layout.
