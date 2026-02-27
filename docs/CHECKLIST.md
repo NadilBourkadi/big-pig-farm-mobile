@@ -40,7 +40,7 @@
 - [ ] Port `GameConfig` constants (all 90+ tuning values)
 - [ ] Port `GameConfig.Behavior` constants (~50 behavior AI values)
 - [ ] Port `GameConfig.Tiers` data tables (TierUpgrade + RoomCost)
-- [ ] Port `PigNames` name generation
+- [x] Port `PigNames` name generation
 
 ### Phase 1 — Headless Simulation (Weeks 3–5)
 
