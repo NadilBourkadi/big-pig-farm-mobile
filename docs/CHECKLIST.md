@@ -37,9 +37,9 @@
 - [x] Translate all 19 Pydantic models to Swift structs
 - [x] Port genetics system (`breed()`, mutations, rarity calculation)
 - [ ] Write genetics comparison tests (Python vs Swift output parity)
-- [ ] Port `GameConfig` constants (all 90+ tuning values)
-- [ ] Port `GameConfig.Behavior` constants (~50 behavior AI values)
-- [ ] Port `GameConfig.Tiers` data tables (TierUpgrade + RoomCost)
+- [x] Port `GameConfig` constants (all 90+ tuning values)
+- [x] Port `GameConfig.Behavior` constants (~50 behavior AI values)
+- [x] Port `GameConfig.Tiers` data tables (TierUpgrade + RoomCost)
 - [x] Port `PigNames` name generation
 
 ### Phase 1 — Headless Simulation (Weeks 3–5)
