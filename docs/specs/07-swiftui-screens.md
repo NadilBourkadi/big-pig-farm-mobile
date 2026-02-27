@@ -1055,9 +1055,15 @@ extension PigListView {
         case .happiness:
             sorted = pigs.sorted { $0.needs.happiness > $1.needs.happiness }
         case .value:
+            // Precompute values to avoid O(n log n) calls to
+            // calculatePigValue inside the sort comparator.
+            let values = Dictionary(
+                uniqueKeysWithValues: pigs.map {
+                    ($0.id, Market.calculatePigValue($0, state: gameState))
+                }
+            )
             sorted = pigs.sorted {
-                Market.calculatePigValue($0, state: gameState)
-                    > Market.calculatePigValue($1, state: gameState)
+                values[$0.id, default: 0] > values[$1.id, default: 0]
             }
         case .rarity:
             sorted = pigs.sorted {
@@ -1316,8 +1322,8 @@ extension PigDetailView {
             let breakdown = Market.calculatePigValueBreakdown(pig, state: gameState)
             infoRow("Sale Value", Currency.format(breakdown.total))
 
-            if pig.originTag != nil {
-                infoRow("Origin", pig.originTag ?? "")
+            if let tag = pig.originTag {
+                infoRow("Origin", tag)
             }
         }
     }
@@ -1638,19 +1644,17 @@ extension BreedingView {
 /// The Python version uses a keyboard-navigated grid of checkboxes and
 /// a cycle selector. The SwiftUI version uses native Toggle and Picker controls.
 private struct ProgramTab: View {
-    let gameState: GameState
+    // @Bindable is required for @Observable classes to produce $-prefixed
+    // bindings. Using `let` with manual Binding(get:set:) closures is
+    // fragile and verbose — @Bindable is the correct iOS 17+ pattern.
+    @Bindable var gameState: GameState
 
     var body: some View {
         Form {
             // Enabled toggle
             Section {
-                Toggle(
-                    "Program Enabled",
-                    isOn: Binding(
-                        get: { gameState.breedingProgram.enabled },
-                        set: { gameState.breedingProgram.enabled = $0 }
-                    )
-                )
+                Toggle("Program Enabled",
+                       isOn: $gameState.breedingProgram.enabled)
             }
 
             // Target traits
@@ -1672,24 +1676,13 @@ private struct ProgramTab: View {
 
             // Settings
             Section("Settings") {
-                // Auto-pair toggle
-                Toggle(
-                    "Auto-Pair",
-                    isOn: Binding(
-                        get: { gameState.breedingProgram.autoPair },
-                        set: { gameState.breedingProgram.autoPair = $0 }
-                    )
-                )
+                Toggle("Auto-Pair",
+                       isOn: $gameState.breedingProgram.autoPair)
 
                 // Keep carriers toggle
                 HStack {
-                    Toggle(
-                        "Keep Carriers",
-                        isOn: Binding(
-                            get: { gameState.breedingProgram.keepCarriers },
-                            set: { gameState.breedingProgram.keepCarriers = $0 }
-                        )
-                    )
+                    Toggle("Keep Carriers",
+                           isOn: $gameState.breedingProgram.keepCarriers)
                 }
                 let hasLab = !gameState.getFacilitiesByType(.geneticsLab).isEmpty
                 if !hasLab {
@@ -1699,10 +1692,8 @@ private struct ProgramTab: View {
                 }
 
                 // Strategy picker
-                Picker("Strategy", selection: Binding(
-                    get: { gameState.breedingProgram.strategy },
-                    set: { gameState.breedingProgram.strategy = $0 }
-                )) {
+                Picker("Strategy",
+                       selection: $gameState.breedingProgram.strategy) {
                     Text("Target").tag(BreedingStrategy.target)
                     Text("Diversity").tag(BreedingStrategy.diversity)
                     Text("Money").tag(BreedingStrategy.money)
@@ -1710,14 +1701,9 @@ private struct ProgramTab: View {
                 .pickerStyle(.segmented)
 
                 // Stock limit stepper
-                Stepper(
-                    "Stock Limit: \(gameState.breedingProgram.stockLimit)",
-                    value: Binding(
-                        get: { gameState.breedingProgram.stockLimit },
-                        set: { gameState.breedingProgram.stockLimit = $0 }
-                    ),
-                    in: 2...gameState.capacity
-                )
+                Stepper("Stock Limit: \(gameState.breedingProgram.stockLimit)",
+                        value: $gameState.breedingProgram.stockLimit,
+                        in: 2...gameState.capacity)
             }
         }
     }
@@ -2034,9 +2020,13 @@ extension PairTab {
         gameState.setBreedingPair(maleID: male.id, femaleID: female.id)
     }
 
-    /// Whether the pair can be set.
+    /// Whether the pair can be set. Checks breeding eligibility on both
+    /// parents (age, lock status, pregnancy). Mirrors Python breeding.py
+    /// can_breed checks.
     private func canSetPair(male: GuineaPig, female: GuineaPig) -> Bool {
-        !female.isPregnant && !male.breedingLocked && !female.breedingLocked
+        male.canBreed && female.canBreed
+            && !male.breedingLocked && !female.breedingLocked
+            && !female.isPregnant
     }
 }
 ```
@@ -2168,7 +2158,9 @@ private struct PigdexTab: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            // LazyVStack for efficient rendering — the grid contains
+            // 144+ rows (2 roan × 3 intensity × 3 pattern × 8 color).
+            LazyVStack(alignment: .leading, spacing: 12) {
                 // Progress header
                 let pigdex = gameState.pigdex
                 Text("\(pigdex.discoveredCount)/\(pigdex.totalPossible) Discovered (\(Int(pigdex.completionPercent))%)")
@@ -2404,10 +2396,10 @@ private struct EventLogTab: View {
                     Text("No events yet.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(
-                        Array(gameState.events.reversed().enumerated()),
-                        id: \.offset
-                    ) { _, event in
+                    // Use stable identity (event ID), not array offset.
+                    // \.offset shifts when new events arrive, causing
+                    // incorrect row recycling and broken animations.
+                    ForEach(gameState.events.reversed()) { event in
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: eventIcon(event.eventType))
                                 .foregroundStyle(eventColor(event.eventType))
@@ -2621,12 +2613,21 @@ extension BiomeSelectView {
     ///
     /// Maps from: biome_select.py _update_detail()
     private func biomeDetail(info: BiomeInfo, biome: BiomeType) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let (available, lockReason) = biomeStatus(biome)
+
+        return VStack(alignment: .leading, spacing: 4) {
             Text(info.displayName)
                 .font(.headline)
             Text(info.description)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+            // Show lock reason when biome is unavailable
+            if !available, let lockReason {
+                Text(lockReason)
+                    .font(.caption.bold())
+                    .foregroundStyle(.red)
+            }
 
             HStack {
                 let costStr = info.cost > 0
@@ -3031,9 +3032,11 @@ struct BreedingStatusLabel: View {
     }
 
     private var statusColor: Color {
-        if pig.canBreed { return .green }
+        // Check locked before canBreed — a locked pig that meets breeding
+        // criteria should show red (locked), not green (ready).
         if pig.breedingLocked { return .red }
         if pig.isPregnant { return .orange }
+        if pig.canBreed { return .green }
         return .secondary
     }
 }
@@ -3224,23 +3227,25 @@ Complete the delegate methods that were stubbed in Doc 06:
 
 ```swift
 @MainActor
-class FarmSceneCoordinator: FarmSceneDelegate {
-    weak var contentView: ContentView?
+final class FarmSceneCoordinator: FarmSceneDelegate {
     private let gameState: GameState
+
+    // Closure-based callbacks — avoids holding a weak reference to a
+    // ContentView struct, which is not valid in Swift (weak requires a
+    // class type). ContentView wires these in .onAppear.
+    var onPigSelected: ((UUID) -> Void)?
+    var onPigDeselected: (() -> Void)?
 
     init(gameState: GameState) {
         self.gameState = gameState
     }
 
     func farmScene(_ scene: FarmScene, didSelectPig pigID: UUID) {
-        // Show pig detail sheet
-        contentView?.selectedPigID = pigID
-        contentView?.showPigDetail = true
+        onPigSelected?(pigID)
     }
 
     func farmSceneDidDeselectPig(_ scene: FarmScene) {
-        contentView?.selectedPigID = nil
-        contentView?.showPigDetail = false
+        onPigDeselected?()
     }
 
     func farmScene(_ scene: FarmScene, didSelectFacility facilityID: UUID) {
@@ -3261,21 +3266,20 @@ class FarmSceneCoordinator: FarmSceneDelegate {
 }
 ```
 
-### Decision Needed: ContentView `@State` Properties Accessibility
-
-The `FarmSceneCoordinator` needs to mutate `ContentView`'s `@State` properties (`selectedPigID`, `showPigDetail`). In the Doc 06 design, the coordinator holds a `weak var contentView: ContentView?` reference. However, since `ContentView` is a struct, this reference actually points to the `@State` backing storage. This pattern works in practice but is unconventional.
-
-**Alternative:** Use `@Bindable` or pass closures to the coordinator instead of a direct reference:
+Wire the callbacks in `ContentView.body` (or `.onAppear`):
 
 ```swift
-class FarmSceneCoordinator: FarmSceneDelegate {
-    var onPigSelected: ((UUID) -> Void)?
-    var onPigDeselected: (() -> Void)?
-    // ...
+.onAppear {
+    coordinator.onPigSelected = { pigID in
+        selectedPigID = pigID
+        showPigDetail = true
+    }
+    coordinator.onPigDeselected = {
+        selectedPigID = nil
+        showPigDetail = false
+    }
 }
 ```
-
-This is cleaner and avoids the struct reference question. The implementer should evaluate both approaches and choose the one that compiles cleanly under Swift 6 strict concurrency.
 
 ---
 
@@ -3349,7 +3353,8 @@ import Testing
 @Test func adoptionCostAboveSaleValue() async {
     // Adoption cost should always exceed sale value to prevent exploits
     let pig = GuineaPig.create(name: "Test", gender: .female)
-    let adoptionCost = Adoption.calculateAdoptionCost(pig, state: nil)
+    let state = GameState.makeForTesting()
+    let adoptionCost = Adoption.calculateAdoptionCost(pig, state: state)
     // Base adoption = 50, base sale value = 25 (for common)
     #expect(adoptionCost >= 50)
 }
