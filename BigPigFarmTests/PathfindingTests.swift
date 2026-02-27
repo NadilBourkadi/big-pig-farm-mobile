@@ -6,6 +6,7 @@ import Foundation
 // MARK: - Helpers
 
 /// Create a small grid with all interior cells walkable and border cells as walls.
+/// The area covers the entire grid; walkable positions run from (1,1) to (width-2, height-2).
 private func makeSimpleGrid(width: Int, height: Int) -> FarmGrid {
     var grid = FarmGrid(width: width, height: height)
     let area = FarmArea(
