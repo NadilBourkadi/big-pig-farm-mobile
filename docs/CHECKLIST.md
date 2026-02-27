@@ -48,7 +48,7 @@
 - [~] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`) — NeedsContext done; others are stubs
 - [x] Implement `GameEngine` tick loop
 - [x] Implement `FarmGrid` with cell types
-- [ ] Implement `Pathfinding` (GKGridGraph integration)
+- [x] Implement `Pathfinding` (GKGridGraph integration)
 - [ ] Implement `Tunnels` and `AreaManager`
 - [ ] Implement `GridExpansion` tier system
 - [ ] Implement `AutoArrange` zone-based layout
