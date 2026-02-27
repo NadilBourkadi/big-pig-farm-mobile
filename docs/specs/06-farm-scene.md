@@ -184,11 +184,12 @@ class FarmScene: SKScene {
 
     // MARK: - Dependencies
 
-    /// The game state to render. Set before the scene is presented.
-    var gameState: GameState!
+    /// The game state to render. Injected via init; never nil after construction.
+    let gameState: GameState
 
     /// Delegate for scene events (pig selection, facility actions).
-    weak var delegate: FarmSceneDelegate?
+    /// Named `sceneDelegate` to avoid collision with SKScene's inherited `delegate`.
+    weak var sceneDelegate: FarmSceneDelegate?
 
     // MARK: - Node Layers
 
@@ -351,13 +352,13 @@ extension FarmScene {
     private func syncPigs() {
         let currentPigs = gameState.guineaPigs
 
-        // Remove nodes for pigs that no longer exist
-        for (pigID, node) in pigNodes {
-            if currentPigs[pigID] == nil {
-                node.removeFromParent()
-                pigNodes.removeValue(forKey: pigID)
-                indicatorTimers.removeValue(forKey: pigID)
-            }
+        // Remove nodes for pigs that no longer exist.
+        // Collect keys first to avoid mutating the dictionary during iteration.
+        let removedPigIDs = pigNodes.keys.filter { currentPigs[$0] == nil }
+        for pigID in removedPigIDs {
+            pigNodes[pigID]?.removeFromParent()
+            pigNodes.removeValue(forKey: pigID)
+            indicatorTimers.removeValue(forKey: pigID)
         }
 
         // Add or update nodes for current pigs
@@ -398,12 +399,12 @@ extension FarmScene {
     private func syncFacilities() {
         let currentFacilities = gameState.facilities
 
-        // Remove nodes for facilities that no longer exist
-        for (facilityID, node) in facilityNodes {
-            if currentFacilities[facilityID] == nil {
-                node.removeFromParent()
-                facilityNodes.removeValue(forKey: facilityID)
-            }
+        // Remove nodes for facilities that no longer exist.
+        // Collect keys first to avoid mutating the dictionary during iteration.
+        let removedFacilityIDs = facilityNodes.keys.filter { currentFacilities[$0] == nil }
+        for facilityID in removedFacilityIDs {
+            facilityNodes[facilityID]?.removeFromParent()
+            facilityNodes.removeValue(forKey: facilityID)
         }
 
         // Add or update nodes for current facilities
@@ -848,9 +849,12 @@ extension PigNode {
         // Per-pig speed variation (port from Python)
         // Python: speed_var = (pig_hash >> 8) % 3 - 1 => -1, 0, or +1
         // ticksPerFrame adjusted by speed_var, clamped to >= 2
+        // Uses UUID bytes (not hashValue) for stable, deterministic variation
+        // across process launches.
         let baseTicks = AnimationData.ticksPerFrame(for: state) ?? 3
-        let pigHash = pigID.hashValue
-        let speedVariation = ((pigHash >> 8) % 3) - 1
+        let uuidBytes = pigID.uuid
+        let stableHash = Int(uuidBytes.0) ^ Int(uuidBytes.1) ^ Int(uuidBytes.2) ^ Int(uuidBytes.3)
+        let speedVariation = ((stableHash >> 4) % 3) - 1
         let adjustedTicks = max(2, baseTicks + speedVariation)
 
         // Convert ticks to seconds: each tick is 1/10 second (10 TPS)
@@ -1413,10 +1417,10 @@ extension FarmScene {
         // Check if a pig was tapped
         if let pigNode = pigNodeAt(location) {
             selectedPigID = pigNode.pigID
-            delegate?.farmScene(self, didSelectPig: pigNode.pigID)
+            sceneDelegate?.farmScene(self, didSelectPig: pigNode.pigID)
         } else {
             selectedPigID = nil
-            delegate?.farmSceneDidDeselectPig(self)
+            sceneDelegate?.farmSceneDidDeselectPig(self)
         }
     }
 }
@@ -1509,7 +1513,7 @@ extension FarmScene {
             if expandedFrame.contains(location) {
                 selectedFacilityID = facilityID
                 syncFacilities() // Update highlight state
-                delegate?.farmScene(self, didSelectFacility: facilityID)
+                sceneDelegate?.farmScene(self, didSelectFacility: facilityID)
                 return
             }
         }
@@ -1594,7 +1598,7 @@ extension FarmScene {
         guard let facilityID = selectedFacilityID else { return }
         selectedFacilityID = nil
         isMovingFacility = false
-        delegate?.farmScene(self, didRemoveFacility: facilityID)
+        sceneDelegate?.farmScene(self, didRemoveFacility: facilityID)
     }
 }
 ```
@@ -1619,9 +1623,6 @@ struct IndicatorTimer: Sendable {
 
     /// Frame number when the indicator was triggered.
     var triggerFrame: Int
-
-    /// Whether the indicator is currently in the visible phase.
-    var isVisible: Bool = true
 }
 ```
 
@@ -1871,6 +1872,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
+            farmScene.sceneDelegate = coordinator
             coordinator.contentView = self
         }
     }
@@ -1890,7 +1892,7 @@ A reference-type coordinator bridges `FarmSceneDelegate` callbacks from the Spri
 @MainActor
 class FarmSceneCoordinator: FarmSceneDelegate {
     /// Back-reference to ContentView (set in onAppear).
-    /// This is unowned because the coordinator's lifetime is tied to ContentView.
+    /// Weak to avoid a retain cycle between ContentView's @State and the coordinator.
     weak var contentView: ContentView?
 
     private let gameState: GameState
@@ -2160,23 +2162,33 @@ struct CameraBoundsTests {
 @Suite("Status Indicator Priority")
 struct IndicatorPriorityTests {
 
-    @Test("Indicator types are ordered by priority")
-    func indicatorPriorityOrder() {
-        // Health is highest priority, pregnant is lowest
-        // This test verifies the priority order in indicatorType(for:)
-        // by checking that health overrides hunger, etc.
+    @Test("Health indicator overrides hunger when both are critical")
+    func healthOverridesHunger() {
+        // indicatorType(for:) checks health first, so when both health
+        // and hunger are below lowThreshold, health should win.
+        // Create a pig with both health and hunger below lowThreshold,
+        // then assert the returned indicator type is "health".
+        //
+        // Priority order (matches Python indicator_sprites.py):
+        // health > hunger > thirst > energy > courting > pregnant
+    }
 
-        // The indicatorType(for:) function checks in order:
-        // health < lowThreshold -> health
-        // hunger < lowThreshold OR eating -> hunger
-        // thirst < lowThreshold OR drinking -> thirst
-        // energy < lowThreshold OR sleeping -> energy
-        // courting -> courting
-        // pregnant -> pregnant
+    @Test("No indicator when all needs are healthy")
+    func noIndicatorWhenHealthy() {
+        // A pig with all needs above lowThreshold and no special state
+        // (not courting, not pregnant) should return nil.
+    }
 
-        // This order matches Python: indicator_sprites.py get_pig_indicator_type()
-        let priorities = ["health", "hunger", "thirst", "energy", "courting", "pregnant"]
-        #expect(priorities.count == 6)
+    @Test("Courting indicator shows when needs are healthy but pig is courting")
+    func courtingIndicatorOnHealthyPig() {
+        // A pig with all needs above lowThreshold but behaviorState == .courting
+        // should return "courting".
+    }
+
+    @Test("Pregnant indicator is lowest priority")
+    func pregnantIsLowestPriority() {
+        // A pregnant pig with hunger below lowThreshold should return
+        // "hunger", not "pregnant" -- hunger outranks pregnancy.
     }
 }
 ```
