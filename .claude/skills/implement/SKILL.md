@@ -6,13 +6,9 @@ argument-hint: "[phase or task-id, e.g. p0, p1, or big-pig-farm-mobile-5qe]"
 
 # Implement — Task Dispatcher
 
-## Available implementation tasks
-
-```
-!`bd ready -n 30 2>&1`
-```
-
 ## Task selection
+
+First, run `bd ready -n 30` to see available implementation tasks.
 
 If an argument was provided (`$ARGUMENTS`):
 - If it looks like a bead ID (e.g. `big-pig-farm-mobile-5qe`), use that task directly
