@@ -10,7 +10,7 @@
 - [x] 02 — Data Models → [`docs/specs/02-data-models.md`](specs/02-data-models.md)
 - [x] 03 — Sprite Pipeline → [`docs/specs/03-sprite-pipeline.md`](specs/03-sprite-pipeline.md)
 - [ ] 04 — Game Engine
-- [ ] 05 — Behavior AI
+- [x] 05 — Behavior AI → [`docs/specs/05-behavior-ai.md`](specs/05-behavior-ai.md)
 - [ ] 06 — Farm Scene
 - [ ] 07 — SwiftUI Screens
 - [ ] 08 — Persistence & Polish
