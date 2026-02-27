@@ -1,16 +1,15 @@
-/// BiomeType — Environmental biome types affecting pig comfort and behavior.
-/// Maps from: entities/biome.py
-// TODO: Implement in doc 02
+/// BiomeType — Environmental biome types affecting pig comfort, mutations, and happiness.
+/// Maps from: entities/biomes.py
 import Foundation
 
-/// One of 8 environmental biome types.
+/// One of 8 environmental biome types for farm areas.
 enum BiomeType: String, Codable, CaseIterable, Sendable {
     case meadow
-    case forest
-    case desert
-    case tundra
+    case burrow
+    case garden
     case tropical
-    case mountain
-    case swamp
-    case volcanic
+    case alpine
+    case crystal
+    case wildflower
+    case sanctuary
 }
