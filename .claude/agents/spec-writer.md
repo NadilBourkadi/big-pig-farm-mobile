@@ -42,7 +42,7 @@ You MUST read all of these before writing:
 Writing a spec always reveals new work. You MUST update the Beads backlog:
 
 - **Update existing bead descriptions** when the spec provides more detail than the original bead had. Use `bd update <id> --description "..."`.
-- **Create new beads** for implementation tasks that emerge from the spec. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd link <new-id> --depends-on <blocker-id>`.
+- **Create new beads** for implementation tasks that emerge from the spec. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
 - **Split beads that are too large** — any task spanning more than ~2 files should be broken into sub-tasks.
 - **Log what you created** — include a summary of new/updated beads in your return message so the dispatcher can verify.
 

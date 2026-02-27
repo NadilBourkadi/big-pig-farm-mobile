@@ -41,7 +41,6 @@
 - [ ] Port `GameConfig.Behavior` constants (~50 behavior AI values)
 - [ ] Port `GameConfig.Tiers` data tables (TierUpgrade + RoomCost)
 - [ ] Port `PigNames` name generation
-- [ ] Write Phase 0 unit tests (ConfigTests, ModelTests, PigNamesTests)
 
 ### Phase 1 — Headless Simulation (Weeks 3–5)
 
@@ -65,9 +64,6 @@
 - [ ] Implement `BreedingProgram` scoring and carrier-aware filter
 - [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
 - [ ] Implement `FacilityManager` scoring
-- [ ] Write engine unit tests (GameState, FarmGrid, Pathfinding, GridExpansion)
-- [ ] Write simulation unit tests (NeedsSystem, Collision, BehaviorDecision, Breeding)
-- [ ] Write economy unit tests (Economy, Contracts)
 - [ ] Write headless simulation integration tests
 
 ### Phase 2 — Sprite Pipeline (Week 3, parallel)
@@ -85,7 +81,6 @@
 - [ ] Implement `PigPalettes` color dictionaries
 - [ ] Implement `SpriteFurMaps` coordinate data
 - [ ] Implement runtime pattern overlay rendering
-- [ ] Write sprite asset tests
 
 ### Phase 3 — Farm Scene (Weeks 6–8)
 
