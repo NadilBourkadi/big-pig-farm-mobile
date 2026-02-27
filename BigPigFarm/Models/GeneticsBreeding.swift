@@ -109,6 +109,7 @@ func breed(
 
     if hasMutations {
         // Pair each locus variable with its metadata for iteration
+        // swiftlint:disable:next large_tuple
         let loci: [(name: String, value: AllelePair, dominant: String, recessive: String)] = [
             ("eLocus", eLocus, "E", "e"),
             ("bLocus", bLocus, "B", "b"),

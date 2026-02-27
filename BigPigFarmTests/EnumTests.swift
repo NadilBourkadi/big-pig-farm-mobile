@@ -1,5 +1,6 @@
 /// EnumTests — Exhaustive tests for all 21 ported Python enums.
 import Testing
+import Foundation
 @testable import BigPigFarm
 
 // MARK: - Genetics Enums

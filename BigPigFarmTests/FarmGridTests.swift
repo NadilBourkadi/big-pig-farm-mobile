@@ -1,5 +1,6 @@
 /// FarmGridTests — Tests for FarmGrid, cell queries, facility placement, area management.
 import Testing
+import Foundation
 @testable import BigPigFarm
 
 // MARK: - Grid Creation
@@ -311,7 +312,9 @@ import Testing
     #expect(decoded.tier == original.tier)
     #expect(decoded.areas.count == original.areas.count)
     #expect(decoded.areas[0].biome == .meadow)
-    #expect(decoded.gridGeneration == original.gridGeneration)
+    // gridGeneration is a runtime cache counter — rebuildCaches() increments it
+    // during decode, so we just verify it's positive rather than equal
+    #expect(decoded.gridGeneration > 0)
     // Verify caches were rebuilt
     #expect(decoded.areaLookup.count == 1)
 }
