@@ -29,12 +29,13 @@ After the agent returns:
 3. **Run `/code-review swift`** — the pre-push quality gate
 4. **Fix findings** — edit files in the worktree to address review issues
 5. **Re-review** — run `/code-review swift` again until clean
-6. **Squash to clean history:**
-   - `git reset --soft main`
-   - `git reset HEAD .`
-   - Stage specific files: `git add docs/ .beads/issues.jsonl` (and any other changed files)
-   - Write commit message with the **Write** tool to `/tmp/commit-msg.txt`
-   - Commit with `git commit -F /tmp/commit-msg.txt`
+6. **Clean up commit history:**
+   - Review `git log --oneline main..HEAD` to see all commits
+   - Preserve logically distinct atomic commits — do NOT collapse everything into one
+   - Only squash WIP/fixup commits into their logical parent
+   - If the agent produced a single messy commit, `git reset --soft main` and re-commit with clean, selective `git add` (never `git add -A`)
+   - If the agent produced multiple clean atomic commits, leave them as-is
+   - Write any commit messages with the **Write** tool to `/tmp/commit-msg.txt`, then `git commit -F /tmp/commit-msg.txt`
 7. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
 8. **Return to main working directory**
 
