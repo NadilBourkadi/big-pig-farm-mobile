@@ -53,7 +53,8 @@
       "Bash(find:*)",
       "Bash(poetry:*)",
       "Bash(echo:*)",
-      "Bash(pwd:*)"
+      "Bash(pwd:*)",
+      "Bash(uv:*)"
     ]
   },
   "outputStyle": "Explanatory"
