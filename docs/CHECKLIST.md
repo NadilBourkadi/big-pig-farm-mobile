@@ -51,7 +51,7 @@
 - [x] Implement `Pathfinding` (GKGridGraph integration)
 - [x] Implement `Tunnels` and `AreaManager`
 - [x] Implement `GridExpansion` tier system
-- [ ] Implement `AutoArrange` zone-based layout
+- [x] Implement `AutoArrange` zone-based layout
 - [x] Implement `NeedsSystem` (decay/recovery)
 - [x] Implement `SimulationRunner` tick orchestration
 - [x] Implement `BehaviorController` + decision tree
