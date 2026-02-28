@@ -76,7 +76,11 @@ This resets the branch to a clean state within the existing worktree directory. 
 2. **Test** — write tests as specified in the plan. Use Swift Testing framework (`@Test`, `#expect`, `#require`). Tests are a mandatory deliverable.
 3. **Commit** — make atomic commits (one logical change per commit). Do NOT push yet.
 4. **Update backlog** — create beads for any bugs, tech debt, or follow-ups discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
-5. **Close bead and update checklist** — `bd close <id>`, update `docs/CHECKLIST.md`, then **commit both files as part of the feature branch** (within the worktree). These changes belong in the feature PR, not a separate follow-up.
+5. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
+   - `bd close <id>` — updates `.beads/issues.jsonl` in the worktree working tree
+   - Edit `docs/CHECKLIST.md` in the worktree (use the worktree absolute path, not the main repo path)
+   - Commit both files as part of the feature branch: `git add docs/CHECKLIST.md .beads/issues.jsonl`
+   - **These changes belong in the feature PR.** A follow-up housekeeping PR means they were committed in the wrong place. If you catch yourself about to commit them in the main repo working tree, stop — you are in the wrong directory.
 
 ## Phase 5 — Review & Ship
 
