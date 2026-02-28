@@ -78,7 +78,7 @@
 - [ ] Create facility sprite assets
 - [ ] Implement `SpriteAssets` loading API
 - [ ] Implement `AnimationData` timing constants
-- [ ] Implement `PigPalettes` color dictionaries
+- [x] Implement `PigPalettes` color dictionaries
 - [ ] Implement `SpriteFurMaps` coordinate data
 - [ ] Implement runtime pattern overlay rendering
 
