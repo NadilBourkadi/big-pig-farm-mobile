@@ -296,6 +296,28 @@ extension FarmGrid {
     }
 }
 
+// MARK: - Nearest Walkable Search
+
+extension FarmGrid {
+    /// Find the nearest walkable cell to `pos` using expanding Manhattan-distance shells.
+    func findNearestWalkable(_ pos: GridPosition, maxDistance: Int = 10) -> GridPosition? {
+        guard maxDistance >= 1 else { return nil }
+        for distance in 1...maxDistance {
+            for dx in -distance...distance {
+                for dy in -distance...distance {
+                    guard abs(dx) + abs(dy) == distance else { continue }
+                    let nx = pos.x + dx
+                    let ny = pos.y + dy
+                    if isWalkable(nx, ny) {
+                        return GridPosition(x: nx, y: ny)
+                    }
+                }
+            }
+        }
+        return nil
+    }
+}
+
 // MARK: - Random Walkable Lookups
 
 extension FarmGrid {
