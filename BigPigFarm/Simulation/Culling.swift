@@ -19,49 +19,23 @@ enum Culling {
 
     // MARK: - Public API
 
-    // TODO(market): Extract sell logic to Market.sellPig when Market system is implemented.
     /// Remove all pigs marked for sale from state and return sale records.
     /// Babies marked for sale are skipped until they reach adulthood.
-    /// Contract fulfillment bonuses are applied here.
+    /// Delegates valuation and contract fulfillment to Market.sellPig.
     @discardableResult
     @MainActor
     static func sellMarkedAdults(gameState: GameState) -> [SoldPigRecord] {
         var sold: [SoldPigRecord] = []
         for pig in gameState.getPigsList() {
             guard pig.markedForSale && !pig.isBaby else { continue }
-            let baseValue = pig.getValue()
-            var contractBonus = 0
-            if let contractIndex = findMatchingContractIndex(pig: pig, gameState: gameState) {
-                var bonus = gameState.contractBoard.activeContracts[contractIndex].reward
-                if gameState.hasUpgrade("trade_network") {
-                    bonus = Int(Double(bonus) * 1.25)
-                }
-                contractBonus = bonus
-                gameState.contractBoard.activeContracts[contractIndex].fulfilled = true
-                gameState.contractBoard.completedContracts += 1
-                gameState.contractBoard.totalContractEarnings += contractBonus
-                gameState.contractBoard.removeFulfilled()
-            }
-            let total = baseValue + contractBonus
-            _ = gameState.removeGuineaPig(pig.id)
-            gameState.addMoney(total)
-            gameState.totalPigsSold += 1
-            if contractBonus > 0 {
-                gameState.logEvent(
-                    "Rehomed \(pig.name) for \(baseValue) + \(contractBonus) contract bonus = \(total) Squeaks",
-                    eventType: "sale"
-                )
-            } else {
-                gameState.logEvent(
-                    "Rehomed \(pig.name) for \(total) Squeaks",
-                    eventType: "sale"
-                )
-            }
+            let pigName = pig.name
+            let pigId = pig.id
+            let saleResult = Market.sellPig(state: gameState, pig: pig)
             sold.append(SoldPigRecord(
-                pigName: pig.name,
-                totalValue: total,
-                contractBonus: contractBonus,
-                pigID: pig.id
+                pigName: pigName,
+                totalValue: saleResult.total,
+                contractBonus: saleResult.contractBonus,
+                pigID: pigId
             ))
         }
         return sold
@@ -238,30 +212,6 @@ enum Culling {
         !adults.contains { $0.gender == pig.gender && !$0.markedForSale && $0.id != pig.id }
     }
 
-    /// Find the index of the first unfulfilled contract matching the pig's phenotype.
-    /// Checks color, pattern, intensity, roan, and optionally biome of birth area.
-    @MainActor
-    private static func findMatchingContractIndex(pig: GuineaPig, gameState: GameState) -> Int? {
-        for index in gameState.contractBoard.activeContracts.indices {
-            let contract = gameState.contractBoard.activeContracts[index]
-            guard !contract.fulfilled else { continue }
-            if let required = contract.requiredColor,
-               pig.phenotype.baseColor != required { continue }
-            if let required = contract.requiredPattern,
-               pig.phenotype.pattern != required { continue }
-            if let required = contract.requiredIntensity,
-               pig.phenotype.intensity != required { continue }
-            if let required = contract.requiredRoan,
-               pig.phenotype.roan != required { continue }
-            if let requiredBiome = contract.requiredBiome {
-                guard let birthAreaId = pig.birthAreaId,
-                      let area = gameState.farm.getAreaByID(birthAreaId),
-                      area.biome == requiredBiome else { continue }
-            }
-            return index
-        }
-        return nil
-    }
 }
 
 // MARK: - ScoredPig
