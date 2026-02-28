@@ -76,7 +76,7 @@
 - [x] Generate pattern mask PNGs (6 image sets)
 - [x] Create sprite atlas for Xcode (Assets.xcassets)
 - [x] Create facility sprite assets
-- [ ] Implement `SpriteAssets` loading API
+- [x] Implement `SpriteAssets` loading API
 - [x] Implement `AnimationData` timing constants
 - [x] Implement `PigPalettes` color dictionaries
 - [ ] Implement `SpriteFurMaps` coordinate data
