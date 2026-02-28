@@ -127,3 +127,57 @@ let upgrades: [String: UpgradeDefinition] = [
         description: "Enables the Pig Talents system.",
         cost: 1500, requiredTier: 3, category: "Quality of Life", implemented: false),
 ]
+
+// MARK: - Upgrades Logic
+
+/// Stateless namespace for upgrade purchase and effect logic.
+enum Upgrades {
+    /// Facility types whose capacity is doubled by the `bulk_feeders` upgrade.
+    static let foodWaterTypes: Set<FacilityType> = [.foodBowl, .waterBottle, .hayRack]
+
+    static func isFoodWaterType(_ type: FacilityType) -> Bool {
+        foodWaterTypes.contains(type)
+    }
+
+    /// All upgrade definitions available at or below the current farm tier.
+    @MainActor
+    static func getAvailablePerks(state: GameState) -> [UpgradeDefinition] {
+        upgrades.values
+            .filter { $0.requiredTier <= state.farmTier }
+            .sorted { $0.requiredTier < $1.requiredTier }
+    }
+
+    /// Purchase a perk upgrade. Returns false if ineligible or insufficient funds.
+    @discardableResult
+    @MainActor
+    static func purchasePerk(state: GameState, upgradeId: String) -> Bool {
+        guard let def = upgrades[upgradeId] else { return false }
+        guard def.requiredTier <= state.farmTier else { return false }
+        guard !state.purchasedUpgrades.contains(upgradeId) else { return false }
+        guard Currency.spendMoney(state: state, amount: def.cost,
+                                   reason: "Upgrade: \(def.name)") else { return false }
+        state.purchasedUpgrades.insert(upgradeId)
+        applyImmediateEffect(state: state, upgradeId: upgradeId)
+        state.logEvent("Purchased upgrade: \(def.name)", eventType: "purchase")
+        return true
+    }
+
+    // MARK: - Private Helpers
+
+    @MainActor
+    private static func applyImmediateEffect(state: GameState, upgradeId: String) {
+        if upgradeId == "bulk_feeders" {
+            applyBulkFeeders(state: state)
+        }
+    }
+
+    @MainActor
+    private static func applyBulkFeeders(state: GameState) {
+        for facility in state.getFacilitiesList() where isFoodWaterType(facility.facilityType) {
+            var updated = facility
+            updated.maxAmount *= 2
+            updated.currentAmount = min(updated.currentAmount * 2, updated.maxAmount)
+            state.updateFacility(updated)
+        }
+    }
+}

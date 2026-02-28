@@ -234,6 +234,13 @@ extension GameState {
         return list
     }
 
+    /// Update an existing facility in place and invalidate caches.
+    func updateFacility(_ facility: Facility) {
+        facilities[facility.id] = facility
+        facilitiesListCache = nil
+        facilitiesByTypeCache = nil
+    }
+
     // MARK: - Economy
 
     func addMoney(_ amount: Int) {
