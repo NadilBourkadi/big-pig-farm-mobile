@@ -79,7 +79,7 @@
 - [ ] Implement `SpriteAssets` loading API
 - [x] Implement `AnimationData` timing constants
 - [x] Implement `PigPalettes` color dictionaries
-- [ ] Implement `SpriteFurMaps` coordinate data
+- [x] Implement `SpriteFurMaps` coordinate data
 - [ ] Implement runtime pattern overlay rendering
 
 ### Phase 3 — Farm Scene (Weeks 6–8)
