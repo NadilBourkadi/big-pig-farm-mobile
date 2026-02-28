@@ -77,7 +77,7 @@
 - [x] Create sprite atlas for Xcode (Assets.xcassets)
 - [x] Create facility sprite assets
 - [ ] Implement `SpriteAssets` loading API
-- [ ] Implement `AnimationData` timing constants
+- [x] Implement `AnimationData` timing constants
 - [x] Implement `PigPalettes` color dictionaries
 - [ ] Implement `SpriteFurMaps` coordinate data
 - [ ] Implement runtime pattern overlay rendering
