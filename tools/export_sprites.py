@@ -430,8 +430,18 @@ EXPECTED_COUNTS = {
 }
 
 
-def validate_export(output_dir: Path, counts: dict[str, int]) -> bool:
-    """Count .imageset directories per category and verify expected counts."""
+def validate_export(
+    output_dir: Path,
+    counts: dict[str, int],
+    categories: list[str] | None = None,
+) -> bool:
+    """Count .imageset directories per category and verify expected counts.
+
+    Args:
+        output_dir: Root Sprites directory.
+        counts: Expected image-set counts keyed by category name.
+        categories: Which categories to validate. None means validate all.
+    """
     subdirs = {
         "pigs": "Pigs",
         "facilities": "Facilities",
@@ -440,6 +450,8 @@ def validate_export(output_dir: Path, counts: dict[str, int]) -> bool:
         "terrain": "Terrain",
         "patterns": "Patterns",
     }
+    if categories is not None:
+        subdirs = {k: v for k, v in subdirs.items() if k in categories}
     all_ok = True
     for category, subdir in subdirs.items():
         category_dir = output_dir / subdir
@@ -538,7 +550,8 @@ def main() -> None:
 
     print()
     print("Validating export...")
-    if not validate_export(output_dir, EXPECTED_COUNTS):
+    categories_to_validate = None if args.category == "all" else [args.category]
+    if not validate_export(output_dir, EXPECTED_COUNTS, categories_to_validate):
         print("ERROR: Validation failed — one or more categories have unexpected counts.")
         sys.exit(1)
 
