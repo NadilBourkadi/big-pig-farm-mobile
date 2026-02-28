@@ -77,9 +77,10 @@ This resets the branch to a clean state within the existing worktree directory. 
 3. **Commit** — make atomic commits (one logical change per commit). Do NOT push yet.
 4. **Update backlog** — create beads for any bugs, tech debt, or follow-ups discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
 5. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
-   - `bd close <id>` — updates `.beads/issues.jsonl` in the worktree working tree
+   - `bd close <id>` — updates the Dolt DB (local-only, **not** git-tracked; `.beads/` is gitignored)
    - Edit `docs/CHECKLIST.md` in the worktree (use the worktree absolute path, not the main repo path)
-   - Commit both files as part of the feature branch: `git add docs/CHECKLIST.md .beads/issues.jsonl`
+   - Commit only the checklist: `git add docs/CHECKLIST.md`
+   - **Do NOT stage `.beads/issues.jsonl`** — it does not exist in worktrees and is gitignored in the main repo.
    - **These changes belong in the feature PR.** A follow-up housekeeping PR means they were committed in the wrong place. If you catch yourself about to commit them in the main repo working tree, stop — you are in the wrong directory.
 
 ## Phase 5 — Review & Ship
