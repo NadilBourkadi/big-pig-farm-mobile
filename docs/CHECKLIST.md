@@ -64,7 +64,7 @@
 - [x] Implement `BreedingProgram` scoring and carrier-aware filter
 - [x] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
 - [x] Implement `FacilityManager` scoring
-- [ ] Write headless simulation integration tests
+- [x] Write headless simulation integration tests
 
 ### Phase 2 — Sprite Pipeline (Week 3, parallel)
 
