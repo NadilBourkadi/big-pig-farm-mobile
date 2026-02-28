@@ -59,7 +59,7 @@
 - [x] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
 - [x] Implement `Breeding` + `Birth` systems
 - [x] Implement `Culling` surplus management
-- [ ] Implement `Acclimation` biome adoption
+- [x] Implement `Acclimation` biome adoption
 - [ ] Implement `AutoResources` drip/AoE/veggie systems
 - [x] Implement `BreedingProgram` scoring and carrier-aware filter
 - [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
