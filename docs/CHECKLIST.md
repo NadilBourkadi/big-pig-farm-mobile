@@ -63,7 +63,7 @@
 - [ ] Implement `AutoResources` drip/AoE/veggie systems
 - [x] Implement `BreedingProgram` scoring and carrier-aware filter
 - [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
-- [ ] Implement `FacilityManager` scoring
+- [x] Implement `FacilityManager` scoring
 - [ ] Write headless simulation integration tests
 
 ### Phase 2 — Sprite Pipeline (Week 3, parallel)
