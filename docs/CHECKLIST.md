@@ -49,8 +49,8 @@
 - [x] Implement `GameEngine` tick loop
 - [x] Implement `FarmGrid` with cell types
 - [x] Implement `Pathfinding` (GKGridGraph integration)
-- [ ] Implement `Tunnels` and `AreaManager`
-- [ ] Implement `GridExpansion` tier system
+- [x] Implement `Tunnels` and `AreaManager`
+- [x] Implement `GridExpansion` tier system
 - [ ] Implement `AutoArrange` zone-based layout
 - [x] Implement `NeedsSystem` (decay/recovery)
 - [x] Implement `SimulationRunner` tick orchestration
