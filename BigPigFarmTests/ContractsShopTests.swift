@@ -58,7 +58,9 @@ import Foundation
 
     #expect(result?.reward == 500)
     #expect(board.completedContracts == 1)
-    #expect(board.totalContractEarnings == 500)
+    // totalContractEarnings is updated by Market.sellPig after applying bonuses,
+    // not by checkAndFulfill — so it stays 0 here.
+    #expect(board.totalContractEarnings == 0)
 }
 
 @Test @MainActor func checkAndFulfillReturnsNilWhenNoMatch() {

@@ -116,6 +116,7 @@ enum Market {
             }
             contractBonus = bonus
             matchedContract = contract
+            state.contractBoard.totalContractEarnings += contractBonus
             state.contractBoard.removeFulfilled()
         }
 
