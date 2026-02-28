@@ -8,6 +8,7 @@
 
 - **Never chain commands** (`cmd1 && cmd2`, `cd … && cmd`). Chaining causes permission escalation — even pre-approved commands require re-prompting when chained. Run each command as a separate Bash tool call instead.
 - **Never prepend `cd`** to commands. The working directory is always the repo root (or the worktree root when in a worktree).
+- **When inside a worktree, use the worktree root for ALL file paths.** Never read or write files via the main repo path (e.g. `/Users/.../big-pig-farm-mobile/…`) — every Read, Write, Edit, Glob, Grep, and `cat` must use the worktree absolute path (e.g. `/Users/.../big-pig-farm-mobile/.claude/worktrees/<name>/…`). The main repo's files are not the ones being modified.
 - Never use inline env vars; use `export` on a separate line
 - **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
 - Use explicit file lists over `git add -A`
@@ -132,6 +133,19 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 - **Suggest improvements** proactively
 - **Flag contradictions and ambiguity** immediately
 - **Use subagents** aggressively to preserve context window
+
+## Parallel Agents — CRITICAL
+
+Multiple Claude agents may run simultaneously on this project. This causes state drift: one agent can close a bead and check off a checklist item while another agent is unaware of that work — and neither has merged to main yet.
+
+**Rules to prevent state drift:**
+
+- **Do NOT close a bead until its PR is merged to main.** Closing the bead while the branch is still unmerged marks the work as done when it isn't yet reflected in main. Close the bead in the same commit that updates the checklist, just before or after the merge.
+- **Do NOT update `docs/CHECKLIST.md` until the PR is merged to main.** Same reason: the checklist is main-branch truth, not worktree truth.
+- **Commit checklist + bead snapshot on the feature branch, not on main directly.** Both `docs/CHECKLIST.md` and `.beads/issues.jsonl` updates belong in the feature PR commit, applied just before the merge.
+- **At the start of any session, run `git log origin/main..HEAD`** to check whether the current branch has already-merged commits. If any appear, the branch is stale — create a fresh branch off main.
+- **If you discover that a bead is closed but its code is not in main,** reopen the task on main (via `bd update <id> --status in_progress`), find the worktree branch, push it, and open a PR. Do not start duplicate work.
+- **Beads state is shared** (Dolt DB is local, not git-tracked), so two agents CAN see each other's bead updates. But checklist and code state is per-branch until merged. Treat the checklist as write-once per merge.
 
 ## Mistakes Are Configuration Gaps — CRITICAL
 
