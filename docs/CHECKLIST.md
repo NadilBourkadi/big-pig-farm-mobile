@@ -62,7 +62,7 @@
 - [x] Implement `Acclimation` biome adoption
 - [x] Implement `AutoResources` drip/AoE/veggie systems
 - [x] Implement `BreedingProgram` scoring and carrier-aware filter
-- [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
+- [x] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
 - [x] Implement `FacilityManager` scoring
 - [ ] Write headless simulation integration tests
 
