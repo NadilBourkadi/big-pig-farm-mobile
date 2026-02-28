@@ -55,6 +55,7 @@ final class BehaviorController {
         var adjustedTimer = newTimer
         if newTimer >= interval {
             BehaviorDecision.makeDecision(controller: self, pig: &pig)
+            // Emergency pigs (interval=0) re-fire on the very next tick regardless of this jitter
             adjustedTimer = Double.random(in: 0..<GameConfig.Simulation.decisionIntervalSeconds / 4)
         }
         decisionTimers[pig.id] = adjustedTimer
