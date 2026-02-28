@@ -38,10 +38,11 @@
       "Bash(git branch:*)",
       "Bash(git fetch:*)",
       "Grep",
+      "Write(path:.tmp/*)",
       "Bash(grep:*)",
       "Bash(sed:*)",
       "Bash(swiftlint lint:*)",
-      "Bash(.tmp/commit-msg.txt:*)",
+
       "Bash(xcodebuild:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
