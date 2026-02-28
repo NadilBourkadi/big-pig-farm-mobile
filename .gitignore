@@ -30,6 +30,9 @@ playground.xcworkspace
 # Scratch space (commit messages, temp files)
 .tmp/
 
+# Beads task tracker (local Dolt DB — not git-tracked)
+.beads/
+
 # AI agent config
 !.claude/
 .claude/*
