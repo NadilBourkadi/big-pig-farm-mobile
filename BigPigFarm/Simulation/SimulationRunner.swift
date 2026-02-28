@@ -210,7 +210,14 @@ final class SimulationRunner {
         var board = state.contractBoard
         _ = board.checkExpiry(gameDay: gameDay)
         if board.needsRefresh(gameDay: gameDay) || board.activeContracts.isEmpty {
-            // TODO(shop): Call ContractGenerator when Shop/Market bead is implemented
+            let availableBiomes = state.farm.areas.map(\.biome)
+            let newContracts = ContractGenerator.generateContracts(
+                farmTier: state.farmTier,
+                gameDay: gameDay,
+                availableBiomes: availableBiomes,
+                gameState: state
+            )
+            board.activeContracts = newContracts
             board.lastRefreshDay = gameDay
         }
         state.contractBoard = board
