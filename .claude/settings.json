@@ -35,7 +35,9 @@
       "Bash(sed:*)",
       "Bash(swiftlint lint:*)",
       "Bash(.tmp/commit-msg.txt:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)"
     ]
   },
   "outputStyle": "Explanatory"
