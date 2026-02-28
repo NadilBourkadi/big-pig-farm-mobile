@@ -20,7 +20,7 @@
 ## Investigation / Open Questions
 
 - [ ] Profile `GKGridGraph` vs custom A* on 96x56 grid (during Phase 1)
-- [ ] Determine `SKShader` vs alpha compositing for pattern overlays (during Phase 2)
+- [x] Determine `SKShader` vs alpha compositing for pattern overlays (during Phase 2)
 - [ ] Test `SpriteView` performance with 50+ animated nodes (during Phase 3)
 - [ ] Evaluate `CADisplayLink` vs `Timer` for tick loop precision (during Phase 1)
 - [ ] Measure JSON save/load performance with 200+ pigs (during Phase 5)
@@ -80,7 +80,7 @@
 - [x] Implement `AnimationData` timing constants
 - [x] Implement `PigPalettes` color dictionaries
 - [x] Implement `SpriteFurMaps` coordinate data
-- [ ] Implement runtime pattern overlay rendering
+- [x] Implement runtime pattern overlay rendering
 
 ### Phase 3 — Farm Scene (Weeks 6–8)
 
