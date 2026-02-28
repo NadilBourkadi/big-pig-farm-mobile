@@ -141,14 +141,16 @@ import Foundation
     #expect(state.contractBoard.lastRefreshDay == state.gameTime.day)
 }
 
-@Test @MainActor func contractExpiryDoesNotCrashWithEmptyBoard() {
+@Test @MainActor func contractRefreshFillsEmptyBoard() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
     let runner = SimulationRunner(state: state, behaviorController: controller)
     // Advance game time significantly so expiry check runs on a non-trivial day
     state.gameTime.advance(minutes: Double(60 * 24 * 15))  // 15 game-days
     runner.tick(gameMinutes: 0.3)
-    #expect(state.contractBoard.activeContracts.isEmpty)
+    // ContractGenerator now fills the board when empty
+    #expect(!state.contractBoard.activeContracts.isEmpty)
+    #expect(state.contractBoard.lastRefreshDay == state.gameTime.day)
 }
 
 // MARK: - Event Callbacks
