@@ -17,6 +17,8 @@ struct PathCacheKey: Hashable, Sendable {
 /// Approximate-LRU path cache. New entries append to an order array;
 /// eviction removes from the front. O(1) writes, O(n) eviction (n ≤ 2048).
 /// Profile before upgrading to a doubly-linked-list LRU.
+/// @MainActor — all access goes through FacilityManager which is @MainActor.
+@MainActor
 final class OrderedPathCache {
     private var cache: [PathCacheKey: [GridPosition]] = [:]
     private var order: [PathCacheKey] = []
