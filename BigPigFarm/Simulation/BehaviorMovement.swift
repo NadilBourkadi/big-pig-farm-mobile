@@ -103,7 +103,7 @@ enum BehaviorMovement {
         target: GridPosition
     ) {
         let start = pig.position.gridPosition
-        var path = controller.facilityManager.findPath(from: start, to: target)
+        var path = controller.facilityManager.cachedFindPath(from: start, to: target)
         if path.first == start { path.removeFirst() }
         pig.path = path
         if !path.isEmpty { pig.targetPosition = Position(x: Double(target.x), y: Double(target.y)) }
