@@ -68,14 +68,14 @@
 
 ### Phase 2 — Sprite Pipeline (Week 3, parallel)
 
-- [ ] Create Python sprite export tool (PNG from half-block data)
-- [ ] Generate 8 base color variant PNGs
-- [ ] Export indicator sprite PNGs (12 image sets)
-- [ ] Export portrait sprite PNGs (144 image sets)
-- [ ] Export terrain tile PNGs (24 image sets)
-- [ ] Generate pattern mask PNGs (6 image sets)
-- [ ] Create sprite atlas for Xcode (Assets.xcassets)
-- [ ] Create facility sprite assets
+- [x] Create Python sprite export tool (PNG from half-block data)
+- [x] Generate 8 base color variant PNGs
+- [x] Export indicator sprite PNGs (12 image sets)
+- [x] Export portrait sprite PNGs (144 image sets)
+- [x] Export terrain tile PNGs (24 image sets)
+- [x] Generate pattern mask PNGs (6 image sets)
+- [x] Create sprite atlas for Xcode (Assets.xcassets)
+- [x] Create facility sprite assets
 - [ ] Implement `SpriteAssets` loading API
 - [ ] Implement `AnimationData` timing constants
 - [x] Implement `PigPalettes` color dictionaries
