@@ -24,6 +24,8 @@ func makePig(x: Double = 5.0, y: Double = 5.0) -> GuineaPig {
     return pig
 }
 
+// MARK: - Multi-Room Grid Helpers
+
 /// Create a two-room horizontal farm grid for tunnel/area tests.
 func makeTwoRoomGrid() -> FarmGrid {
     var grid = FarmGrid(width: 140, height: 40)
