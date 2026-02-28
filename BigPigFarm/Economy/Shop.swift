@@ -100,3 +100,109 @@ let shopItems: [ShopItem] = [
              cost: GameConfig.Economy.stageCost, category: .facilities,
              facilityType: .stage, requiredTier: 5),
 ]
+
+// MARK: - Shop Logic
+
+/// Stateless namespace for shop purchase, sell, and tier upgrade logic.
+enum Shop {
+    // MARK: - Items
+
+    /// All shop items, filtered by category and marked locked/unlocked by farm tier.
+    static func getShopItems(category: ShopCategory? = nil, farmTier: Int = 1) -> [ShopItem] {
+        var items = shopItems
+        if let category {
+            items = items.filter { $0.category == category }
+        }
+        return items
+            .map { item in
+                var copy = item
+                copy.unlocked = item.requiredTier <= farmTier
+                return copy
+            }
+            .sorted { $0.requiredTier < $1.requiredTier }
+    }
+
+    /// Purchase a facility shop item at the given grid position.
+    @discardableResult
+    @MainActor
+    static func purchaseItem(
+        state: GameState,
+        item: ShopItem,
+        position: GridPosition?
+    ) -> Bool {
+        guard item.requiredTier <= state.farmTier else { return false }
+        guard Currency.canAfford(state: state, amount: item.cost) else { return false }
+
+        if let facilityType = item.facilityType, let position {
+            var facility = Facility.create(type: facilityType, x: position.x, y: position.y)
+            if state.hasUpgrade("bulk_feeders") && Upgrades.isFoodWaterType(facilityType) {
+                facility.maxAmount *= 2
+                facility.currentAmount *= 2
+            }
+            guard state.addFacility(facility) else { return false }
+        }
+
+        return Currency.spendMoney(state: state, amount: item.cost, reason: "Purchased \(item.name)")
+    }
+
+    /// Remove a facility from the farm and refund its original shop cost.
+    @discardableResult
+    @MainActor
+    static func sellFacility(state: GameState, facility: Facility) -> Int {
+        let refund = getFacilityCost(facilityType: facility.facilityType)
+        _ = state.removeFacility(facility.id)
+        Currency.addMoney(state: state, amount: refund,
+                          reason: "Removed \(facility.facilityType.displayName)")
+        return refund
+    }
+
+    /// Original shop cost of a facility type (used for refund calculations).
+    static func getFacilityCost(facilityType: FacilityType) -> Int {
+        shopItems.first { $0.facilityType == facilityType }?.cost ?? 0
+    }
+
+    // MARK: - Tier Upgrades
+
+    /// The next tier upgrade the farm can work toward, or nil if at max tier.
+    @MainActor
+    static func getNextTierUpgrade(state: GameState) -> TierUpgrade? {
+        tierUpgrades.first { $0.tier == state.farmTier + 1 }
+    }
+
+    /// Check which requirements for the given tier upgrade are currently satisfied.
+    @MainActor
+    static func checkTierRequirements(
+        state: GameState,
+        upgrade: TierUpgrade
+    ) -> [String: Bool] {
+        [
+            "pigs_born": state.totalPigsBorn >= upgrade.requiredPigsBorn,
+            "pigdex": state.pigdex.discoveredCount >= upgrade.requiredPigdex,
+            "contracts": state.contractBoard.completedContracts >= upgrade.requiredContracts,
+            "money": state.money >= upgrade.cost,
+        ]
+    }
+
+    /// Purchase a farm tier upgrade when all requirements are met.
+    @discardableResult
+    @MainActor
+    static func purchaseTierUpgrade(state: GameState) -> Bool {
+        guard let upgrade = getNextTierUpgrade(state: state) else { return false }
+        let reqs = checkTierRequirements(state: state, upgrade: upgrade)
+        guard reqs.values.allSatisfy({ $0 }) else { return false }
+        guard Currency.spendMoney(state: state, amount: upgrade.cost,
+                                   reason: "Tier upgrade: \(upgrade.name)") else { return false }
+        state.farmTier = upgrade.tier
+        state.farm.tier = upgrade.tier
+        state.logEvent("Farm upgraded to Tier \(upgrade.tier): \(upgrade.name)!", eventType: "purchase")
+        return true
+    }
+
+    /// Total cost to purchase a new room of the given biome (base room cost + biome cost).
+    @MainActor
+    static func getRoomTotalCost(state: GameState, biome: BiomeType) -> Int {
+        guard let nextRoom = state.farm.nextRoomCost else { return 0 }
+        let biomeCost = biomes[biome]?.cost ?? 0
+        return nextRoom.cost + biomeCost
+    }
+}

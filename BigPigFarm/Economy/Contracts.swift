@@ -163,3 +163,187 @@ struct ContractBoard: Codable, Sendable {
         case lastRefreshDay = "last_refresh_day"
     }
 }
+
+// MARK: - BreedingContract Matching
+
+extension BreedingContract {
+    /// Returns true if this unfulfilled contract's requirements are all met by the pig.
+    func matchesPig(_ pig: GuineaPig, farm: FarmGrid? = nil) -> Bool {
+        guard !fulfilled else { return false }
+        if let required = requiredColor, pig.phenotype.baseColor != required { return false }
+        if let required = requiredPattern, pig.phenotype.pattern != required { return false }
+        if let required = requiredIntensity, pig.phenotype.intensity != required { return false }
+        if let required = requiredRoan, pig.phenotype.roan != required { return false }
+        if let requiredBiome {
+            guard let birthAreaId = pig.birthAreaId,
+                  let farm,
+                  let area = farm.getAreaByID(birthAreaId),
+                  area.biome == requiredBiome else { return false }
+        }
+        return true
+    }
+}
+
+// MARK: - ContractBoard Fulfillment
+
+extension ContractBoard {
+    /// Check active contracts for a match on the pig. Fulfills the first match found,
+    /// updates completion stats, and returns the fulfilled contract (or nil).
+    mutating func checkAndFulfill(_ pig: GuineaPig, farm: FarmGrid? = nil) -> BreedingContract? {
+        for index in activeContracts.indices {
+            guard activeContracts[index].matchesPig(pig, farm: farm) else { continue }
+            activeContracts[index].fulfilled = true
+            completedContracts += 1
+            totalContractEarnings += activeContracts[index].reward
+            return activeContracts[index]
+        }
+        return nil
+    }
+}
+
+// MARK: - ContractGenerator
+
+/// Generates breeding contracts scaled to the current farm tier and biome availability.
+enum ContractGenerator {
+    private static let colorTierRequirements: [BaseColor: Int] = [
+        .black: 1, .chocolate: 1, .golden: 1, .cream: 2,
+        .blue: 3, .lilac: 3, .saffron: 3, .smoke: 4,
+    ]
+    private static let patternTierRequirements: [Pattern: Int] = [
+        .solid: 1, .dutch: 1, .dalmatian: 1,
+    ]
+    private static let intensityTierRequirements: [ColorIntensity: Int] = [
+        .full: 1, .chinchilla: 2, .himalayan: 2,
+    ]
+    private static let roanTierRequirements: [RoanType: Int] = [
+        .none: 1, .roan: 3,
+    ]
+
+    /// Generate a fresh set of contracts for the given farm state.
+    @MainActor
+    static func generateContracts(
+        farmTier: Int,
+        gameDay: Int,
+        availableBiomes: [BiomeType],
+        gameState: GameState
+    ) -> [BreedingContract] {
+        var maxContracts = GameConfig.Contracts.maxActiveContracts
+        if gameState.hasUpgrade("contract_negotiator") { maxContracts += 1 }
+        let numContracts = min(maxContracts, max(2, farmTier))
+
+        var availableDifficulties: [ContractDifficulty] = []
+        if farmTier >= 1 { availableDifficulties.append(.easy) }
+        if farmTier >= 2 { availableDifficulties.append(.medium) }
+        if farmTier >= 3 { availableDifficulties.append(.hard) }
+        if farmTier >= 4 { availableDifficulties.append(.expert) }
+        if farmTier >= 5 && gameState.hasUpgrade("vip_contracts") {
+            availableDifficulties.append(.legendary)
+        }
+
+        return (0..<numContracts).map { _ in
+            let difficulty = availableDifficulties.randomElement() ?? .easy
+            return generateSingle(
+                difficulty: difficulty,
+                gameDay: gameDay,
+                farmTier: farmTier,
+                availableBiomes: availableBiomes
+            )
+        }
+    }
+
+    // MARK: - Private Helpers
+
+    private static func filterByTier<T: Hashable>(
+        _ values: [T],
+        tierMap: [T: Int],
+        farmTier: Int
+    ) -> [T] {
+        values.filter { (tierMap[$0] ?? 1) <= farmTier }
+    }
+
+    private static func generateSingle(
+        difficulty: ContractDifficulty,
+        gameDay: Int,
+        farmTier: Int,
+        availableBiomes: [BiomeType]
+    ) -> BreedingContract {
+        // Color is always required
+        let availableColors = filterByTier(
+            BaseColor.allCases, tierMap: colorTierRequirements, farmTier: farmTier
+        )
+        let requiredColor = availableColors.randomElement() ?? .black
+
+        // Pattern required for medium+
+        var requiredPattern: Pattern?
+        if difficulty != .easy {
+            let available = filterByTier(
+                Pattern.allCases, tierMap: patternTierRequirements, farmTier: farmTier
+            )
+            requiredPattern = available.randomElement()
+        }
+
+        // Intensity required for hard+
+        var requiredIntensity: ColorIntensity?
+        if [.hard, .expert, .legendary].contains(difficulty) {
+            let available = filterByTier(
+                ColorIntensity.allCases, tierMap: intensityTierRequirements, farmTier: farmTier
+            )
+            requiredIntensity = available.randomElement()
+        }
+
+        // Roan required for expert+
+        var requiredRoan: RoanType?
+        if [.expert, .legendary].contains(difficulty) {
+            let available = filterByTier(
+                RoanType.allCases, tierMap: roanTierRequirements, farmTier: farmTier
+            )
+            requiredRoan = available.randomElement()
+        }
+
+        // Legendary always requires roan
+        if difficulty == .legendary { requiredRoan = .roan }
+
+        // Biome requirement: tier 3+, hard+ difficulty, 30% chance
+        var requiredBiome: BiomeType?
+        if farmTier >= 3
+            && availableBiomes.count > 1
+            && [.hard, .expert, .legendary].contains(difficulty)
+            && Double.random(in: 0..<1) < GameConfig.Biome.biomeContractChance {
+            requiredBiome = availableBiomes.randomElement()
+        }
+
+        var reward = Int.random(in: rewardRange(for: difficulty))
+        if requiredBiome != nil {
+            reward = Int(Double(reward) * (1 + GameConfig.Biome.biomeContractRewardBonus))
+        }
+
+        var contract = BreedingContract(
+            requiredColor: requiredColor,
+            requiredPattern: requiredPattern,
+            requiredIntensity: requiredIntensity,
+            requiredRoan: requiredRoan,
+            requiredBiome: requiredBiome,
+            difficulty: difficulty,
+            reward: reward,
+            deadlineDay: gameDay + GameConfig.Contracts.expiryDays,
+            createdDay: gameDay
+        )
+        contract.description = "Deliver a \(contract.requirementsText) pig"
+        return contract
+    }
+
+    private static func rewardRange(for difficulty: ContractDifficulty) -> ClosedRange<Int> {
+        switch difficulty {
+        case .easy:
+            GameConfig.Contracts.easyRewardMin...GameConfig.Contracts.easyRewardMax
+        case .medium:
+            GameConfig.Contracts.mediumRewardMin...GameConfig.Contracts.mediumRewardMax
+        case .hard:
+            GameConfig.Contracts.hardRewardMin...GameConfig.Contracts.hardRewardMax
+        case .expert:
+            GameConfig.Contracts.expertRewardMin...GameConfig.Contracts.expertRewardMax
+        case .legendary:
+            GameConfig.Contracts.legendaryRewardMin...GameConfig.Contracts.legendaryRewardMax
+        }
+    }
+}

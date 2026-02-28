@@ -18,4 +18,27 @@ enum Currency {
     static func formatCurrency(_ amount: Int) -> String {
         "Sq\(formatMoney(amount))"
     }
+
+    // MARK: - Money Management
+
+    /// Add money to the game state and update total earnings.
+    @discardableResult
+    @MainActor
+    static func addMoney(state: GameState, amount: Int, reason: String = "") -> Int {
+        state.addMoney(amount)
+        return amount
+    }
+
+    /// Spend money from the game state. Returns false if insufficient funds.
+    @discardableResult
+    @MainActor
+    static func spendMoney(state: GameState, amount: Int, reason: String = "") -> Bool {
+        state.spendMoney(amount)
+    }
+
+    /// Check if the game state can afford the given amount.
+    @MainActor
+    static func canAfford(state: GameState, amount: Int) -> Bool {
+        state.money >= amount
+    }
 }
