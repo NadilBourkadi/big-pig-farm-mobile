@@ -165,12 +165,15 @@ import Foundation
 }
 
 // CullingContext is intentionally narrow — it exposes no pig mutation methods.
-// This is a compile-time guarantee: addGuineaPig, removeGuineaPig, addMoney, totalPigsBorn
-// are all absent from CullingContext, so the culling system cannot accidentally
-// modify pig population directly.
+// This is a compile-time guarantee enforced by Swift's type system:
+// addGuineaPig, removeGuineaPig, addMoney, and totalPigsBorn are all absent,
+// so the culling system cannot accidentally modify pig population directly.
+// If any of those were added to CullingContext, the GameState conformance
+// extensions would still compile, but callers accessing `any CullingContext`
+// would gain unintended mutation power — a protocol design regression.
 @Test @MainActor func cullingContextIsNarrow() {
     let state = GameState()
     let _: any CullingContext = state
-    // If this compiles and passes, the existential assignment succeeds.
-    // The absence of mutation methods on CullingContext is enforced by the compiler.
+    // Existential assignment succeeds: GameState satisfies CullingContext.
+    // The absence of mutation methods on CullingContext is enforced at compile time.
 }

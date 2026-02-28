@@ -5,6 +5,7 @@ import Foundation
 // MARK: - NeedsContext
 
 /// Read-only access to farm grid, pig list, and upgrades for the needs system.
+/// Pig list access lets NeedsSystem evaluate social comfort from nearby pigs.
 ///
 /// `@MainActor` because `GameState` (the sole conformer) is actor-isolated.
 /// All simulation runs on `@MainActor` via the tick loop, so this is safe.
