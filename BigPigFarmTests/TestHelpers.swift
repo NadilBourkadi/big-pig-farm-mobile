@@ -75,3 +75,66 @@ func makePigAt(
     pig.path = path
     return pig
 }
+
+// MARK: - Integration Test Helpers
+
+/// Create a fully-wired integration test rig: a GameState with a starter farm,
+/// optional facilities, N adult pigs, and a running SimulationRunner.
+///
+/// Pig positions are placed at interior walkable cells far from facilities.
+/// Alternates gender (male, female, male, ...) so breeding tests work.
+@MainActor
+func makeIntegrationState(
+    pigCount: Int = 2,
+    addFood: Bool = true,
+    addWater: Bool = true,
+    addHideout: Bool = false,
+    money: Int = 200
+) -> (GameState, SimulationRunner) {
+    let state = GameState()
+    state.farm = FarmGrid.createStarter()
+    state.money = money
+
+    if addFood {
+        let food = Facility.create(type: .foodBowl, x: 5, y: 5)
+        _ = state.addFacility(food)
+    }
+    if addWater {
+        let water = Facility.create(type: .waterBottle, x: 10, y: 5)
+        _ = state.addFacility(water)
+    }
+    if addHideout {
+        let hideout = Facility.create(type: .hideout, x: 15, y: 5)
+        _ = state.addFacility(hideout)
+    }
+
+    for i in 0..<pigCount {
+        let gender: Gender = i.isMultiple(of: 2) ? .male : .female
+        var pig = GuineaPig.create(name: "IntegPig\(i)", gender: gender)
+        pig.ageDays = 5.0          // Adult (adultAgeDays = 3)
+        pig.needs.happiness = 80.0 // Above minHappinessToBreed (70)
+        pig.position = Position(x: Double(25 + (i % 3) * 5), y: Double(15 + (i / 3) * 5))
+        state.addGuineaPig(pig)
+    }
+
+    let controller = BehaviorController(gameState: state)
+    let runner = SimulationRunner(state: state, behaviorController: controller)
+    return (state, runner)
+}
+
+/// Run N simulation ticks, manually advancing GameTime before each tick.
+///
+/// GameEngine normally advances time, but in headless tests we drive it manually.
+/// Default of 0.3 game-minutes/tick matches GameSpeed.normal at 10 TPS.
+@MainActor
+func runTicks(
+    _ runner: SimulationRunner,
+    state: GameState,
+    count: Int,
+    gameMinutesPerTick: Double = 0.3
+) {
+    for _ in 0..<count {
+        state.gameTime.advance(minutes: gameMinutesPerTick)
+        runner.tick(gameMinutes: gameMinutesPerTick)
+    }
+}
