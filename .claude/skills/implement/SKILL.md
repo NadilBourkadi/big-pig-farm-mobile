@@ -61,6 +61,15 @@ When the plan is approved, write the final version to `.tmp/plan-<bead-id>.md` u
 
 **Always create a fresh worktree** via `EnterWorktree`. Never reuse a worktree from a previous session — stale branches cause merge conflicts when commits have already been merged to main via a separate PR.
 
+**If already inside a worktree** (e.g. the session was continued with `/clear` rather than a fresh open): run `git fetch origin main` then `git log origin/main..HEAD`. If any commits appear, the current branch is stale — do NOT use `EnterWorktree` (it will fail). Instead, create a fresh branch off main directly:
+
+```
+git fetch origin main
+git checkout -b feature/<bead-id>-<slug> origin/main
+```
+
+This resets the branch to a clean state within the existing worktree directory. The directory name is irrelevant — only the branch matters. Verify with `git log origin/main..HEAD` (must be empty) before proceeding.
+
 **From this point forward, your primary reference is the plan file at `.tmp/plan-<bead-id>.md`.** Read it and work through it systematically:
 
 1. **Implement** — write Swift code following the plan's file order and type signatures. Follow all CLAUDE.md conventions.
@@ -83,6 +92,7 @@ Write a brief implementation summary to `.tmp/summary-<bead-id>.md` capturing: w
    - Only squash WIP/fixup commits into their logical parent
    - Write messages with the **Write** tool to `.tmp/commit-msg.txt`, then `git commit -F .tmp/commit-msg.txt`
 6. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
+7. **Merge** — `gh pr merge <number> --rebase`
 
 ### Git commands — CRITICAL
 
