@@ -80,6 +80,7 @@ enum BehaviorMovement {
             }
             if path.count >= minSteps {
                 pig.path = path
+                // Safe: path.count >= minSteps guarantees non-empty
                 pig.targetPosition = Position(x: Double(path.last!.x), y: Double(path.last!.y))
                 pig.targetDescription = nil
                 pig.behaviorState = .wandering
