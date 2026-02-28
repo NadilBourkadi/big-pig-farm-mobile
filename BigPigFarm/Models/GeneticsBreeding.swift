@@ -208,3 +208,21 @@ func carrierSummary(_ genotype: Genotype) -> String {
 
     return carriers.isEmpty ? "None" : carriers.joined(separator: ", ")
 }
+
+// MARK: - Genotype Locus Access
+
+extension Genotype {
+    /// Return the allele pair for the named locus.
+    /// Supports: "eLocus", "bLocus", "sLocus", "cLocus", "rLocus", "dLocus".
+    func allelePair(forLocus name: String) -> AllelePair {
+        switch name {
+        case "eLocus": eLocus
+        case "bLocus": bLocus
+        case "sLocus": sLocus
+        case "cLocus": cLocus
+        case "rLocus": rLocus
+        case "dLocus": dLocus
+        default: fatalError("Unknown locus name: \(name)")
+        }
+    }
+}
