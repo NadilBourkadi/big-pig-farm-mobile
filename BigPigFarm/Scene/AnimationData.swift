@@ -63,7 +63,8 @@ enum AnimationData {
     /// Returns the effective display state for a baby pig.
     ///
     /// Baby pigs have sprites for idle, walking, and sleeping only.
-    /// States without baby sprites fall back to idle.
+    /// States without baby sprites fall back to idle. Unknown states
+    /// are returned unchanged — no validation is performed.
     static func babyFallbackState(for state: String) -> String {
         switch state {
         case "eating", "happy", "sad":
