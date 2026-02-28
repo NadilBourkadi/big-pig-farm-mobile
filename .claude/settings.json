@@ -37,6 +37,7 @@
       "Bash(git status:*)",
       "Bash(git branch:*)",
       "Bash(git fetch:*)",
+      "Grep",
       "Bash(grep:*)",
       "Bash(sed:*)",
       "Bash(swiftlint lint:*)",
