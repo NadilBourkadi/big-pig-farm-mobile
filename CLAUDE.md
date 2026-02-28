@@ -108,21 +108,20 @@ Run `swiftlint lint` regularly. Fix warnings immediately — don't let them accu
 
 ## Beads Task Tracking — CRITICAL
 
-This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` and are committed to git.
+This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` (local only, not git-tracked).
 
 ### Session workflow
 1. **Start:** Run `bd ready` to see unblocked tasks
 2. **Claim:** Run `bd update <id> --status in_progress` before starting work
 3. **Discover:** File new issues with `bd create "title" -t task -p <priority>`
 4. **Close:** Run `bd close <id>` when done
-5. **Sync:** Commit `.beads/` changes with your code changes
+5. **Sync:** No git sync needed — Beads state lives in a local Dolt DB only.
 
 ### Rules
 - Always check `bd ready` before starting a new task
 - Never work on a task that has open blockers — use `bd show <id>` to check
 - Create discovered issues as you find them (bugs, tech debt, follow-ups)
 - Keep tasks granular — anything over ~2 files should be its own bead
-- The `.beads/` directory is committed to git — include it in PRs
 - Priority levels: P0 (foundation), P1 (core features), P2 (UI/scene), P3 (polish/investigation)
 
 ## Working Style
