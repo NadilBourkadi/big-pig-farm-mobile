@@ -132,3 +132,19 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 - **Suggest improvements** proactively
 - **Flag contradictions and ambiguity** immediately
 - **Use subagents** aggressively to preserve context window
+
+## Mistakes Are Configuration Gaps — CRITICAL
+
+When something goes wrong — even if existing guidance nominally covers it — treat it as a signal that the guidance is insufficient, not as an occasion for apology.
+
+**The response to any mistake is:**
+1. Identify the root cause (missing rule? ambiguous wording? wrong default behavior?)
+2. Make a tangible fix: update `CLAUDE.md`, the relevant skill file, or `MEMORY.md`
+3. Commit the fix so it propagates to future sessions
+
+**Never:**
+- Apologise and move on without a config change
+- Describe something as a "one off" or "edge case"
+- Repeat the same mistake in a future session because the fix wasn't written down
+
+The goal is a self-improving process: every mistake tightens the guidance so it cannot recur.
