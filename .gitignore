@@ -27,6 +27,10 @@ Package.resolved
 timeline.xctimeline
 playground.xcworkspace
 
+# Python virtualenvs (uv creates .venv in project root)
+.venv/
+uv.lock
+
 # Scratch space (commit messages, temp files)
 .tmp/
 
