@@ -111,6 +111,10 @@ extension GameConfig {
         static let dodgeMaxStep: Double = 1.0
         static let waypointReached: Double = 0.1
 
+        // MARK: - Campfire night attraction
+
+        static let campfireAttractionRadius: Double = 10.0
+
         // MARK: - Overlap handling
 
         static let overlapEpsilon: Double = 0.01
