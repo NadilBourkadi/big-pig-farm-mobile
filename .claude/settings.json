@@ -47,5 +47,17 @@
       "Bash(cat:*)"
     ]
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "Explanatory",
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p .claude && cp /Users/nadilbourkadi/Dev/big-pig-farm-mobile/.claude/settings.json .claude/settings.json"
+          }
+        ]
+      }
+    ]
+  }
 }
