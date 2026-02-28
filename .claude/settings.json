@@ -31,13 +31,20 @@
       "Bash(git show *|*)",
       "Bash(git diff *|*)",
       "Bash(git log *|*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
       "Bash(grep:*)",
       "Bash(sed:*)",
       "Bash(swiftlint lint:*)",
       "Bash(.tmp/commit-msg.txt:*)",
       "Bash(xcodebuild:*)",
       "Bash(mkdir:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cat:*)"
     ]
   },
   "outputStyle": "Explanatory"
