@@ -57,11 +57,11 @@
 - [x] Implement `BehaviorController` + decision tree
 - [x] Implement `BehaviorMovement` + seeking
 - [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
-- [ ] Implement `Breeding` + `Birth` systems
+- [x] Implement `Breeding` + `Birth` systems
 - [ ] Implement `Culling` surplus management
 - [ ] Implement `Acclimation` biome adoption
 - [ ] Implement `AutoResources` drip/AoE/veggie systems
-- [ ] Implement `BreedingProgram` scoring and carrier-aware filter
+- [x] Implement `BreedingProgram` scoring and carrier-aware filter
 - [ ] Implement `Shop`, `Market`, `Contracts`, `Upgrades`, `Currency`
 - [ ] Implement `FacilityManager` scoring
 - [ ] Write headless simulation integration tests

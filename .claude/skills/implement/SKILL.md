@@ -76,7 +76,7 @@ This resets the branch to a clean state within the existing worktree directory. 
 2. **Test** — write tests as specified in the plan. Use Swift Testing framework (`@Test`, `#expect`, `#require`). Tests are a mandatory deliverable.
 3. **Commit** — make atomic commits (one logical change per commit). Do NOT push yet.
 4. **Update backlog** — create beads for any bugs, tech debt, or follow-ups discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
-5. **Close bead** — `bd close <id>`, then update `docs/CHECKLIST.md`
+5. **Close bead and update checklist** — `bd close <id>`, update `docs/CHECKLIST.md`, then **commit both files as part of the feature branch** (within the worktree). These changes belong in the feature PR, not a separate follow-up.
 
 ## Phase 5 — Review & Ship
 
@@ -92,7 +92,10 @@ Write a brief implementation summary to `.tmp/summary-<bead-id>.md` capturing: w
    - Only squash WIP/fixup commits into their logical parent
    - Write messages with the **Write** tool to `.tmp/commit-msg.txt`, then `git commit -F .tmp/commit-msg.txt`
 6. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
-7. **Merge** — `gh pr merge <number> --rebase`
+7. **Present PR URL and summary to the user. STOP and wait for explicit approval.** Do NOT merge until the user says to proceed (e.g. "go ahead", "merge it", "lgtm", "approved"). The PR must stay open until the user has reviewed it.
+8. **Merge (after user approval)** — `gh pr merge <number> --rebase`. We do the merge ourselves after approval; the user should not need to run any git commands.
+9. **Return to main repo and pull** — `git -C /Users/nadilbourkadi/Dev/big-pig-farm-mobile pull origin main`. This syncs the main branch with the newly merged commits.
+10. **Done — start a new session for the next task.** Close this Claude Code session and open a fresh one. `/clear` does NOT exit a worktree, so a new session is required to return to the main repo root cleanly.
 
 ### Git commands — CRITICAL
 
