@@ -31,6 +31,10 @@ function_body_length:
   warning: 50
   error: 100
 
+function_parameter_count:
+  warning: 8
+  error: 10
+
 # Safety rules — error severity
 force_unwrapping:
   severity: error
