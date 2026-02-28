@@ -56,7 +56,7 @@
 - [x] Implement `SimulationRunner` tick orchestration
 - [x] Implement `BehaviorController` + decision tree
 - [x] Implement `BehaviorMovement` + seeking
-- [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
+- [x] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
 - [x] Implement `Breeding` + `Birth` systems
 - [ ] Implement `Culling` surplus management
 - [ ] Implement `Acclimation` biome adoption
