@@ -131,7 +131,8 @@ enum Shop {
         position: GridPosition?
     ) -> Bool {
         guard item.requiredTier <= state.farmTier else { return false }
-        guard Currency.canAfford(state: state, amount: item.cost) else { return false }
+        // Spend money first so the grid placement cannot succeed without payment.
+        guard Currency.spendMoney(state: state, amount: item.cost) else { return false }
 
         if let facilityType = item.facilityType, let position {
             var facility = Facility.create(type: facilityType, x: position.x, y: position.y)
@@ -139,10 +140,14 @@ enum Shop {
                 facility.maxAmount *= 2
                 facility.currentAmount *= 2
             }
-            guard state.addFacility(facility) else { return false }
+            if !state.addFacility(facility) {
+                // Grid placement failed — refund the cost.
+                Currency.addMoney(state: state, amount: item.cost)
+                return false
+            }
         }
 
-        return Currency.spendMoney(state: state, amount: item.cost, reason: "Purchased \(item.name)")
+        return true
     }
 
     /// Remove a facility from the farm and refund its original shop cost.
@@ -151,8 +156,7 @@ enum Shop {
     static func sellFacility(state: GameState, facility: Facility) -> Int {
         let refund = getFacilityCost(facilityType: facility.facilityType)
         _ = state.removeFacility(facility.id)
-        Currency.addMoney(state: state, amount: refund,
-                          reason: "Removed \(facility.facilityType.displayName)")
+        Currency.addMoney(state: state, amount: refund)
         return refund
     }
 
@@ -190,8 +194,7 @@ enum Shop {
         guard let upgrade = getNextTierUpgrade(state: state) else { return false }
         let reqs = checkTierRequirements(state: state, upgrade: upgrade)
         guard reqs.values.allSatisfy({ $0 }) else { return false }
-        guard Currency.spendMoney(state: state, amount: upgrade.cost,
-                                   reason: "Tier upgrade: \(upgrade.name)") else { return false }
+        guard Currency.spendMoney(state: state, amount: upgrade.cost) else { return false }
         state.farmTier = upgrade.tier
         state.farm.tier = upgrade.tier
         state.logEvent("Farm upgraded to Tier \(upgrade.tier): \(upgrade.name)!", eventType: "purchase")

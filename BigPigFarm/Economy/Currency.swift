@@ -24,7 +24,7 @@ enum Currency {
     /// Add money to the game state and update total earnings.
     @discardableResult
     @MainActor
-    static func addMoney(state: GameState, amount: Int, reason: String = "") -> Int {
+    static func addMoney(state: GameState, amount: Int) -> Int {
         state.addMoney(amount)
         return amount
     }
@@ -32,7 +32,7 @@ enum Currency {
     /// Spend money from the game state. Returns false if insufficient funds.
     @discardableResult
     @MainActor
-    static func spendMoney(state: GameState, amount: Int, reason: String = "") -> Bool {
+    static func spendMoney(state: GameState, amount: Int) -> Bool {
         state.spendMoney(amount)
     }
 

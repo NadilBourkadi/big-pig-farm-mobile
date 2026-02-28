@@ -218,7 +218,7 @@ enum Culling {
 
 /// Internal scoring result with primary and optional secondary sort keys.
 /// Mirrors Python's lexicographic tuple comparison for (primary, secondary) scores.
-private struct ScoredPig {
+private struct ScoredPig: Sendable {
     let pig: GuineaPig
     let primaryScore: Double
     let secondaryScore: Double

@@ -194,7 +194,8 @@ extension ContractBoard {
             guard activeContracts[index].matchesPig(pig, farm: farm) else { continue }
             activeContracts[index].fulfilled = true
             completedContracts += 1
-            totalContractEarnings += activeContracts[index].reward
+            // Note: totalContractEarnings is updated by Market.sellPig after
+            // applying the trade_network bonus so it reflects actual payout.
             return activeContracts[index]
         }
         return nil

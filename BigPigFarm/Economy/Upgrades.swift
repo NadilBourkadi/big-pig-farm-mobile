@@ -154,8 +154,7 @@ enum Upgrades {
         guard let def = upgrades[upgradeId] else { return false }
         guard def.requiredTier <= state.farmTier else { return false }
         guard !state.purchasedUpgrades.contains(upgradeId) else { return false }
-        guard Currency.spendMoney(state: state, amount: def.cost,
-                                   reason: "Upgrade: \(def.name)") else { return false }
+        guard Currency.spendMoney(state: state, amount: def.cost) else { return false }
         state.purchasedUpgrades.insert(upgradeId)
         applyImmediateEffect(state: state, upgradeId: upgradeId)
         state.logEvent("Purchased upgrade: \(def.name)", eventType: "purchase")
