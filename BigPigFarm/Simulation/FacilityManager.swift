@@ -72,10 +72,68 @@ extension FacilityManager {
         // TODO(facility): Store cooldown; decrement each decision cycle
     }
 
+    /// How many decision cycles remain before retrying failed facilities.
+    /// Stub always returns 0 — full cooldown tracking implemented in FacilityManager bead.
+    func getFailedCooldown(_ pigId: UUID) -> Int {
+        // TODO(facility): Return remaining cooldown cycles
+        0
+    }
+
+    /// Decrement the failure cooldown counter for a pig by one cycle.
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func tickFailedCooldown(_ pigId: UUID) {
+        // TODO(facility): Decrement cooldown counter
+    }
+
+    /// Clear the failed facility blacklist for a pig (called when pig makes a fresh decision).
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func clearFailedFacilities(_ pigId: UUID) {
+        // TODO(facility): Remove all failed facility entries for this pig
+    }
+
+    /// Return the set of facility IDs currently blacklisted for this pig.
+    /// Stub returns empty set — implemented in FacilityManager bead.
+    func getFailedFacilities(_ pigId: UUID) -> Set<UUID> {
+        // TODO(facility): Return per-pig failed facility set
+        []
+    }
+
     /// Try to find an alternative facility when the pig is blocked.
     /// Stub always returns false — full fallback search implemented in FacilityManager bead.
     func tryAlternativeFacility(pig: inout GuineaPig) -> Bool {
         // TODO(facility): Try other facilities of same type, path to best alternative
         false
+    }
+}
+
+// MARK: - Facility Arrival and Consumption (stub)
+
+extension FacilityManager {
+    /// Transition a pig's behavior state based on the facility it just reached.
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func checkArrivedAtFacility(pig: inout GuineaPig) {
+        // TODO(facility): Match facility type to behavior state (.eating, .drinking, etc.)
+    }
+
+    /// Consume resources from any facility the pig is currently using.
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func consumeFromNearbyFacility(pig: inout GuineaPig, gameMinutes: Double) {
+        // TODO(facility): Drain currentAmount from target facility, apply need recovery
+    }
+}
+
+// MARK: - Lifecycle Helpers (stub)
+
+extension FacilityManager {
+    /// Clear all per-pig facility state (occupancy, failed list, cooldown) on pig removal.
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func cleanupPig(_ pigId: UUID) {
+        // TODO(facility): Remove pig from occupancy tracking and failure blacklist
+    }
+
+    /// Reset all per-pig facility state (called on game reset / new game).
+    /// Stub is a no-op — implemented in FacilityManager bead.
+    func resetAll() {
+        // TODO(facility): Clear all tracking dictionaries
     }
 }
