@@ -7,6 +7,8 @@ import Foundation
 /// Result of adding a new room to the farm.
 struct AddRoomResult: Sendable {
     var area: FarmArea
+    /// All farm tunnels after the rebuild — not just tunnels for the new room.
+    /// Filter by areaAId/areaBId matching the new area if only new connections are needed.
     var tunnels: [TunnelConnection]
     var offsetX: Int
     var offsetY: Int
