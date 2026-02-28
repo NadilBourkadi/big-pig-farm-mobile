@@ -71,14 +71,14 @@ private extension AreaManager {
             for x in 0..<farm.width {
                 guard !farm.cells[y][x].isTunnel else { continue }
                 guard let areaId = farm.cells[y][x].areaId else { continue }
-                let area = farm.getAreaByID(areaId)
-                if area == nil || !area!.contains(x: x, y: y) {
+                guard let area = farm.getAreaByID(areaId), area.contains(x: x, y: y) else {
                     farm.cells[y][x].areaId = nil
                     farm.cells[y][x].facilityId = nil
                     farm.cells[y][x].cellType = .floor
                     farm.cells[y][x].isWalkable = false
                     farm.cells[y][x].isCorner = false
                     farm.cells[y][x].isHorizontalWall = false
+                    continue
                 }
             }
         }
