@@ -68,6 +68,7 @@ Views (SwiftUI) + Scene (SpriteKit)
 - **Always push and open PR** when work is complete.
 - **Merge with rebase** (not squash, not merge commit).
 - **NO "Co-Authored-By" lines** in commits.
+- **NO "Generated with Claude Code" footers** in commits or PR descriptions.
 - **Atomic commits** — one logical change per commit. Each commit should be a single, self-contained logical unit.
 - **Preserve logical commits.** Multiple atomic commits in a PR is expected and good. Do NOT squash logically distinct changes into one commit.
 - **Clean up WIP noise before pushing** — use interactive rebase to collapse fixup/WIP commits into their logical parent. Only squash when intermediate commits have no standalone meaning.
