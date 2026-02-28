@@ -45,7 +45,7 @@
 ### Phase 1 — Headless Simulation (Weeks 3–5)
 
 - [x] Implement `GameState` observable container
-- [~] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`) — NeedsContext done; others are stubs
+- [x] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`)
 - [x] Implement `GameEngine` tick loop
 - [x] Implement `FarmGrid` with cell types
 - [x] Implement `Pathfinding` (GKGridGraph integration)
