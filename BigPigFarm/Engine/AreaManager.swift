@@ -2,20 +2,90 @@
 /// Maps from: game/world_areas.py
 import Foundation
 
-// MARK: - AreaManager
-
+/// Manages the collection of farm areas and their relationships.
+/// Caseless enum used as a namespace — cannot be instantiated.
 enum AreaManager {
-    /// Re-stamp areaId on cells within each area and clear orphaned cells.
-    /// Needed after room repositioning to fix ghost walls/floors.
+
+    // MARK: - Cell Repair
+
+    /// Re-stamp areaId on border/interior cells and mark void cells non-walkable.
+    ///
+    /// Three-pass algorithm:
+    ///   Pass 1: Clear orphaned areaId from cells outside their area bounds.
+    ///           These "ghost cells" arise from room repositioning.
+    ///   Pass 2: Stamp each area's bounds with correct wall/floor/areaId.
+    ///           Preserves facilityId occupancy (facility cells stay non-walkable).
+    ///   Pass 3: Mark void cells (outside all areas and tunnels) non-walkable.
     static func repairAreaCells(_ farm: inout FarmGrid) {
         clearOrphanedCells(&farm)
-        stampAreaCells(&farm)
-        markVoidCellsNonWalkable(&farm)
+        for area in farm.areas {
+            stampAreaBounds(&farm, area: area)
+        }
+        markVoidCells(&farm)
         farm.computeWallFlags()
         farm.invalidateWalkableCache()
     }
 
-    /// Return all pairs of rooms in horizontally/vertically adjacent grid slots.
+    // MARK: - Cell Repair Helpers
+
+    /// Pass 1: Reset cells whose areaId points to an area that no longer contains that position.
+    private static func clearOrphanedCells(_ farm: inout FarmGrid) {
+        for y in 0..<farm.height {
+            for x in 0..<farm.width {
+                let cell = farm.cells[y][x]
+                guard let areaId = cell.areaId, !cell.isTunnel else { continue }
+                let area = farm.getAreaByID(areaId)
+                if area?.contains(x: x, y: y) != true {
+                    farm.cells[y][x].areaId = nil
+                    farm.cells[y][x].facilityId = nil
+                    farm.cells[y][x].cellType = .floor
+                    farm.cells[y][x].isWalkable = false
+                    farm.cells[y][x].isCorner = false
+                    farm.cells[y][x].isHorizontalWall = false
+                }
+            }
+        }
+    }
+
+    /// Pass 2: Stamp an area's bounds with correct wall/floor/areaId.
+    /// Interior cells occupied by a facility keep isWalkable = false.
+    private static func stampAreaBounds(_ farm: inout FarmGrid, area: FarmArea) {
+        for x in area.x1...area.x2 {
+            for y in area.y1...area.y2 {
+                guard farm.isValidPosition(x, y) else { continue }
+                guard !farm.cells[y][x].isTunnel else { continue }
+                let isBorder = x == area.x1 || x == area.x2
+                    || y == area.y1 || y == area.y2
+                if isBorder {
+                    farm.cells[y][x].cellType = .wall
+                    farm.cells[y][x].isWalkable = false
+                    farm.cells[y][x].areaId = area.id
+                } else {
+                    farm.cells[y][x].cellType = .floor
+                    if farm.cells[y][x].facilityId == nil {
+                        farm.cells[y][x].isWalkable = true
+                    }
+                    farm.cells[y][x].areaId = area.id
+                }
+            }
+        }
+    }
+
+    /// Pass 3: Mark cells outside all areas and tunnels as non-walkable.
+    private static func markVoidCells(_ farm: inout FarmGrid) {
+        for y in 0..<farm.height {
+            for x in 0..<farm.width {
+                if farm.cells[y][x].areaId == nil && !farm.cells[y][x].isTunnel {
+                    farm.cells[y][x].isWalkable = false
+                }
+            }
+        }
+    }
+
+    // MARK: - Adjacency
+
+    /// Return all pairs of areas in horizontally or vertically adjacent grid slots.
+    /// Uses gridCol/gridRow on FarmArea to determine adjacency.
     static func getAdjacentPairs(_ farm: FarmGrid) -> [(FarmArea, FarmArea)] {
         var pairs: [(FarmArea, FarmArea)] = []
         var bySlot: [GridPosition: FarmArea] = [:]
@@ -33,11 +103,14 @@ enum AreaManager {
         return pairs
     }
 
-    /// Re-carve all tunnel connections using current tunnel dimensions.
+    // MARK: - Tunnel Rebuild
+
+    /// Re-carve all tunnel connections for the current area layout.
+    /// Clears all existing tunnel cells, then reconnects all adjacent area pairs.
     static func rebuildTunnels(_ farm: inout FarmGrid) {
         guard farm.areas.count >= 2 else { return }
 
-        // Clear all existing tunnel cells back to base state
+        // Clear all existing tunnel cells back to base state before re-carving
         for tunnel in farm.tunnels {
             for pos in tunnel.cells {
                 guard farm.isValidPosition(pos.x, pos.y) else { continue }
@@ -54,67 +127,10 @@ enum AreaManager {
         }
         farm.tunnels.removeAll()
 
-        // Re-carve each adjacent pair with current settings
+        // Re-carve tunnels for each adjacent area pair
         for (areaA, areaB) in getAdjacentPairs(farm) {
             let newTunnels = Tunnels.connectAreas(&farm, areaA: areaA, areaB: areaB)
             farm.tunnels.append(contentsOf: newTunnels)
-        }
-    }
-}
-
-// MARK: - Private Helpers
-
-private extension AreaManager {
-    /// Pass 1: clear orphaned area ownership from cells that are outside their area bounds.
-    static func clearOrphanedCells(_ farm: inout FarmGrid) {
-        for y in 0..<farm.height {
-            for x in 0..<farm.width {
-                guard !farm.cells[y][x].isTunnel else { continue }
-                guard let areaId = farm.cells[y][x].areaId else { continue }
-                guard let area = farm.getAreaByID(areaId), area.contains(x: x, y: y) else {
-                    farm.cells[y][x].areaId = nil
-                    farm.cells[y][x].facilityId = nil
-                    farm.cells[y][x].cellType = .floor
-                    farm.cells[y][x].isWalkable = false
-                    farm.cells[y][x].isCorner = false
-                    farm.cells[y][x].isHorizontalWall = false
-                    continue
-                }
-            }
-        }
-    }
-
-    /// Pass 2: stamp cells for each area — set wall/floor types and areaId.
-    static func stampAreaCells(_ farm: inout FarmGrid) {
-        for area in farm.areas {
-            for x in area.x1...area.x2 {
-                for y in area.y1...area.y2 {
-                    guard farm.isValidPosition(x, y) else { continue }
-                    guard !farm.cells[y][x].isTunnel else { continue }
-                    let isBorder = x == area.x1 || x == area.x2
-                        || y == area.y1 || y == area.y2
-                    if isBorder {
-                        farm.cells[y][x].cellType = .wall
-                        farm.cells[y][x].isWalkable = false
-                        farm.cells[y][x].areaId = area.id
-                    } else {
-                        farm.cells[y][x].cellType = .floor
-                        farm.cells[y][x].isWalkable = farm.cells[y][x].facilityId == nil
-                        farm.cells[y][x].areaId = area.id
-                    }
-                }
-            }
-        }
-    }
-
-    /// Pass 3: ensure void cells (outside all areas and tunnels) are non-walkable.
-    static func markVoidCellsNonWalkable(_ farm: inout FarmGrid) {
-        for y in 0..<farm.height {
-            for x in 0..<farm.width {
-                if farm.cells[y][x].areaId == nil && !farm.cells[y][x].isTunnel {
-                    farm.cells[y][x].isWalkable = false
-                }
-            }
         }
     }
 }
