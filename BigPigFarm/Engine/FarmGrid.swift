@@ -154,6 +154,7 @@ extension FarmGrid {
                 for y in area.y1...area.y2 {
                     guard isValidPosition(x, y) else { continue }
                     guard cells[y][x].cellType == .wall else { continue }
+                    guard !cells[y][x].isTunnel else { continue }
                     if (x == area.x1 || x == area.x2)
                         && (y == area.y1 || y == area.y2) {
                         cells[y][x].isCorner = true
