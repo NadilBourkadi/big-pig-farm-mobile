@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "big-pig-farm-mobile-tools"
+version = "0.1.0"
+description = "Python development tools for the Big Pig Farm iOS project"
+package-mode = false
+
+# Dependencies used by tools/export_sprites.py.
+# The big-pig-farm source modules are imported via the --source flag (sys.path injection).
+# We list only the transitive deps those modules require at import time:
+#   - rich:    imported by big_pig_farm/data/sprite_engine.py
+#   - pydantic: imported by big_pig_farm/entities/genetics.py (via biomes.py)
+[tool.poetry.dependencies]
+python = "^3.10"
+Pillow = ">=10.0"
+rich = ">=13.0"
+pydantic = ">=2.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

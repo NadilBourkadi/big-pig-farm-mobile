@@ -46,7 +46,8 @@ def render_grid_to_image(
     Args:
         grid: 2D array of palette keys (str) or None (transparent).
         palette: Mapping from palette key to hex color string.
-            The None key must already be removed before calling.
+            Pig palettes include a None key (wisp color) — remove it before calling.
+            Facility, indicator, and portrait palettes do not contain None keys.
         scale: Integer scale factor (each art pixel becomes scale x scale PNG pixels).
 
     Returns:
@@ -173,8 +174,11 @@ def export_facility_sprites(source_path: Path, output_dir: Path, scale: int) -> 
 
         palette = FACILITY_PALETTES.get(base_type)
         if palette is None:
-            print(f"  WARNING: No palette for '{base_type}', skipping '{sprite_key}'")
-            continue
+            raise ValueError(
+                f"No palette for facility type '{base_type}' "
+                f"(from sprite key '{sprite_key}'). "
+                f"Available: {sorted(FACILITY_PALETTES.keys())}"
+            )
 
         asset_name = f"facility_{sprite_key}"
         img = render_grid_to_image(grid, palette, scale=scale)
@@ -199,7 +203,16 @@ def export_indicator_sprites(source_path: Path, output_dir: Path, scale: int) ->
     count = 0
 
     for indicator_name, grid in INDICATOR_PIXELS_NORMAL.items():
+        if indicator_name not in INDICATOR_PALETTES:
+            raise ValueError(
+                f"No palette for indicator '{indicator_name}'. "
+                f"Available: {sorted(INDICATOR_PALETTES.keys())}"
+            )
         for brightness in ["bright", "dim"]:
+            if brightness not in INDICATOR_PALETTES[indicator_name]:
+                raise ValueError(
+                    f"No '{brightness}' variant for indicator '{indicator_name}'"
+                )
             palette = INDICATOR_PALETTES[indicator_name][brightness]
             asset_name = f"indicator_{indicator_name}_{brightness}"
             img = render_grid_to_image(grid, palette, scale=scale)
@@ -261,7 +274,8 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
     for biome_type, biome_info in BIOMES.items():
         biome_name = biome_type.value
 
-        # Floor tile: base floor_bg with 15% variation from floor_colors
+        # Floor tile: base floor_bg with 15% variation from floor_colors.
+        # Fixed seed ensures identical tiles across re-exports (deterministic asset pipeline).
         floor_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
         bg_rgba = hex_to_rgba(biome_info.floor_bg)
         rng = random.Random(f"terrain_{biome_name}_floor")
@@ -340,7 +354,12 @@ def export_pattern_masks(source_path: Path, output_dir: Path, scale: int) -> int
             return key is not None and key in body_keys
 
         def is_inner_fur(row: int, col: int) -> bool:
-            """Fur pixel with all 4 cardinal neighbors being body pixels."""
+            """Fur pixel with all 4 cardinal neighbors being body pixels.
+
+            Edge pixels (neighbors out-of-bounds) return None from at(), which
+            fails is_body(), so edge fur is intentionally excluded from the mask.
+            This matches the Python source _apply_himalayan() which targets interior fur.
+            """
             return (
                 at(row, col) == "fur"
                 and is_body(at(row - 1, col))
@@ -519,7 +538,9 @@ def main() -> None:
 
     print()
     print("Validating export...")
-    validate_export(output_dir, EXPECTED_COUNTS)
+    if not validate_export(output_dir, EXPECTED_COUNTS):
+        print("ERROR: Validation failed — one or more categories have unexpected counts.")
+        sys.exit(1)
 
     print()
     print(f"Done. {total} image sets, {total * 3} PNG files.")
