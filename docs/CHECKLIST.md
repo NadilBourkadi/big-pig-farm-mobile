@@ -54,7 +54,7 @@
 - [ ] Implement `AutoArrange` zone-based layout
 - [x] Implement `NeedsSystem` (decay/recovery)
 - [x] Implement `SimulationRunner` tick orchestration
-- [ ] Implement `BehaviorController` + decision tree
+- [x] Implement `BehaviorController` + decision tree
 - [x] Implement `BehaviorMovement` + seeking
 - [ ] Implement `Collision` spatial hash (`SpatialGrid` + `CollisionHandler`)
 - [ ] Implement `Breeding` + `Birth` systems
