@@ -7,6 +7,13 @@
 ///   Dalmatian and Roan patterns are pig-specific (seeded by UUID).
 ///
 /// Cache entries are evicted when a pig is sold or dies.
+///
+/// **Thread Safety:** This type is **not** thread-safe. All calls to `texture(for:)`,
+/// `evict(pigID:)`, and `evictAll()` must occur on the same thread — typically the
+/// main thread, which is the only thread SpriteKit uses for scene updates. The
+/// `@unchecked Sendable` conformance is provided solely to satisfy Swift 6 strict
+/// concurrency at the SpriteKit scene boundary; callers must not share an instance
+/// across threads.
 import SpriteKit
 
 final class SpriteTextureCache: @unchecked Sendable {
@@ -100,10 +107,7 @@ final class SpriteTextureCache: @unchecked Sendable {
         )
         let composited = PatternRenderer.applyPattern(baseTexture: base, config: config)
 
-        if patternedCache[pig.id] == nil {
-            patternedCache[pig.id] = [:]
-        }
-        patternedCache[pig.id]![cacheKey] = composited
+        patternedCache[pig.id, default: [:]][cacheKey] = composited
         return composited
     }
 
