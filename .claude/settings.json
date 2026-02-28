@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mkdir -p .claude && cp /Users/nadilbourkadi/Dev/big-pig-farm-mobile/.claude/settings.json .claude/settings.json"
+            "command": "mkdir -p .claude && cp -n /Users/nadilbourkadi/Dev/big-pig-farm-mobile/.claude/settings.json .claude/settings.json; true"
           }
         ]
       }
