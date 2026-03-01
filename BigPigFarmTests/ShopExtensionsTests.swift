@@ -56,27 +56,27 @@ import Foundation
 // MARK: - getAvailablePerks
 
 @Test func shopGetAvailablePerksAtTierOneReturnsEmpty() {
-    let result = Shop.getAvailablePerks(farmTier: 1, purchased: [])
+    let result = Shop.getAvailablePerks(farmTier: 1)
     #expect(result.isEmpty)
 }
 
 @Test func getAvailablePerksAtTierTwoReturnsNonEmpty() {
-    let result = Shop.getAvailablePerks(farmTier: 2, purchased: [])
+    let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(!result.isEmpty)
 }
 
 @Test func getAvailablePerksAtTierTwoContainsOnlyEligibleTiers() {
-    let result = Shop.getAvailablePerks(farmTier: 2, purchased: [])
+    let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(result.allSatisfy { $0.requiredTier <= 2 })
 }
 
 @Test func getAvailablePerksAtTierFiveReturnsAllPerks() {
-    let result = Shop.getAvailablePerks(farmTier: 5, purchased: [])
+    let result = Shop.getAvailablePerks(farmTier: 5)
     #expect(result.count == upgrades.count)
 }
 
 @Test func getAvailablePerksSortedAscendingByTier() {
-    let result = Shop.getAvailablePerks(farmTier: 5, purchased: [])
+    let result = Shop.getAvailablePerks(farmTier: 5)
     for index in 1..<result.count {
         #expect(result[index - 1].requiredTier <= result[index].requiredTier)
     }
@@ -84,7 +84,7 @@ import Foundation
 
 @Test func getAvailablePerksDoesNotFilterAlreadyPurchased() {
     // The view shows "Owned" badge for purchased perks, so they must remain in the list
-    let result = Shop.getAvailablePerks(farmTier: 2, purchased: ["bulk_feeders"])
+    let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(result.contains(where: { $0.id == "bulk_feeders" }))
 }
 
