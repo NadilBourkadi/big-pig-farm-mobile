@@ -173,6 +173,7 @@ final class SimulationRunner {
         if runExpensive { breedingCheckCounter = 0 }
         let eventCountBefore = state.events.count
         _ = Breeding.checkBreedingOpportunities(gameState: state, runExpensive: runExpensive)
+        // Fire haptics for every birth, regardless of whether the UI callback is registered.
         for event in state.events[eventCountBefore...] where event.eventType == "birth" {
             onBirth?(event.message)
             HapticManager.birth()
