@@ -274,4 +274,57 @@ enum Shop {
     static func facilityCost(_ facilityType: FacilityType) -> Int {
         getFacilityCost(facilityType: facilityType)
     }
+
+    // MARK: - Room Purchase
+
+    /// Purchase a new room of the given biome. Deducts cost (base room + biome), expands
+    /// the grid canvas, and shifts all entity positions to match the new layout.
+    /// Returns true if purchase succeeded; false if at max rooms, insufficient funds,
+    /// or grid expansion failed.
+    @discardableResult
+    @MainActor
+    static func purchaseNewRoom(state: GameState, biome: BiomeType) -> Bool {
+        guard getFarmUpgradeInfo(state: state) != nil else { return false }
+        let totalCost = getRoomTotalCost(state: state, biome: biome)
+        guard Currency.spendMoney(state: state, amount: totalCost) else { return false }
+        guard let result = GridExpansion.addRoom(&state.farm, biome: biome) else {
+            Currency.addMoney(state: state, amount: totalCost)
+            return false
+        }
+        if result.offsetX != 0 || result.offsetY != 0 || !result.roomDeltas.isEmpty {
+            shiftEntities(state: state, result: result)
+        }
+        let biomeName = biomes[biome]?.displayName ?? biome.rawValue.capitalized
+        state.logEvent("New \(biomeName) room added!", eventType: "purchase")
+        return true
+    }
+
+    // MARK: - Private Helpers
+
+    /// Shift all pig and facility positions after a grid expansion.
+    /// Applies the global entity offset plus any per-area repositioning delta.
+    @MainActor
+    private static func shiftEntities(state: GameState, result: AddRoomResult) {
+        var pigs = state.getPigsList()
+        for i in pigs.indices {
+            let delta = pigs[i].currentAreaId.flatMap { result.roomDeltas[$0] }
+                ?? GridPosition(x: 0, y: 0)
+            let dx = Double(result.offsetX + delta.x)
+            let dy = Double(result.offsetY + delta.y)
+            pigs[i].position.x += dx
+            pigs[i].position.y += dy
+            pigs[i].targetPosition?.x += dx
+            pigs[i].targetPosition?.y += dy
+        }
+        for pig in pigs { state.updateGuineaPig(pig) }
+
+        var facilities = state.getFacilitiesList()
+        for i in facilities.indices {
+            let delta = facilities[i].areaId.flatMap { result.roomDeltas[$0] }
+                ?? GridPosition(x: 0, y: 0)
+            facilities[i].positionX += result.offsetX + delta.x
+            facilities[i].positionY += result.offsetY + delta.y
+        }
+        for facility in facilities { state.updateFacility(facility) }
+    }
 }
