@@ -46,7 +46,10 @@ extension FarmScene {
     ///
     /// Returns the index into `frames`/`centers` of the closest candidate within
     /// `tapTolerance` points of the frame edges, or nil if nothing qualifies.
-    /// Internal for unit testability — the algorithm is the correctness-critical part.
+    ///
+    /// `nonisolated`: this is a pure function (value-type inputs only, no actor state),
+    /// so it does not inherit `@MainActor` from `FarmScene`. This allows test code to
+    /// call it without actor overhead or `await`.
     nonisolated internal static func nearestIndex(
         at location: CGPoint,
         frames: [CGRect],
