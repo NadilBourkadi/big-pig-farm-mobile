@@ -97,6 +97,7 @@ extension FarmScene {
     override func didMove(to view: SKView) {
         backgroundColor = .black
         anchorPoint = CGPoint(x: 0, y: 0)
+        scaleMode = .aspectFill
 
         let farm = gameState.farm
         farmWidth = farm.width
