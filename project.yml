@@ -14,7 +14,7 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     GENERATE_INFOPLIST_FILE: YES
     CURRENT_PROJECT_VERSION: 1
-    MARKETING_VERSION: 0.1.0
+    MARKETING_VERSION: 1.0.0
 
 targets:
   BigPigFarm:
@@ -26,8 +26,13 @@ targets:
           - "**/.DS_Store"
     resources:
       - path: BigPigFarm/Resources/Assets.xcassets
+      - path: BigPigFarm/PrivacyInfo.xcprivacy
     settings:
       base:
+        INFOPLIST_KEY_CFBundleDisplayName: Big Pig Farm
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.simulation-games"
+        INFOPLIST_KEY_UIRequiredDeviceCapabilities: arm64
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
