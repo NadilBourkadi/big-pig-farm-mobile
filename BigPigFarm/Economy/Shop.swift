@@ -235,8 +235,9 @@ enum Shop {
     }
 
     /// All upgrade perks whose required tier is at or below `farmTier`, sorted by tier.
-    /// Does not filter out already-purchased perks — the caller handles "Owned" display.
-    static func getAvailablePerks(farmTier: Int, purchased: Set<String>) -> [UpgradeDefinition] {
+    /// Returns all eligible perks regardless of purchase state — the caller renders
+    /// "Owned" badges for perks already in `gameState.purchasedUpgrades`.
+    static func getAvailablePerks(farmTier: Int) -> [UpgradeDefinition] {
         upgrades.values
             .filter { $0.requiredTier <= farmTier }
             .sorted { $0.requiredTier < $1.requiredTier }
@@ -252,6 +253,8 @@ enum Shop {
 
     /// Metadata about the next room expansion, or nil when the farm is already at the
     /// maximum room count for its current tier or all 8 room slots are filled.
+    /// `state.farmTier` is guaranteed to be in [1..5] by `purchaseTierUpgrade` — the
+    /// fallback in `getTierUpgrade` (tier 1) will never silently apply in practice.
     @MainActor
     static func getFarmUpgradeInfo(state: GameState) -> RoomUpgradeInfo? {
         let currentTier = getTierUpgrade(tier: state.farmTier)
