@@ -82,6 +82,8 @@ struct BiomeSelectView: View {
             return (false, "Requires Tier \(info.requiredTier)")
         }
 
+        // At least one biome of every tier below requiredTier must be built.
+        // Players can choose which biome, but all lower tier slots must be filled.
         let coveredTiers = Set(existingBiomes.compactMap { biomes[$0]?.requiredTier })
         for tier in 1..<info.requiredTier where !coveredTiers.contains(tier) {
             return (false, "Build a Tier \(tier) biome first")
@@ -197,8 +199,8 @@ private struct BiomeRow: View {
     private var accessibilityLabel: String {
         let name = info?.displayName ?? biomeType.rawValue.capitalized
         if let reason = lockReason { return "\(name), locked: \(reason)" }
-        let cost = info.map { $0.cost > 0 ? Currency.formatCurrency($0.cost) : "Free" } ?? ""
-        return "\(name), \(cost)"
+        let costText = info.map { $0.cost > 0 ? Currency.formatCurrency($0.cost) : "Free" } ?? ""
+        return costText.isEmpty ? name : "\(name), \(costText)"
     }
 }
 
