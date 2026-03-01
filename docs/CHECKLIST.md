@@ -99,7 +99,7 @@
 - [x] Implement `PigListView` (sortable list)
 - [x] Implement `PigDetailView` (stats + genetics)
 - [x] Implement `BreedingView` (pair selection)
-- [ ] Implement `AlmanacView` (Pigdex + contracts)
+- [x] Implement `AlmanacView` (Pigdex + contracts)
 - [ ] Implement `BiomeSelectView` (biome picker)
 - [x] Implement `AdoptionView` (bloodline adoption)
 - [x] Implement `SharedComponents` (currency, badges, bars)
