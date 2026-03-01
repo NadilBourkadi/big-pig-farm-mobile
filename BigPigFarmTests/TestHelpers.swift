@@ -138,3 +138,76 @@ func runTicks(
         runner.tick(gameMinutes: gameMinutesPerTick)
     }
 }
+
+// MARK: - Large Integration State (Performance Tests)
+
+/// Create a GameState with a Grand Master-sized farm (96×56) and up to 200 pigs,
+/// suitable for performance/benchmarking tests.
+///
+/// Pigs are spread in a 3-cell stride grid across the interior so none are placed
+/// off-map even at pigCount=200. Food and water are included to keep needs valid.
+@MainActor
+func makeLargeIntegrationState(pigCount: Int) -> (GameState, SimulationRunner) {
+    let state = GameState()
+    var grid = FarmGrid(width: 96, height: 56)
+    grid.createLegacyStarterArea()
+    state.farm = grid
+
+    let food = Facility.create(type: .foodBowl, x: 5, y: 5)
+    _ = state.addFacility(food)
+    let water = Facility.create(type: .waterBottle, x: 10, y: 5)
+    _ = state.addFacility(water)
+
+    // Spread pigs in a 3-cell stride grid. 28 columns fit within 96-wide interior.
+    let interiorCols = (96 - 10) / 3
+    for i in 0..<pigCount {
+        let gender: Gender = i.isMultiple(of: 2) ? .male : .female
+        var pig = GuineaPig.create(name: "PerfPig\(i)", gender: gender)
+        pig.ageDays = 5.0
+        pig.needs.happiness = 80.0
+        pig.position = Position(
+            x: Double(5 + (i % interiorCols) * 3),
+            y: Double(10 + (i / interiorCols) * 3)
+        )
+        state.addGuineaPig(pig)
+    }
+
+    let controller = BehaviorController(gameState: state)
+    let runner = SimulationRunner(
+        state: state,
+        behaviorController: controller,
+        saveManager: makeTempSaveManager()
+    )
+    return (state, runner)
+}
+
+// MARK: - Memory Measurement
+
+/// Current process resident-set size in megabytes, via mach_task_basic_info.
+/// Returns 0.0 if the kernel call fails (allows callers to skip gracefully).
+func memoryUsageMB() -> Double {
+    var info = mach_task_basic_info()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<mach_task_basic_info>.size / MemoryLayout<integer_t>.size
+    )
+    let kern: kern_return_t = withUnsafeMutablePointer(to: &info) {
+        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+        }
+    }
+    guard kern == KERN_SUCCESS else { return 0.0 }
+    return Double(info.resident_size) / (1_024 * 1_024)
+}
+
+// MARK: - Duration Extension
+
+extension Duration {
+    /// Wall-clock milliseconds as a Double.
+    ///
+    /// `Duration.components` returns `(seconds: Int64, attoseconds: Int64)`.
+    /// 1 millisecond = 10^15 attoseconds, so: `seconds*1000 + attoseconds/10^15`.
+    var milliseconds: Double {
+        let parts = components
+        return Double(parts.seconds) * 1_000.0 + Double(parts.attoseconds) / 1_000_000_000_000_000.0
+    }
+}
