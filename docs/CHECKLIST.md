@@ -95,7 +95,7 @@
 ### Phase 4 — SwiftUI Screens (Weeks 9–12)
 
 - [x] Implement `StatusBarView` (HUD overlay)
-- [ ] Implement `ShopView` (4-tab shop)
+- [x] Implement `ShopView` (4-tab shop)
 - [x] Implement `PigListView` (sortable list)
 - [x] Implement `PigDetailView` (stats + genetics)
 - [x] Implement `BreedingView` (pair selection)
