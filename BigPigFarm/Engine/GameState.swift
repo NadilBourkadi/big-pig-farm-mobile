@@ -54,7 +54,9 @@ struct GameTime: Codable, Sendable {
 }
 
 /// A single event log entry for the event feed.
-struct EventLog: Codable, Sendable {
+struct EventLog: Identifiable, Codable, Sendable {
+    /// Transient identity for SwiftUI ForEach — not persisted (excluded from CodingKeys).
+    let id = UUID()
     let timestamp: Date
     let gameDay: Int
     let message: String
