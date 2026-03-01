@@ -52,7 +52,7 @@ func setupNewGame(state: GameState) {
         }
 
         var pig = GuineaPig.create(name: name, gender: gender)
-        pig.ageDays = 5.0   // Start as young adults, not babies
+        pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)  // Start as young adults, not babies
         pig.position = pos
         state.addGuineaPig(pig)
     }
