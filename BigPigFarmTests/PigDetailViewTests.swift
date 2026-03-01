@@ -166,6 +166,7 @@ struct PigDetailCarrierSummaryTests {
 
 // MARK: - Test Helper (mirrors PigDetailView.parentName)
 
+@MainActor
 private func resolveParentName(id: UUID?, state: GameState) -> String {
     guard let id else { return "Unknown (adopted/starter)" }
     if let parent = state.getGuineaPig(id) { return parent.name }

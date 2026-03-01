@@ -206,7 +206,7 @@ func carrierSummary(_ genotype: Genotype) -> String {
         carriers.append("D/d")
     }
 
-    return carriers.isEmpty ? "None" : carriers.joined(separator: ", ")
+    return carriers.joined(separator: ", ")
 }
 
 // MARK: - Genotype Locus Access
