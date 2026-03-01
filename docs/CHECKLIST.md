@@ -98,7 +98,7 @@
 - [ ] Implement `ShopView` (4-tab shop)
 - [x] Implement `PigListView` (sortable list)
 - [x] Implement `PigDetailView` (stats + genetics)
-- [ ] Implement `BreedingView` (pair selection)
+- [x] Implement `BreedingView` (pair selection)
 - [ ] Implement `AlmanacView` (Pigdex + contracts)
 - [ ] Implement `BiomeSelectView` (biome picker)
 - [x] Implement `AdoptionView` (bloodline adoption)
