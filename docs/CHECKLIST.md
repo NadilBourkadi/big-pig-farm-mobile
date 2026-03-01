@@ -107,6 +107,7 @@
 ### Phase 5 — Persistence & Polish (Weeks 13–14)
 
 - [x] Implement `SaveManager` (JSON save/load)
+- [x] Implement `HapticManager` (7 event methods + 9 integration call sites)
 - [ ] Implement app lifecycle save (background/terminate)
 - [ ] Implement auto-save (every 300 ticks)
 - [ ] Add app icon
