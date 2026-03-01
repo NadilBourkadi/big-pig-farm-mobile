@@ -184,10 +184,10 @@ import Foundation
     #expect(!perks.contains(where: { $0.requiredTier > 2 }))
 }
 
-@Test @MainActor func purchasePerkDeductsCostAndAddsToUpgrades() {
+@Test @MainActor func purchasePerkDeductsCostAndAddsToUpgrades() throws {
     let state = makeGameState()
     state.farmTier = 2
-    let def = upgrades["bulk_feeders"]!
+    let def = try #require(upgrades["bulk_feeders"])
     state.money = def.cost + 100
 
     let success = Upgrades.purchasePerk(state: state, upgradeId: "bulk_feeders")
@@ -277,12 +277,12 @@ import Foundation
     #expect(Shop.getNextTierUpgrade(state: state) == nil)
 }
 
-@Test @MainActor func checkTierRequirementsCorrectFlags() {
+@Test @MainActor func checkTierRequirementsCorrectFlags() throws {
     let state = makeGameState()
     state.farmTier = 1
     state.money = 0
     state.totalPigsBorn = 0
-    let upgrade = tierUpgrades.first { $0.tier == 2 }!
+    let upgrade = try #require(tierUpgrades.first { $0.tier == 2 })
 
     let reqs = Shop.checkTierRequirements(state: state, upgrade: upgrade)
 

@@ -138,8 +138,9 @@ struct Genotype: Codable, Sendable {
     var dLocus: AllelePair   // Dilution: D/d
 
     /// Generate a guaranteed common genotype (solid, full color, no roan, no dilution).
-    static func randomCommon() -> Genotype {
-        Genotype(
+    static func randomCommon() -> Self {
+        // swiftlint:disable force_unwrapping
+        Self(
             eLocus: [AllelePair(first: "E", second: "E"),
                      AllelePair(first: "E", second: "e")].randomElement()!,
             bLocus: [AllelePair(first: "B", second: "B"),
@@ -149,11 +150,13 @@ struct Genotype: Codable, Sendable {
             rLocus: AllelePair(first: "r", second: "r"),
             dLocus: AllelePair(first: "D", second: "D")
         )
+        // swiftlint:enable force_unwrapping
     }
 
     /// Generate a random genotype with more variation.
-    static func random() -> Genotype {
-        Genotype(
+    static func random() -> Self {
+        // swiftlint:disable force_unwrapping
+        Self(
             eLocus: [AllelePair(first: "E", second: "E"),
                      AllelePair(first: "E", second: "e"),
                      AllelePair(first: "e", second: "e")].randomElement()!,
@@ -165,6 +168,7 @@ struct Genotype: Codable, Sendable {
             rLocus: AllelePair(first: "r", second: "r"),
             dLocus: AllelePair(first: "D", second: "D")
         )
+        // swiftlint:enable force_unwrapping
     }
 
     enum CodingKeys: String, CodingKey {
@@ -279,37 +283,46 @@ func calculatePhenotype(_ genotype: Genotype) -> Phenotype {
     )
 }
 
+/// Points contributed by a pattern toward rarity scoring.
+private func patternRarityPoints(_ pattern: Pattern) -> Int {
+    switch pattern {
+    case .dalmatian: return 2
+    case .dutch: return 1
+    case .solid: return 0
+    }
+}
+
+/// Points contributed by a color intensity toward rarity scoring.
+private func intensityRarityPoints(_ intensity: ColorIntensity) -> Int {
+    switch intensity {
+    case .himalayan: return 3
+    case .chinchilla: return 2
+    case .full: return 0
+    }
+}
+
+/// Points contributed by a base color toward rarity scoring.
+private func colorRarityPoints(_ baseColor: BaseColor) -> Int {
+    switch baseColor {
+    case .chocolate, .cream: return 1
+    case .blue: return 2
+    case .lilac, .saffron: return 3
+    case .smoke: return 4
+    case .black, .golden: return 0
+    }
+}
+
 /// Calculate the rarity tier based on trait combination point scoring.
 func calculateRarity(
     baseColor: BaseColor, pattern: Pattern,
     intensity: ColorIntensity, roan: RoanType
 ) -> Rarity {
     var rareCount = 0
-
-    // Pattern rarity
-    if pattern == .dalmatian { rareCount += 2 }
-    else if pattern == .dutch { rareCount += 1 }
-
-    // Intensity rarity
-    if intensity == .himalayan { rareCount += 3 }
-    else if intensity == .chinchilla { rareCount += 2 }
-
-    // Roan is rare
+    rareCount += patternRarityPoints(pattern)
+    rareCount += intensityRarityPoints(intensity)
+    rareCount += colorRarityPoints(baseColor)
     if roan == .roan { rareCount += 2 }
 
-    // Chocolate and cream are slightly less common
-    if baseColor == .chocolate || baseColor == .cream { rareCount += 1 }
-
-    // Diluted colors require dd (homozygous recessive)
-    switch baseColor {
-    case .blue: rareCount += 2
-    case .lilac: rareCount += 3    // bb + dd
-    case .saffron: rareCount += 3  // ee + dd
-    case .smoke: rareCount += 4    // ee + bb + dd
-    default: break
-    }
-
-    // Determine tier
     if rareCount >= 6 { return .legendary }
     if rareCount >= 4 { return .veryRare }
     if rareCount >= 2 { return .rare }
@@ -319,7 +332,8 @@ func calculateRarity(
 
 // MARK: - Locus Constants
 
-/// Locus definitions for mutation/breeding: (locusName, dominant, recessive).
+// Locus definitions for mutation/breeding: (locusName, dominant, recessive).
+// swiftlint:disable:next large_tuple
 let locusDefinitions: [(String, String, String)] = [
     ("eLocus", "E", "e"),
     ("bLocus", "B", "b"),

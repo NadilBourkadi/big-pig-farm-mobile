@@ -49,7 +49,7 @@ extension AutoArrange {
         for facility in facilities {
             let name = zoneForFacility(facility.facilityType, mergeSmall: true).zoneName
             if zoneMap[name] != nil {
-                zoneMap[name]!.append(facility)
+                zoneMap[name, default: []].append(facility)
             } else {
                 zoneMap[zones[zones.count - 1].name, default: []].append(facility)
             }
@@ -144,7 +144,7 @@ private extension AutoArrange {
         for facility in facilities {
             let name = zoneForFacility(facility.facilityType, mergeSmall: true).zoneName
             if zoneMap[name] != nil {
-                zoneMap[name]!.append(facility)
+                zoneMap[name, default: []].append(facility)
             } else {
                 zoneMap[zones[zones.count - 1].name, default: []].append(facility)
             }

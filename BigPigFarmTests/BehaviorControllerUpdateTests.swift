@@ -59,7 +59,7 @@ struct BehaviorDecisionTimerTests {
 struct BehaviorDecisionCourtshipTimerTests {
 
     @Test("Courtship timer advances when initiator is adjacent to partner")
-    func testCourtshipTimerAdvancesWhenAdjacent() {
+    func testCourtshipTimerAdvancesWhenAdjacent() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
         var male = makePig(x: 5.0, y: 5.0)
@@ -73,7 +73,7 @@ struct BehaviorDecisionCourtshipTimerTests {
         female.courtingPartnerId = male.id
         state.addGuineaPig(male)
         state.addGuineaPig(female)
-        var updatedMale = state.getGuineaPig(male.id)!
+        var updatedMale = try #require(state.getGuineaPig(male.id))
         // Do NOT pre-set decision timer: forcing a decision would call seekCourtingPartner,
         // setting a non-empty path that blocks updateCurrentBehavior from advancing the timer.
         // With no pre-set timer, newTimer < decisionIntervalSeconds so decision never fires.
@@ -83,7 +83,7 @@ struct BehaviorDecisionCourtshipTimerTests {
     }
 
     @Test("Completed courtship is queued when timer crosses threshold")
-    func testCourtshipCompletionQueued() {
+    func testCourtshipCompletionQueued() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
         var male = makePig(x: 5.0, y: 5.0)
@@ -98,7 +98,7 @@ struct BehaviorDecisionCourtshipTimerTests {
         female.courtingPartnerId = male.id
         state.addGuineaPig(male)
         state.addGuineaPig(female)
-        var updatedMale = state.getGuineaPig(male.id)!
+        var updatedMale = try #require(state.getGuineaPig(male.id))
         // Do NOT pre-set decision timer: forcing a decision calls seekCourtingPartner which
         // sets a path, preventing updateCurrentBehavior from advancing the courtship timer.
         // Advance enough to cross the threshold (3.9 + 0.2 = 4.1 >= courtshipTogetherSeconds=4.0)

@@ -19,7 +19,7 @@ func predictOffspringPhenotypes(
         phenotypeCounts[phenotype, default: 0] += 1
     }
 
-    var results = phenotypeCounts.map { (phenotype, count) in
+    var results = phenotypeCounts.map { phenotype, count in
         (phenotype, Double(count) / Double(totalSamples))
     }
     results.sort { $0.1 > $1.1 }

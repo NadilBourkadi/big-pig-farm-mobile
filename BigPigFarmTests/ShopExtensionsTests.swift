@@ -90,10 +90,10 @@ import Foundation
 
 // MARK: - purchasePerk
 
-@Test @MainActor func shopPurchasePerkDeductsCostAndAddsToUpgrades() {
+@Test @MainActor func shopPurchasePerkDeductsCostAndAddsToUpgrades() throws {
     let state = makeGameState()
     state.farmTier = 2
-    let cost = upgrades["bulk_feeders"]!.cost
+    let cost = try #require(upgrades["bulk_feeders"]).cost
     state.money = cost + 100
 
     let success = Shop.purchasePerk(perkID: "bulk_feeders", state: state)

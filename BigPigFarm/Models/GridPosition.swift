@@ -7,7 +7,7 @@ struct GridPosition: Codable, Sendable, Hashable {
     let y: Int
 
     /// Manhattan distance to another grid position.
-    func manhattanDistance(to other: GridPosition) -> Int {
+    func manhattanDistance(to other: Self) -> Int {
         abs(x - other.x) + abs(y - other.y)
     }
 }

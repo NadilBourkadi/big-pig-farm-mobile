@@ -67,7 +67,11 @@ struct Pigdex: Codable, Sendable {
 
 /// Generate a unique string key for a phenotype.
 func phenotypeKey(_ phenotype: Phenotype) -> String {
-    "\(phenotype.baseColor.rawValue):\(phenotype.pattern.rawValue):\(phenotype.intensity.rawValue):\(phenotype.roan.rawValue)"
+    let color = phenotype.baseColor.rawValue
+    let pattern = phenotype.pattern.rawValue
+    let intensity = phenotype.intensity.rawValue
+    let roan = phenotype.roan.rawValue
+    return "\(color):\(pattern):\(intensity):\(roan)"
 }
 
 /// Generate a unique string key from individual trait parts.

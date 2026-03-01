@@ -95,20 +95,19 @@ import Foundation
     #expect(state.lastSave == nil)
 }
 
-@Test @MainActor func autoSaveCounterResetsAfterTrigger() {
+@Test @MainActor func autoSaveCounterResetsAfterTrigger() throws {
     let state = makeGameState()
     let controller = makeController(state: state)
     let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     for _ in 0..<300 {
         runner.tick(gameMinutes: 0.3)
     }
-    let firstSave = state.lastSave
-    #expect(firstSave != nil)
+    let firstSave = try #require(state.lastSave)
     for _ in 0..<300 {
         runner.tick(gameMinutes: 0.3)
     }
-    #expect(state.lastSave != nil)
-    #expect(state.lastSave! >= firstSave!)
+    let secondSave = try #require(state.lastSave)
+    #expect(secondSave >= firstSave)
 }
 
 // MARK: - Farm Bell
@@ -224,7 +223,7 @@ import Foundation
 
 // MARK: - Acclimation Phase
 
-@Test @MainActor func acclimationPhaseSkipsPigsWithNoPreferredBiomeAndNoTimer() {
+@Test @MainActor func acclimationPhaseSkipsPigsWithNoPreferredBiomeAndNoTimer() throws {
     let state = GameState()
     var pig = GuineaPig.create(name: "TestPig", gender: .male)
     pig.preferredBiome = nil
@@ -234,14 +233,14 @@ import Foundation
     let controller = BehaviorController(gameState: state)
     let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     runner.tick(gameMinutes: 0.3)
-    let updatedPig = state.getGuineaPig(pig.id)!
+    let updatedPig = try #require(state.getGuineaPig(pig.id))
     #expect(updatedPig.acclimationTimer == 0.0)
     #expect(updatedPig.acclimatingBiome == nil)
 }
 
 // MARK: - Pig Mutation Writeback
 
-@Test @MainActor func tickWritesBackMutatedPigs() {
+@Test @MainActor func tickWritesBackMutatedPigs() throws {
     let state = GameState()
     var pig = GuineaPig.create(name: "TestPig", gender: .male)
     pig.needs.hunger = 100.0
@@ -250,7 +249,7 @@ import Foundation
     let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // After one tick at normal speed, hunger should have decayed slightly
     runner.tick(gameMinutes: 1.0)
-    let updatedPig = state.getGuineaPig(pig.id)!
+    let updatedPig = try #require(state.getGuineaPig(pig.id))
     // Hunger should decay from 100.0 (decay rate is 0.6/hour, 1 minute = 0.01 hour)
     #expect(updatedPig.needs.hunger < 100.0)
 }

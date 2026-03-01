@@ -6,7 +6,7 @@ import Foundation
 
 // MARK: - tickAutoResources
 
-@Test @MainActor func tickAutoResourcesNoOpWithoutUpgrades() {
+@Test @MainActor func tickAutoResourcesNoOpWithoutUpgrades() throws {
     let state = makeGameState()
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
     bowl.currentAmount = 50.0
@@ -14,10 +14,11 @@ import Foundation
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 50.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 50.0)
 }
 
-@Test @MainActor func tickAutoResourcesDripRefillsGradually() {
+@Test @MainActor func tickAutoResourcesDripRefillsGradually() throws {
     let state = makeGameState()
     state.purchasedUpgrades.insert("drip_system")
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -27,10 +28,11 @@ import Foundation
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 52.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 52.0)
 }
 
-@Test @MainActor func tickAutoResourcesDripClampsToMax() {
+@Test @MainActor func tickAutoResourcesDripClampsToMax() throws {
     let state = makeGameState()
     state.purchasedUpgrades.insert("drip_system")
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -40,10 +42,11 @@ import Foundation
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 200.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 200.0)
 }
 
-@Test @MainActor func tickAutoResourcesAutoFeederRefillsWhenLow() {
+@Test @MainActor func tickAutoResourcesAutoFeederRefillsWhenLow() throws {
     let state = makeGameState()
     state.purchasedUpgrades.insert("auto_feeders")
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -54,10 +57,11 @@ import Foundation
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 200.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 200.0)
 }
 
-@Test @MainActor func tickAutoResourcesAutoFeederSkipsAboveThreshold() {
+@Test @MainActor func tickAutoResourcesAutoFeederSkipsAboveThreshold() throws {
     let state = makeGameState()
     state.purchasedUpgrades.insert("auto_feeders")
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -68,10 +72,11 @@ import Foundation
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 52.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 52.0)
 }
 
-@Test @MainActor func tickAutoResourcesDripThenAutoFeeder() {
+@Test @MainActor func tickAutoResourcesDripThenAutoFeeder() throws {
     // With both upgrades: drip applies first. If drip pushes above 25%, auto-feeder skips.
     let state = makeGameState()
     state.purchasedUpgrades.insert("drip_system")
@@ -85,20 +90,23 @@ import Foundation
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
     // Drip adds 2.0 → 50.0; 50/200 = 25.0% which is NOT below threshold (< 25.0 is false)
-    #expect(state.facilities[bowl.id]!.currentAmount == 50.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 50.0)
 }
 
-@Test @MainActor func tickAutoResourcesSkipsNonFoodWaterTypes() {
+@Test @MainActor func tickAutoResourcesSkipsNonFoodWaterTypes() throws {
     let state = makeGameState()
     state.purchasedUpgrades.insert("drip_system")
     state.purchasedUpgrades.insert("auto_feeders")
     let hideout = Facility.create(type: .hideout, x: 5, y: 5)
     state.facilities[hideout.id] = hideout
-    let initialAmount = state.facilities[hideout.id]!.currentAmount
+    let initialFacility = try #require(state.facilities[hideout.id])
+    let initialAmount = initialFacility.currentAmount
 
     AutoResources.tickAutoResources(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[hideout.id]!.currentAmount == initialAmount)
+    let updated = try #require(state.facilities[hideout.id])
+    #expect(updated.currentAmount == initialAmount)
 }
 
 @Test @MainActor func tickAutoResourcesNoOpWithEmptyFacilities() {
@@ -111,7 +119,7 @@ import Foundation
 
 // MARK: - applyBulkFeeders
 
-@Test @MainActor func applyBulkFeedersDoublesCapacityAndCurrent() {
+@Test @MainActor func applyBulkFeedersDoublesCapacityAndCurrent() throws {
     let state = makeGameState()
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
     bowl.maxAmount = 200.0
@@ -120,21 +128,24 @@ import Foundation
 
     AutoResources.applyBulkFeeders(state: state)
 
-    #expect(state.facilities[bowl.id]!.maxAmount == 400.0)
-    #expect(state.facilities[bowl.id]!.currentAmount == 200.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.maxAmount == 400.0)
+    #expect(updated.currentAmount == 200.0)
 }
 
-@Test @MainActor func applyBulkFeedersSkipsNonFoodWaterTypes() {
+@Test @MainActor func applyBulkFeedersSkipsNonFoodWaterTypes() throws {
     let state = makeGameState()
     let hideout = Facility.create(type: .hideout, x: 5, y: 5)
     state.facilities[hideout.id] = hideout
-    let initialMax = state.facilities[hideout.id]!.maxAmount
-    let initialCurrent = state.facilities[hideout.id]!.currentAmount
+    let initialFacility = try #require(state.facilities[hideout.id])
+    let initialMax = initialFacility.maxAmount
+    let initialCurrent = initialFacility.currentAmount
 
     AutoResources.applyBulkFeeders(state: state)
 
-    #expect(state.facilities[hideout.id]!.maxAmount == initialMax)
-    #expect(state.facilities[hideout.id]!.currentAmount == initialCurrent)
+    let updated = try #require(state.facilities[hideout.id])
+    #expect(updated.maxAmount == initialMax)
+    #expect(updated.currentAmount == initialCurrent)
 }
 
 @Test @MainActor func applyBulkFeedersNoOpWhenNoFacilities() {
@@ -145,7 +156,7 @@ import Foundation
 
 // MARK: - tickVeggieGardens
 
-@Test @MainActor func tickVeggieGardensDistributesFoodEvenly() {
+@Test @MainActor func tickVeggieGardensDistributesFoodEvenly() throws {
     let state = makeGameState()
     let garden = Facility.create(type: .veggieGarden, x: 0, y: 0)
     state.facilities[garden.id] = garden
@@ -163,11 +174,13 @@ import Foundation
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 
     // foodProduction = 10, gameHours = 1.0, 2 targets → 5.0 each
-    #expect(state.facilities[bowl1.id]!.currentAmount == 5.0)
-    #expect(state.facilities[bowl2.id]!.currentAmount == 5.0)
+    let updated1 = try #require(state.facilities[bowl1.id])
+    let updated2 = try #require(state.facilities[bowl2.id])
+    #expect(updated1.currentAmount == 5.0)
+    #expect(updated2.currentAmount == 5.0)
 }
 
-@Test @MainActor func tickVeggieGardensSkipsFullFacilities() {
+@Test @MainActor func tickVeggieGardensSkipsFullFacilities() throws {
     let state = makeGameState()
     let garden = Facility.create(type: .veggieGarden, x: 0, y: 0)
     state.facilities[garden.id] = garden
@@ -184,11 +197,13 @@ import Foundation
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 
     // bowl1 stays full; bowl2 gets all 10.0 units
-    #expect(state.facilities[bowl1.id]!.currentAmount == state.facilities[bowl1.id]!.maxAmount)
-    #expect(state.facilities[bowl2.id]!.currentAmount == 10.0)
+    let updated1 = try #require(state.facilities[bowl1.id])
+    let updated2 = try #require(state.facilities[bowl2.id])
+    #expect(updated1.currentAmount == updated1.maxAmount)
+    #expect(updated2.currentAmount == 10.0)
 }
 
-@Test @MainActor func tickVeggieGardensNoOpWithoutGardens() {
+@Test @MainActor func tickVeggieGardensNoOpWithoutGardens() throws {
     let state = makeGameState()
     var bowl = Facility.create(type: .foodBowl, x: 5, y: 5)
     bowl.currentAmount = 50.0
@@ -197,7 +212,8 @@ import Foundation
 
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 
-    #expect(state.facilities[bowl.id]!.currentAmount == 50.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 50.0)
 }
 
 @Test @MainActor func tickVeggieGardensNoOpWithoutFoodFacilities() {
@@ -209,7 +225,7 @@ import Foundation
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 }
 
-@Test @MainActor func tickVeggieGardensMultipleGardensAccumulate() {
+@Test @MainActor func tickVeggieGardensMultipleGardensAccumulate() throws {
     let state = makeGameState()
     let garden1 = Facility.create(type: .veggieGarden, x: 0, y: 0)
     state.facilities[garden1.id] = garden1
@@ -224,10 +240,11 @@ import Foundation
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 
     // garden1 produces 10.0 → bowl gets 10.0; garden2 produces 10.0 → bowl gets 10.0 more
-    #expect(state.facilities[bowl.id]!.currentAmount == 20.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 20.0)
 }
 
-@Test @MainActor func tickVeggieGardensDoesNotOverfill() {
+@Test @MainActor func tickVeggieGardensDoesNotOverfill() throws {
     let state = makeGameState()
     let garden = Facility.create(type: .veggieGarden, x: 0, y: 0)
     state.facilities[garden.id] = garden
@@ -240,7 +257,8 @@ import Foundation
     AutoResources.tickVeggieGardens(state: state, gameHours: 1.0)
 
     // Refill clamps to maxAmount
-    #expect(state.facilities[bowl.id]!.currentAmount == 200.0)
+    let updated = try #require(state.facilities[bowl.id])
+    #expect(updated.currentAmount == 200.0)
 }
 
 // MARK: - tickAoEFacilities
@@ -264,7 +282,7 @@ import Foundation
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 }
 
-@Test @MainActor func tickAoEFacilitiesNoPerformerNoEffect() {
+@Test @MainActor func tickAoEFacilitiesNoPerformerNoEffect() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 5, y: 5)
     state.facilities[stage.id] = stage
@@ -277,10 +295,11 @@ import Foundation
 
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 
-    #expect(state.getGuineaPig(pig.id)!.needs.happiness == 50.0)
+    let updated = try #require(state.getGuineaPig(pig.id))
+    #expect(updated.needs.happiness == 50.0)
 }
 
-@Test @MainActor func tickAoEFacilitiesAudienceGetsBonus() {
+@Test @MainActor func tickAoEFacilitiesAudienceGetsBonus() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 5, y: 5)
     state.facilities[stage.id] = stage
@@ -303,12 +322,12 @@ import Foundation
 
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 
-    let updatedAudience = state.getGuineaPig(audience.id)!
+    let updatedAudience = try #require(state.getGuineaPig(audience.id))
     #expect(updatedAudience.needs.happiness == 62.0)
     #expect(updatedAudience.needs.social == 41.5)
 }
 
-@Test @MainActor func tickAoEFacilitiesPerformerExcluded() {
+@Test @MainActor func tickAoEFacilitiesPerformerExcluded() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 5, y: 5)
     state.facilities[stage.id] = stage
@@ -324,12 +343,12 @@ import Foundation
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 
     // Performer should NOT get the audience bonus
-    let updatedPerformer = state.getGuineaPig(performer.id)!
+    let updatedPerformer = try #require(state.getGuineaPig(performer.id))
     #expect(updatedPerformer.needs.happiness == 60.0)
     #expect(updatedPerformer.needs.social == 40.0)
 }
 
-@Test @MainActor func tickAoEFacilitiesPigOutsideRadiusUnaffected() {
+@Test @MainActor func tickAoEFacilitiesPigOutsideRadiusUnaffected() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 0, y: 0)
     state.facilities[stage.id] = stage
@@ -348,10 +367,11 @@ import Foundation
 
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 
-    #expect(state.getGuineaPig(farPig.id)!.needs.happiness == 50.0)
+    let updated = try #require(state.getGuineaPig(farPig.id))
+    #expect(updated.needs.happiness == 50.0)
 }
 
-@Test @MainActor func tickAoEFacilitiesBonusClampedTo100() {
+@Test @MainActor func tickAoEFacilitiesBonusClampedTo100() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 5, y: 5)
     state.facilities[stage.id] = stage
@@ -369,10 +389,11 @@ import Foundation
 
     AutoResources.tickAoEFacilities(state: state, gameHours: 1.0)
 
-    #expect(state.getGuineaPig(audience.id)!.needs.happiness == 100.0)
+    let updated = try #require(state.getGuineaPig(audience.id))
+    #expect(updated.needs.happiness == 100.0)
 }
 
-@Test @MainActor func tickAoEFacilitiesBonusScalesWithGameHours() {
+@Test @MainActor func tickAoEFacilitiesBonusScalesWithGameHours() throws {
     let state = makeGameState()
     let stage = Facility.create(type: .stage, x: 5, y: 5)
     state.facilities[stage.id] = stage
@@ -391,7 +412,7 @@ import Foundation
     // 3 game hours → happiness +6.0, social +4.5
     AutoResources.tickAoEFacilities(state: state, gameHours: 3.0)
 
-    let updated = state.getGuineaPig(audience.id)!
+    let updated = try #require(state.getGuineaPig(audience.id))
     #expect(updated.needs.happiness == 56.0)
     #expect(updated.needs.social == 34.5)
 }

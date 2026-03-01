@@ -102,6 +102,7 @@ enum PigNames {
         includeSuffix: Bool = false,
         gender: PrefixGender? = nil
     ) -> String {
+        // swiftlint:disable:next force_unwrapping
         var name = allNames.randomElement()!
 
         if includeTitle && Double.random(in: 0.0..<1.0) < 0.15 {
@@ -114,11 +115,13 @@ enum PigNames {
             case nil:
                 prefixes = malePrefixes + femalePrefixes + neutralPrefixes
             }
+            // swiftlint:disable:next force_unwrapping
             let prefix = prefixes.randomElement()!
             name = "\(prefix) \(name)"
         }
 
         if includeSuffix && Double.random(in: 0.0..<1.0) < 0.1 {
+            // swiftlint:disable:next force_unwrapping
             let suffix = suffixes.randomElement()!
             name = "\(name) \(suffix)"
         }
@@ -150,6 +153,7 @@ enum PigNames {
         }
 
         // Fallback: add a number suffix
+        // swiftlint:disable:next force_unwrapping
         let baseName = allNames.randomElement()!
         var counter = 1
         while existingNames.contains("\(baseName) \(counter)") {

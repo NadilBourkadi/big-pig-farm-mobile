@@ -134,7 +134,7 @@ struct CollisionCellOccupancyTests {
 struct CollisionSeparationTests {
 
     @Test("Two idle pigs within minPigDistance (3.0) are pushed apart")
-    func testSeparateOverlappingBothIdle() {
+    func testSeparateOverlappingBothIdle() throws {
         let state = makeGameState()
         let pigA = makePigAt(x: 5.0, y: 5.0, state: .idle)
         let pigB = makePigAt(x: 7.0, y: 5.0, state: .idle)  // 2.0 apart, threshold 3.0
@@ -144,8 +144,8 @@ struct CollisionSeparationTests {
         handler.rebuildSpatialGrid()
         handler.separateOverlappingPigs()
 
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         let dx = updatedB.position.x - updatedA.position.x
         let dy = updatedB.position.y - updatedA.position.y
         let dist = (dx * dx + dy * dy).squareRoot()
@@ -153,7 +153,7 @@ struct CollisionSeparationTests {
     }
 
     @Test("Two moving pigs within separationBothMoving (1.0) are pushed apart")
-    func testSeparateOverlappingBothMoving() {
+    func testSeparateOverlappingBothMoving() throws {
         let state = makeGameState()
         let steps = [GridPosition(x: 20, y: 5)]
         let pigA = makePigAt(x: 5.0, y: 5.0, state: .wandering, path: steps)
@@ -164,8 +164,8 @@ struct CollisionSeparationTests {
         handler.rebuildSpatialGrid()
         handler.separateOverlappingPigs()
 
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         let dx = updatedB.position.x - updatedA.position.x
         let dy = updatedB.position.y - updatedA.position.y
         let dist = (dx * dx + dy * dy).squareRoot()
@@ -173,7 +173,7 @@ struct CollisionSeparationTests {
     }
 
     @Test("Courting pair at close distance is NOT separated")
-    func testSeparateOverlappingSkipsCourtingPair() {
+    func testSeparateOverlappingSkipsCourtingPair() throws {
         let state = makeGameState()
         var pigA = makePigAt(x: 5.0, y: 5.0, state: .courting)
         var pigB = makePigAt(x: 5.3, y: 5.0, state: .courting)  // 0.3 apart, below all thresholds
@@ -185,14 +185,14 @@ struct CollisionSeparationTests {
         handler.rebuildSpatialGrid()
         handler.separateOverlappingPigs()
 
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         #expect(abs(updatedA.position.x - 5.0) < 0.001)
         #expect(abs(updatedB.position.x - 5.3) < 0.001)
     }
 
     @Test("Exactly overlapping pigs (distance ≈ 0) get one pushed in random direction")
-    func testSeparateExactOverlap() {
+    func testSeparateExactOverlap() throws {
         let state = makeGameState()
         let pigA = makePigAt(x: 5.0, y: 5.0, state: .idle)
         let pigB = makePigAt(x: 5.0, y: 5.0, state: .idle)  // exact overlap
@@ -204,8 +204,8 @@ struct CollisionSeparationTests {
 
         // Which pig is pushed depends on UUID string ordering (the canonical "second" pig in the pair
         // is always pushed). Check that the two pigs are now apart from each other.
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         let dx = updatedB.position.x - updatedA.position.x
         let dy = updatedB.position.y - updatedA.position.y
         let dist = (dx * dx + dy * dy).squareRoot()
@@ -213,7 +213,7 @@ struct CollisionSeparationTests {
     }
 
     @Test("Separation is skipped when new position would be on a wall")
-    func testSeparateOnlyIfBothWalkable() {
+    func testSeparateOnlyIfBothWalkable() throws {
         let state = makeGameState()
         // pigA is close to the left wall — separation would push it off-grid
         let pigA = makePigAt(x: 1.0, y: 5.0, state: .idle)
@@ -226,15 +226,15 @@ struct CollisionSeparationTests {
         handler.rebuildSpatialGrid()
         handler.separateOverlappingPigs()
 
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         // Separation would push A into the wall (x <= 0), so neither pig should move
         #expect(abs(updatedA.position.x - origAx) < 0.001)
         #expect(abs(updatedB.position.x - origBx) < 0.001)
     }
 
     @Test("Both-facility-use pigs use 1.0 separation threshold")
-    func testSeparateFacilityUse() {
+    func testSeparateFacilityUse() throws {
         let state = makeGameState()
         let pigA = makePigAt(x: 5.0, y: 5.0, state: .eating)
         let pigB = makePigAt(x: 6.5, y: 5.0, state: .sleeping)  // 1.5 apart, outside 1.0 facility threshold
@@ -247,8 +247,8 @@ struct CollisionSeparationTests {
         handler.separateOverlappingPigs()
 
         // 1.5 apart > 1.0 threshold → no separation
-        let updatedA = state.guineaPigs[pigA.id]!
-        let updatedB = state.guineaPigs[pigB.id]!
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
         #expect(abs(updatedA.position.x - origAx) < 0.001)
         #expect(abs(updatedB.position.x - origBx) < 0.001)
     }
@@ -294,7 +294,7 @@ struct CollisionFacilityTargetTests {
 struct CollisionRescueTests {
 
     @Test("Pig on non-walkable cell is teleported to a walkable cell")
-    func testRescueNonWalkablePigs() {
+    func testRescueNonWalkablePigs() throws {
         let state = makeGameState()
         // The starter farm has walls at x=0 and y=0 border
         var pig = makePigAt(x: 0.0, y: 5.0, state: .wandering)  // wall cell at x=0
@@ -304,7 +304,7 @@ struct CollisionRescueTests {
         let handler = CollisionHandler(gameState: state)
         handler.rescueNonWalkablePigs([pig])
 
-        let rescued = state.guineaPigs[pig.id]!
+        let rescued = try #require(state.guineaPigs[pig.id])
         let gx = Int(rescued.position.x)
         let gy = Int(rescued.position.y)
         #expect(state.farm.isWalkable(gx, gy))
@@ -314,7 +314,7 @@ struct CollisionRescueTests {
     }
 
     @Test("Pig on walkable cell is not moved by rescue")
-    func testRescueSkipsWalkablePig() {
+    func testRescueSkipsWalkablePig() throws {
         let state = makeGameState()
         let pig = makePigAt(x: 5.0, y: 5.0, state: .wandering)
         let origX = pig.position.x
@@ -323,7 +323,7 @@ struct CollisionRescueTests {
         let handler = CollisionHandler(gameState: state)
         handler.rescueNonWalkablePigs([pig])
 
-        let after = state.guineaPigs[pig.id]!
+        let after = try #require(state.guineaPigs[pig.id])
         #expect(abs(after.position.x - origX) < 0.001)
         #expect(abs(after.position.y - origY) < 0.001)
     }

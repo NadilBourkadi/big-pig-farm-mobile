@@ -8,15 +8,15 @@ import Foundation
 
 // MARK: - Pair Eligibility Tests
 
-@Test @MainActor func canSetPairWithEligiblePigs() {
+@Test @MainActor func canSetPairWithEligiblePigs() throws {
     let state = makeGameState()
     let male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 15.0)
     let female = GuineaPig.create(name: "Doe", gender: .female, ageDays: 15.0)
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let malePig = state.getGuineaPig(male.id)!
-    let femalePig = state.getGuineaPig(female.id)!
+    let malePig = try #require(state.getGuineaPig(male.id))
+    let femalePig = try #require(state.getGuineaPig(female.id))
 
     let canPair = malePig.canBreed && femalePig.canBreed
         && !malePig.breedingLocked && !femalePig.breedingLocked
@@ -25,7 +25,7 @@ import Foundation
     #expect(canPair)
 }
 
-@Test @MainActor func canSetPairBlockedByPregnancy() {
+@Test @MainActor func canSetPairBlockedByPregnancy() throws {
     let state = makeGameState()
     let male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 15.0)
     var female = GuineaPig.create(name: "Doe", gender: .female, ageDays: 15.0)
@@ -33,14 +33,14 @@ import Foundation
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let femalePig = state.getGuineaPig(female.id)!
+    let femalePig = try #require(state.getGuineaPig(female.id))
     #expect(femalePig.isPregnant)
     // canSetPair requires !female.isPregnant
     let canPair = !femalePig.isPregnant
     #expect(!canPair)
 }
 
-@Test @MainActor func canSetPairBlockedByLocked() {
+@Test @MainActor func canSetPairBlockedByLocked() throws {
     let state = makeGameState()
     var male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 15.0)
     male.breedingLocked = true
@@ -48,26 +48,26 @@ import Foundation
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let malePig = state.getGuineaPig(male.id)!
+    let malePig = try #require(state.getGuineaPig(male.id))
     #expect(malePig.breedingLocked)
     let canPair = !malePig.breedingLocked
     #expect(!canPair)
 }
 
-@Test @MainActor func canSetPairBlockedByBaby() {
+@Test @MainActor func canSetPairBlockedByBaby() throws {
     let state = makeGameState()
     let male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 2.0)
     let female = GuineaPig.create(name: "Doe", gender: .female, ageDays: 15.0)
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let malePig = state.getGuineaPig(male.id)!
+    let malePig = try #require(state.getGuineaPig(male.id))
     // A baby is not an adult and canBreed returns false
     #expect(!malePig.isAdult)
     #expect(!malePig.canBreed)
 }
 
-@Test @MainActor func canSetPairBlockedByUnhappy() {
+@Test @MainActor func canSetPairBlockedByUnhappy() throws {
     let state = makeGameState()
     var male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 15.0)
     male.needs.happiness = 50.0 // Below the 70.0 threshold
@@ -75,7 +75,7 @@ import Foundation
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let malePig = state.getGuineaPig(male.id)!
+    let malePig = try #require(state.getGuineaPig(male.id))
     #expect(!malePig.canBreed)
 }
 
@@ -183,15 +183,15 @@ import Foundation
 
 // MARK: - Offspring Prediction Tests
 
-@Test @MainActor func predictionReturnsResults() {
+@Test @MainActor func predictionReturnsResults() throws {
     let state = makeGameState()
     let male = GuineaPig.create(name: "Buck", gender: .male, ageDays: 15.0)
     let female = GuineaPig.create(name: "Doe", gender: .female, ageDays: 15.0)
     state.addGuineaPig(male)
     state.addGuineaPig(female)
 
-    let malePig = state.getGuineaPig(male.id)!
-    let femalePig = state.getGuineaPig(female.id)!
+    let malePig = try #require(state.getGuineaPig(male.id))
+    let femalePig = try #require(state.getGuineaPig(female.id))
 
     let predictions = predictOffspringPhenotypes(malePig.genotype, femalePig.genotype)
     #expect(!predictions.isEmpty)

@@ -54,7 +54,7 @@ struct Position: Codable, Sendable, Hashable {
     var y: Double = 0.0
 
     /// Euclidean distance to another position.
-    func distanceTo(_ other: Position) -> Double {
+    func distanceTo(_ other: Self) -> Double {
         let dx = x - other.x
         let dy = y - other.y
         return (dx * dx + dy * dy).squareRoot()
@@ -110,9 +110,9 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var personality: [Personality] = []
 
     // State
-    var needs: Needs = Needs()
+    var needs = Needs()
     var behaviorState: BehaviorState = .idle
-    var position: Position = Position()
+    var position = Position()
 
     // Movement
     var targetPosition: Position?
@@ -240,7 +240,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         fatherId: UUID? = nil,
         motherName: String? = nil,
         fatherName: String? = nil
-    ) -> GuineaPig {
+    ) -> Self {
         let resolvedGenotype = genotype ?? Genotype.randomCommon()
         let phenotype = calculatePhenotype(resolvedGenotype)
 
@@ -255,7 +255,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
             selectedTraits.append(available.remove(at: index))
         }
 
-        return GuineaPig(
+        return Self(
             id: UUID(),
             name: name,
             genotype: resolvedGenotype,

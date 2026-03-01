@@ -17,9 +17,12 @@ struct FacilityManagerTests {
 
     func placeFacility(type: FacilityType, x: Int, y: Int, state: GameState) -> Facility {
         let facility = Facility.create(type: type, x: x, y: y)
-        let placed = state.addFacility(facility)
-        precondition(placed, "Failed to place \(type) at (\(x), \(y))")
-        return state.getFacility(facility.id)!
+        let success = state.addFacility(facility)
+        precondition(success, "Failed to place \(type) at (\(x), \(y))")
+        guard let placed = state.getFacility(facility.id) else {
+            preconditionFailure("Facility missing after placement")
+        }
+        return placed
     }
 
     func pigAt(x: Double, y: Double, state: BehaviorState = .idle) -> GuineaPig {
@@ -177,10 +180,9 @@ struct FacilityManagerTests {
     // MARK: - Area Population Tests
 
     @Test("updateAreaPopulations counts pigs in the same area correctly")
-    func testUpdateAreaPopulationsCountsPigsPerArea() {
+    func testUpdateAreaPopulationsCountsPigsPerArea() throws {
         let (manager, state, unusedController) = makeManager()
-        let areaId = state.farm.areas.first?.id
-        #expect(areaId != nil)
+        let areaId = try #require(state.farm.areas.first?.id)
 
         var pig1 = pigAt(x: 5.0, y: 5.0)
         pig1.currentAreaId = areaId
@@ -190,7 +192,7 @@ struct FacilityManagerTests {
         state.addGuineaPig(pig2)
 
         manager.updateAreaPopulations()
-        #expect(manager.areaPopulations[areaId!] == 2)
+        #expect(manager.areaPopulations[areaId] == 2)
     }
 
     // MARK: - getCandidateFacilitiesRanked Tests

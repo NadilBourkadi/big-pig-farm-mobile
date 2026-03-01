@@ -132,6 +132,7 @@ extension FacilityManager {
         // 30% chance to shuffle an uncrowded facility to the front
         let uncrowded = ranked.filter { (crowdCounts[$0.id] ?? 0) == 0 }
         if !uncrowded.isEmpty && Double.random(in: 0..<1) < GameConfig.Behavior.uncrowdedChance {
+            // swiftlint:disable:next force_unwrapping
             let pick = uncrowded.randomElement()!
             ranked.removeAll { $0.id == pick.id }
             ranked.insert(pick, at: 0)
