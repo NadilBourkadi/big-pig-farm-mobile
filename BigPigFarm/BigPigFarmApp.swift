@@ -53,6 +53,9 @@ struct BigPigFarmApp: App {
 
     @MainActor
     private func lifecycleSave() {
+        // Save errors are logged but not surfaced to the user.
+        // The OS gives very limited time in background — a synchronous write
+        // is the safest approach to ensure completion before suspension.
         do {
             try saveManager.save(gameState)
         } catch {
