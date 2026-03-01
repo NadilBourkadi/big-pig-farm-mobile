@@ -63,6 +63,21 @@ struct StatusBarFoodLevelTests {
         let level = computeFoodLevel(state: state)
         #expect(level == 100)
     }
+
+    @Test func foodLevelRoundsHalfUp() {
+        let state = makeGameState()
+        // Two bowls at 30% and 31% → average 30.5% → rounds to 31, not truncates to 30
+        var bowl1 = Facility.create(type: .foodBowl, x: 5, y: 5)
+        bowl1.currentAmount = bowl1.maxAmount * 0.30
+        _ = state.addFacility(bowl1)
+
+        var bowl2 = Facility.create(type: .foodBowl, x: 10, y: 5)
+        bowl2.currentAmount = bowl2.maxAmount * 0.31
+        _ = state.addFacility(bowl2)
+
+        let level = computeFoodLevel(state: state)
+        #expect(level == 31)   // 30.5 rounds up, not truncates to 30
+    }
 }
 
 // MARK: - Water Level Tests
@@ -223,7 +238,7 @@ private func computeFoodLevel(state: GameState) -> Int {
     guard !facilities.isEmpty else { return 0 }
     let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
         / Double(facilities.count)
-    return Int(average)
+    return Int(average.rounded())
 }
 
 @MainActor
@@ -232,7 +247,7 @@ private func computeWaterLevel(state: GameState) -> Int {
     guard !facilities.isEmpty else { return 0 }
     let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
         / Double(facilities.count)
-    return Int(average)
+    return Int(average.rounded())
 }
 
 @MainActor
