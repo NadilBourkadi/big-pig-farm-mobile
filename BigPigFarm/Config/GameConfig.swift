@@ -96,6 +96,8 @@ enum GameConfig {
         static let rareMultiplier: Double = 2.5
         static let veryRareMultiplier: Double = 4.0
         static let legendaryMultiplier: Double = 10.0
+        // Adoption cost: intentionally 2× the common pig sale value (25) to prevent buy/sell exploits.
+        static let adoptionBaseCost: Int = 50
         // Facility costs (all 17)
         static let foodBowlCost: Int = 20
         static let waterBottleCost: Int = 20
