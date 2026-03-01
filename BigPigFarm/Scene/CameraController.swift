@@ -25,6 +25,8 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
     func setupGestureRecognizers(in view: SKView) {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         pan.maximumNumberOfTouches = 1
+        // pan.delegate = self so gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:)
+        // fires when pan and pinch are both active, enabling two-finger zoom+drag.
         pan.delegate = self
 
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
@@ -85,8 +87,9 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     // MARK: - UIGestureRecognizerDelegate
 
-    /// Allow pinch and pan to recognize simultaneously (two-finger zoom + drag).
-    /// Tap is exclusive — it only fires after pan fails.
+    /// Allow pinch and pan to recognize simultaneously — standard iOS "zoom while dragging" UX.
+    /// Tap exclusivity is enforced by tap.require(toFail: pan) in setupGestureRecognizers,
+    /// not by this delegate, so we never return true for tap here.
     nonisolated func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
