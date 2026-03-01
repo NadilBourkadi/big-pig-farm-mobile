@@ -114,7 +114,9 @@ private struct FacilityRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                FacilityBonusLabel(facilityType: item.facilityType!)
+                if let facilityType = item.facilityType {
+                    FacilityBonusLabel(facilityType: facilityType)
+                }
             }
             Spacer()
             VStack(spacing: 6) {
