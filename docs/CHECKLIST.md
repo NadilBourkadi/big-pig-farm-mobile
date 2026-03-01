@@ -112,4 +112,4 @@
 - [x] Implement auto-save (every 300 ticks)
 - [x] Add app icon
 - [ ] Polish animations and transitions
-- [ ] TestFlight build and testing
+- [x] TestFlight build and testing (code-complete: PrivacyInfo, metadata, 1.0.0, 1187 tests passing, clean build; upload gated on paid Apple Developer account)
