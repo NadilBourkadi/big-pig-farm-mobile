@@ -359,6 +359,15 @@ extension FarmScene {
             node.isSelected = (id == selectedPigID)
         }
     }
+
+    /// Select a pig and immediately center the camera on it.
+    /// Called from ContentView when the player taps "Follow" in PigList or PigDetail.
+    func centerOnPig(_ pigID: UUID) {
+        selectedPigID = pigID
+        if let node = pigNodes[pigID] {
+            cameraController.follow(node.position)
+        }
+    }
 }
 
 // MARK: - Indicators
