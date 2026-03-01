@@ -5,7 +5,7 @@ import Foundation
 /// Owns the collision handler and facility manager; drives per-pig AI decisions.
 @MainActor
 final class BehaviorController {
-    unowned let gameState: GameState
+    weak var gameState: GameState!
     let collision: CollisionHandler
     let facilityManager: FacilityManager
 
@@ -31,6 +31,7 @@ final class BehaviorController {
 
     /// Evaluate and apply one AI decision step for a single pig.
     func update(pig: inout GuineaPig, gameMinutes: Double) {
+        guard let gameState else { return }
         // Invalidate unreachable caches when the farm layout changes
         let gridGen = gameState.farm.gridGeneration
         if gridGen != lastGridGeneration {
@@ -86,6 +87,7 @@ final class BehaviorController {
         stuckTimers.removeValue(forKey: pigId)
         unreachableNeeds.removeValue(forKey: pigId)
         facilityManager.cleanupPig(pigId)
+        guard let gameState else { return }
         for var pig in gameState.getPigsList() where pig.courtingPartnerId == pigId {
             Breeding.clearCourtship(pig: &pig)
             gameState.updateGuineaPig(pig)

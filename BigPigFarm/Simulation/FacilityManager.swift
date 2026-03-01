@@ -64,8 +64,8 @@ final class OrderedPathCache {
 ///   FacilityConsumption.swift — arrival handling, resource consumption, alternatives
 @MainActor
 final class FacilityManager {
-    unowned let gameState: GameState
-    unowned let collision: CollisionHandler
+    weak var gameState: GameState!
+    let collision: CollisionHandler
 
     // MARK: - Path Cache
 

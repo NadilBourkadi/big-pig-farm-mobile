@@ -19,7 +19,7 @@ import QuartzCore
 ///  13. Auto-save counter
 @MainActor
 final class SimulationRunner {
-    private unowned let state: GameState
+    private weak var state: GameState?
     private let behaviorController: BehaviorController
 
     // MARK: - Event Callbacks
@@ -59,6 +59,7 @@ final class SimulationRunner {
 
     /// Process one simulation tick. `gameMinutes` is already speed-scaled by GameEngine.
     func tick(gameMinutes: Double) {
+        guard let state else { return }
         recordTimestamp(CACurrentMediaTime())
         let gameHours = gameMinutes / 60.0
 
@@ -104,6 +105,7 @@ final class SimulationRunner {
     // MARK: - Phase Helpers
 
     private func updateNeedsPhase(gameMinutes: Double) {
+        guard let state else { return }
         let pigs = state.getPigsList()
         let nearbyCounts = NeedsSystem.precomputeNearbyCounts(
             pigs: pigs,
@@ -121,6 +123,7 @@ final class SimulationRunner {
     }
 
     private func updateBehaviorsPhase(gameMinutes: Double) {
+        guard let state else { return }
         for var pig in state.getPigsList() {
             behaviorController.update(pig: &pig, gameMinutes: gameMinutes)
             state.updateGuineaPig(pig)
@@ -136,6 +139,7 @@ final class SimulationRunner {
     }
 
     private func updateAcclimationPhase(gameHours: Double) {
+        guard let state else { return }
         for var pig in state.getPigsList() {
             guard pig.preferredBiome != nil
                 || pig.acclimationTimer > 0.0
@@ -157,6 +161,7 @@ final class SimulationRunner {
     }
 
     private func processEconomyPhase() {
+        guard let state else { return }
         Culling.cullSurplusBreeders(gameState: state)
         for record in Culling.sellMarkedAdults(gameState: state) {
             behaviorController.cleanupDeadPig(record.pigID)
@@ -192,6 +197,7 @@ final class SimulationRunner {
     /// Fire the Farm Bell perk notification when pigs have critical needs.
     /// Throttled to at most once per game-hour.
     private func checkFarmBell(pigs: [GuineaPig]) {
+        guard let state else { return }
         guard state.hasUpgrade("farm_bell") else { return }
         let currentHour = state.gameTime.day * 24 + state.gameTime.hour
         guard currentHour != lastFarmBellHour else { return }
@@ -206,6 +212,7 @@ final class SimulationRunner {
 
     /// Expire and optionally refresh the contract board each tick.
     private func checkContractRefresh() {
+        guard let state else { return }
         let gameDay = state.gameTime.day
         var board = state.contractBoard
         _ = board.checkExpiry(gameDay: gameDay)
