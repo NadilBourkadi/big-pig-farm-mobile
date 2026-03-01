@@ -30,12 +30,12 @@ func formatBreedingStatus(_ pig: GuineaPig, verbose: Bool = false) -> String {
 func formatFacilityBonuses(_ facilityType: FacilityType) -> String {
     guard let info = facilityInfo[facilityType] else { return "" }
     var parts: [String] = []
-    if info.healthBonus > 0 { parts.append("+\(Int(info.healthBonus * 100))% health") }
-    if info.happinessBonus > 0 { parts.append("+\(Int(info.happinessBonus * 100))% happiness") }
-    if info.socialBonus > 0 { parts.append("+\(Int(info.socialBonus * 100))% social") }
-    if info.breedingBonus > 0 { parts.append("+\(Int(info.breedingBonus * 100))% breeding") }
-    if info.growthBonus > 0 { parts.append("+\(Int(info.growthBonus * 100))% growth") }
-    if info.saleBonus > 0 { parts.append("+\(Int(info.saleBonus * 100))% sale value") }
+    if info.healthBonus > 0 { parts.append("+\(Int((info.healthBonus * 100).rounded()))% health") }
+    if info.happinessBonus > 0 { parts.append("+\(Int((info.happinessBonus * 100).rounded()))% happiness") }
+    if info.socialBonus > 0 { parts.append("+\(Int((info.socialBonus * 100).rounded()))% social") }
+    if info.breedingBonus > 0 { parts.append("+\(Int((info.breedingBonus * 100).rounded()))% breeding") }
+    if info.growthBonus > 0 { parts.append("+\(Int((info.growthBonus * 100).rounded()))% growth") }
+    if info.saleBonus > 0 { parts.append("+\(Int((info.saleBonus * 100).rounded()))% sale value") }
     if info.foodProduction > 0 { parts.append("produces \(info.foodProduction) food") }
     return parts.joined(separator: ", ")
 }
@@ -73,11 +73,22 @@ struct CurrencyLabel: View {
 
 /// A horizontal bar visualizing a pig need level (value: 0.0–1.0).
 ///
-/// Callers must normalize from the 0–100 need range: `pig.needs.hunger / 100.0`.
+/// **Precondition:** `value` must be in 0.0–1.0. Callers must normalize from the
+/// 0–100 need range: `pig.needs.hunger / 100.0`. Passing an un-normalized value
+/// (e.g. 75.0 for hunger) triggers a precondition failure in debug builds.
 /// Used in PigDetailView needs section and PigListView rows.
 struct NeedBar: View {
     let value: Double
     let label: String
+
+    init(value: Double, label: String) {
+        precondition(
+            value >= 0.0 && value <= 1.0,
+            "NeedBar value must be 0.0–1.0; got \(value). Normalize with e.g. pig.needs.hunger / 100.0"
+        )
+        self.value = value
+        self.label = label
+    }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -173,6 +184,10 @@ struct BreedingStatusLabel: View {
 
 /// Displays facility bonuses as a compact comma-separated summary.
 ///
+/// Renders nothing (empty view) for facilities with no bonuses (e.g. food bowl, water bottle).
+/// Precondition: facilityType must exist in `facilityInfo`. Missing entries silently render
+/// empty here; Facility.info crashes — so both will fail loudly at any usage site.
+///
 /// Maps from: ui/utils.py format_facility_bonuses()
 struct FacilityBonusLabel: View {
     let facilityType: FacilityType
@@ -193,6 +208,11 @@ struct FacilityBonusLabel: View {
 ///
 /// Maps from: pig_detail.py _build_portrait_text() — iOS loads PNGs
 /// exported by the sprite pipeline (Doc 03) instead of rendering at runtime.
+///
+/// **Asset dependency:** image name is `portrait_<color>_<pattern>_<intensity>_<roan>`.
+/// If the portrait is missing from the asset catalog, SwiftUI renders nothing silently.
+/// All 483 portrait combinations are committed in the repo (PR #58); this is only a
+/// concern if new enum cases are added without re-running the sprite pipeline.
 struct PigPortraitView: View {
     let baseColor: BaseColor
     let pattern: Pattern
