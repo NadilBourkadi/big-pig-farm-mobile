@@ -274,6 +274,7 @@ private struct RequirementRow: View {
         HStack {
             Image(systemName: met ? "checkmark.circle.fill" : "circle")
                 .foregroundStyle(met ? .green : .secondary)
+                .accessibilityLabel(met ? "Requirement met" : "Requirement not met")
             Text(label)
                 .font(.caption)
             Spacer()

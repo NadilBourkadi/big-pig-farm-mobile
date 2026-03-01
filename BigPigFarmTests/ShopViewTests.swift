@@ -96,6 +96,7 @@ import Foundation
     state.money = 0
     Shop.purchaseNewRoom(state: state, biome: .meadow)
     #expect(state.money == 0)
+    #expect(state.farm.areas.count == 1)
 }
 
 @Test @MainActor func purchaseNewRoomFailsAtMaxRoomsForTier() {
