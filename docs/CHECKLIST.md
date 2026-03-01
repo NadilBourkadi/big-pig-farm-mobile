@@ -96,8 +96,8 @@
 
 - [x] Implement `StatusBarView` (HUD overlay)
 - [ ] Implement `ShopView` (4-tab shop)
-- [ ] Implement `PigListView` (sortable list)
-- [ ] Implement `PigDetailView` (stats + genetics)
+- [x] Implement `PigListView` (sortable list)
+- [x] Implement `PigDetailView` (stats + genetics)
 - [ ] Implement `BreedingView` (pair selection)
 - [ ] Implement `AlmanacView` (Pigdex + contracts)
 - [ ] Implement `BiomeSelectView` (biome picker)
