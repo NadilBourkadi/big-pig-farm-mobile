@@ -8,7 +8,7 @@ import Foundation
 /// Returns a SaveManager pointing to a unique temporary directory.
 /// Each test gets its own isolated directory so tests never interfere with each other.
 @MainActor
-private func makeTempSaveManager() -> SaveManager {
+func makeTempSaveManager() -> SaveManager {
     let tempDir = FileManager.default.temporaryDirectory
         .appendingPathComponent(UUID().uuidString)
     try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)

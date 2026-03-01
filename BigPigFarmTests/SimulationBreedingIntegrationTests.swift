@@ -32,7 +32,7 @@ import Foundation
     state.addGuineaPig(female)
 
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     let femaleId = female.id
 
     runTicks(runner, state: state, count: 5, gameMinutesPerTick: 6.0)
@@ -75,7 +75,7 @@ import Foundation
     state.addGuineaPig(female)
 
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
 
     runTicks(runner, state: state, count: 5, gameMinutesPerTick: 30.0)
 
@@ -105,7 +105,7 @@ import Foundation
     state.addGuineaPig(female)
 
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
 
     runTicks(runner, state: state, count: 5, gameMinutesPerTick: 30.0)
 
@@ -153,7 +153,7 @@ import Foundation
     state.addGuineaPig(female)
 
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     let femaleId = female.id
 
     // One tick at 1.0 game-min: timer goes 3.9 + 1.0 = 4.9 >= 4.0, courtship completes
@@ -183,7 +183,7 @@ import Foundation
     state.addGuineaPig(pig)
 
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
 
     runTicks(runner, state: state, count: 1)
 

@@ -5,20 +5,24 @@ import SwiftUI
 
 @main
 struct BigPigFarmApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var gameState: GameState
     @State private var engine: GameEngine
     // SimulationRunner must be retained here; the engine tick callback holds a weak ref.
     @State private var runner: SimulationRunner
+    private let saveManager: SaveManager
 
     init() {
+        let sm = SaveManager()
         let state = GameState()
         let behaviorController = BehaviorController(gameState: state)
-        let sim = SimulationRunner(state: state, behaviorController: behaviorController)
+        let sim = SimulationRunner(state: state, behaviorController: behaviorController, saveManager: sm)
         let eng = GameEngine(state: state)
         eng.registerTickCallback { [weak sim] minutes in
             sim?.tick(gameMinutes: minutes)
         }
         setupNewGame(state: state)
+        saveManager = sm
         _gameState = State(initialValue: state)
         _engine = State(initialValue: eng)
         _runner = State(initialValue: sim)
@@ -27,6 +31,32 @@ struct BigPigFarmApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(gameState: gameState, engine: engine)
+        }
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            handleScenePhaseChange(from: oldPhase, to: newPhase)
+        }
+    }
+
+    @MainActor
+    private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
+        switch newPhase {
+        case .active:
+            engine.resume()
+        case .inactive:
+            engine.pause()
+        case .background:
+            lifecycleSave()
+        @unknown default:
+            break
+        }
+    }
+
+    @MainActor
+    private func lifecycleSave() {
+        do {
+            try saveManager.save(gameState)
+        } catch {
+            print("[BigPigFarmApp] lifecycleSave failed: \(error)")
         }
     }
 }

@@ -8,7 +8,7 @@ import Foundation
 @Test @MainActor func simulationRunnerInitializes() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     #expect(runner.currentTPS == 0.0)
 }
 
@@ -17,7 +17,7 @@ import Foundation
 @Test @MainActor func tpsMeasurementAfterMultipleTicks() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     for _ in 0..<10 {
         runner.tick(gameMinutes: 0.3)
     }
@@ -27,7 +27,7 @@ import Foundation
 @Test @MainActor func tpsWindowCappedAtMaxTimestamps() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // Run well past the 50-timestamp window — should not crash or allocate unboundedly
     for _ in 0..<100 {
         runner.tick(gameMinutes: 0.3)
@@ -40,7 +40,7 @@ import Foundation
 @Test @MainActor func tickWithNoPigsDoesNotCrash() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     for _ in 0..<100 {
         runner.tick(gameMinutes: 0.3)
     }
@@ -52,7 +52,7 @@ import Foundation
 @Test @MainActor func breedingThrottleResetsAfterInterval() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // 20 ticks = 2 full breeding-check cycles (interval = 10); must not crash
     for _ in 0..<20 {
         runner.tick(gameMinutes: 0.3)
@@ -66,12 +66,49 @@ import Foundation
 @Test @MainActor func autoSaveCounterOver300Ticks() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     for _ in 0..<300 {
         runner.tick(gameMinutes: 0.3)
     }
     // Should not crash; save counter resets at 300
     #expect(runner.currentTPS > 0.0)
+}
+
+@Test @MainActor func autoSaveTriggersAfter300Ticks() {
+    let state = makeGameState()
+    let controller = makeController(state: state)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
+    #expect(state.lastSave == nil)
+    for _ in 0..<300 {
+        runner.tick(gameMinutes: 0.3)
+    }
+    #expect(state.lastSave != nil)
+}
+
+@Test @MainActor func autoSaveDoesNotTriggerBefore300Ticks() {
+    let state = makeGameState()
+    let controller = makeController(state: state)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
+    for _ in 0..<299 {
+        runner.tick(gameMinutes: 0.3)
+    }
+    #expect(state.lastSave == nil)
+}
+
+@Test @MainActor func autoSaveCounterResetsAfterTrigger() {
+    let state = makeGameState()
+    let controller = makeController(state: state)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
+    for _ in 0..<300 {
+        runner.tick(gameMinutes: 0.3)
+    }
+    let firstSave = state.lastSave
+    #expect(firstSave != nil)
+    for _ in 0..<300 {
+        runner.tick(gameMinutes: 0.3)
+    }
+    #expect(state.lastSave != nil)
+    #expect(state.lastSave! >= firstSave!)
 }
 
 // MARK: - Farm Bell
@@ -83,7 +120,7 @@ import Foundation
     pig.needs.hunger = 5.0  // Below criticalThreshold (20)
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     runner.tick(gameMinutes: 0.3)
     let farmBellEvents = state.events.filter { $0.eventType == "farm_bell" }
     #expect(!farmBellEvents.isEmpty)
@@ -95,7 +132,7 @@ import Foundation
     pig.needs.hunger = 5.0
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     runner.tick(gameMinutes: 0.3)
     let farmBellEvents = state.events.filter { $0.eventType == "farm_bell" }
     #expect(farmBellEvents.isEmpty)
@@ -108,7 +145,7 @@ import Foundation
     pig.needs.hunger = 5.0
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // Two ticks in the same game-hour — only one notification
     runner.tick(gameMinutes: 0.3)
     runner.tick(gameMinutes: 0.3)
@@ -123,7 +160,7 @@ import Foundation
     let pig = GuineaPig.create(name: "HealthyPig", gender: .male)
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     runner.tick(gameMinutes: 0.3)
     let farmBellEvents = state.events.filter { $0.eventType == "farm_bell" }
     #expect(farmBellEvents.isEmpty)
@@ -134,7 +171,7 @@ import Foundation
 @Test @MainActor func contractBoardLastRefreshDayUpdatedOnFirstTick() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     #expect(state.contractBoard.lastRefreshDay == 0)
     runner.tick(gameMinutes: 0.3)
     // Board starts empty with lastRefreshDay == 0, so refresh triggers immediately
@@ -144,7 +181,7 @@ import Foundation
 @Test @MainActor func contractRefreshFillsEmptyBoard() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // Advance game time significantly so expiry check runs on a non-trivial day
     state.gameTime.advance(minutes: Double(60 * 24 * 15))  // 15 game-days
     runner.tick(gameMinutes: 0.3)
@@ -158,7 +195,7 @@ import Foundation
 @Test @MainActor func onPigSoldCallbackNotFiredWhenNoPigsForSale() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     var sold = false
     runner.onPigSold = { _, _, _, _ in sold = true }
     runner.tick(gameMinutes: 0.3)
@@ -168,7 +205,7 @@ import Foundation
 @Test @MainActor func onPregnancyCallbackNotFiredWithNoPigs() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     var pregnancyFired = false
     runner.onPregnancy = { _, _ in pregnancyFired = true }
     runner.tick(gameMinutes: 0.3)
@@ -178,7 +215,7 @@ import Foundation
 @Test @MainActor func onBirthCallbackNotFiredWithNoPigs() {
     let state = GameState()
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     var birthFired = false
     runner.onBirth = { _ in birthFired = true }
     runner.tick(gameMinutes: 0.3)
@@ -195,7 +232,7 @@ import Foundation
     pig.acclimatingBiome = nil
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     runner.tick(gameMinutes: 0.3)
     let updatedPig = state.getGuineaPig(pig.id)!
     #expect(updatedPig.acclimationTimer == 0.0)
@@ -210,7 +247,7 @@ import Foundation
     pig.needs.hunger = 100.0
     state.addGuineaPig(pig)
     let controller = BehaviorController(gameState: state)
-    let runner = SimulationRunner(state: state, behaviorController: controller)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
     // After one tick at normal speed, hunger should have decayed slightly
     runner.tick(gameMinutes: 1.0)
     let updatedPig = state.getGuineaPig(pig.id)!
