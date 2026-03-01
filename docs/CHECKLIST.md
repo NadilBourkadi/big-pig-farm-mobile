@@ -89,7 +89,7 @@
 - [x] Implement `FacilityNode`
 - [x] Implement `CameraController` (pan/zoom/bounds)
 - [x] Wire `SpriteView` into `ContentView`
-- [ ] Implement touch handling (tap pig, place facility)
+- [x] Implement touch handling (tap pig, place facility)
 - [ ] Performance test with 50+ pigs
 
 ### Phase 4 — SwiftUI Screens (Weeks 9–12)
