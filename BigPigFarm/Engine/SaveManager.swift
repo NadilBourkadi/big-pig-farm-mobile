@@ -34,7 +34,9 @@ extension SaveManager {
     }
 
     /// Write pre-encoded JSON data atomically, backing up the previous save first.
-    /// Not `@MainActor` — caller encodes on main actor, passes Data here for background use.
+    /// Not `@MainActor` — intended for auto-save where the caller encodes on the main actor
+    /// then dispatches this write to a background task. Only one concurrent writer is safe;
+    /// the backup-then-write sequence is not internally synchronized.
     func saveData(_ data: Data) throws {
         makeBackup()
         try data.write(to: saveFileURL, options: .atomic)

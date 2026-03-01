@@ -212,7 +212,7 @@ private func makeTempSaveManager() -> SaveManager {
 
 // MARK: - Migration: clampOrphanedPigs
 
-@Test @MainActor func clampOrphanedPigsMovesOffWallCells() {
+@Test @MainActor func clampOrphanedPigsMovesOffWallCells() throws {
     let state = makeGameState()
     // Place a pig on a wall cell (border of the starter area, which is at x=0,y=0)
     var pig = GuineaPig.create(name: "Clipper", gender: .female)
@@ -221,8 +221,22 @@ private func makeTempSaveManager() -> SaveManager {
 
     SaveMigration.clampOrphanedPigs(state)
 
-    let moved = state.getGuineaPig(pig.id)!
+    let moved = try #require(state.getGuineaPig(pig.id))
     let x = Int(moved.position.x)
     let y = Int(moved.position.y)
     #expect(state.farm.isWalkable(x, y) == true)
+}
+
+@Test @MainActor func migrateIfNeededCreatesLegacyAreaWhenFarmEmpty() {
+    let state = makeGameState(withArea: false)
+    state.farm = FarmGrid(width: 62, height: 37)  // Blank grid, no areas
+    SaveMigration.migrateIfNeeded(state)
+    #expect(state.farm.areas.isEmpty == false)
+}
+
+@Test @MainActor func relayoutAreasReturnsFalseWhenAlreadyCorrect() {
+    let state = makeGameState()
+    // Starter farm has one area with gridCol=0, gridRow=0 already at the right position.
+    let result = SaveMigration.relayoutAreas(state)
+    #expect(result == false)
 }
