@@ -88,7 +88,7 @@
 - [x] Implement `PigNode` (animated sprite)
 - [x] Implement `FacilityNode`
 - [x] Implement `CameraController` (pan/zoom/bounds)
-- [ ] Wire `SpriteView` into `ContentView`
+- [x] Wire `SpriteView` into `ContentView`
 - [ ] Implement touch handling (tap pig, place facility)
 - [ ] Performance test with 50+ pigs
 
