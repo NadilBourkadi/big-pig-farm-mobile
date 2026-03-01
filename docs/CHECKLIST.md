@@ -21,7 +21,7 @@
 
 - [ ] Profile `GKGridGraph` vs custom A* on 96x56 grid (during Phase 1)
 - [x] Determine `SKShader` vs alpha compositing for pattern overlays (during Phase 2)
-- [ ] Test `SpriteView` performance with 50+ animated nodes (during Phase 3)
+- [x] Test `SpriteView` performance with 50+ animated nodes (during Phase 3)
 - [ ] Evaluate `CADisplayLink` vs `Timer` for tick loop precision (during Phase 1)
 - [ ] Measure JSON save/load performance with 200+ pigs (during Phase 5)
 - [ ] Test Swift 6 strict concurrency with SpriteKit scene updates (during Phase 3)
@@ -90,7 +90,7 @@
 - [x] Implement `CameraController` (pan/zoom/bounds)
 - [x] Wire `SpriteView` into `ContentView`
 - [x] Implement touch handling (tap pig, place facility)
-- [ ] Performance test with 50+ pigs
+- [x] Performance test with 50+ pigs
 
 ### Phase 4 — SwiftUI Screens (Weeks 9–12)
 
