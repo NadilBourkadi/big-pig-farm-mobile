@@ -31,6 +31,8 @@ extension FarmScene {
     /// Uses frame expansion + closest-center-distance selection, matching the
     /// Python pig_at_screen_pos() behavior for comfortable mobile tapping on small sprites.
     private func pigNodeAt(_ location: CGPoint) -> PigNode? {
+        // PigNode uses the default SKSpriteNode anchor (0.5, 0.5), so node.position
+        // is the frame center. nearestIndex relies on frame/center alignment being correct.
         let nodeList = Array(pigNodes.values)
         let frames = nodeList.map { $0.frame }
         let centers = nodeList.map { $0.position }

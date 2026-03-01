@@ -52,7 +52,7 @@ class FarmScene: SKScene {
 
     // MARK: - Node Tracking
 
-    var pigNodes: [UUID: PigNode] = [:]
+    private(set) var pigNodes: [UUID: PigNode] = [:]
     private var facilityNodes: [UUID: FacilityNode] = [:]
 
     // MARK: - Camera
