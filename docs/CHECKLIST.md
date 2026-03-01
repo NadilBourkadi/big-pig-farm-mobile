@@ -106,7 +106,7 @@
 
 ### Phase 5 — Persistence & Polish (Weeks 13–14)
 
-- [ ] Implement `SaveManager` (JSON save/load)
+- [x] Implement `SaveManager` (JSON save/load)
 - [ ] Implement app lifecycle save (background/terminate)
 - [ ] Implement auto-save (every 300 ticks)
 - [ ] Add app icon
