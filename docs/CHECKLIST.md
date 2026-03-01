@@ -110,6 +110,6 @@
 - [x] Implement `HapticManager` (7 event methods + 9 integration call sites)
 - [ ] Implement app lifecycle save (background/terminate)
 - [ ] Implement auto-save (every 300 ticks)
-- [ ] Add app icon
+- [x] Add app icon
 - [ ] Polish animations and transitions
 - [ ] TestFlight build and testing
