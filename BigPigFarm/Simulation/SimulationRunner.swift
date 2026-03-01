@@ -166,16 +166,16 @@ final class SimulationRunner {
         for record in Culling.sellMarkedAdults(gameState: state) {
             behaviorController.cleanupDeadPig(record.pigID)
             onPigSold?(record.pigName, record.totalValue, record.contractBonus, record.pigID)
+            HapticManager.pigSold()
         }
         breedingCheckCounter += 1
         let runExpensive = breedingCheckCounter >= breedingCheckInterval
         if runExpensive { breedingCheckCounter = 0 }
         let eventCountBefore = state.events.count
         _ = Breeding.checkBreedingOpportunities(gameState: state, runExpensive: runExpensive)
-        if let onBirth = onBirth {
-            for event in state.events[eventCountBefore...] where event.eventType == "birth" {
-                onBirth(event.message)
-            }
+        for event in state.events[eventCountBefore...] where event.eventType == "birth" {
+            onBirth?(event.message)
+            HapticManager.birth()
         }
     }
 

@@ -49,6 +49,7 @@ extension FarmScene {
             facility.positionY = oldY
             _ = gameState.farm.placeFacility(facility)
             gameState.updateFacility(facility)
+            HapticManager.error()
         }
     }
 

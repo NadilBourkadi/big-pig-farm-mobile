@@ -19,6 +19,7 @@ extension FarmScene {
             } else {
                 selectedPigID = pigNode.pigID
                 sceneDelegate?.farmScene(self, didSelectPig: pigNode.pigID)
+                HapticManager.pigSelected()
             }
         } else {
             selectedPigID = nil

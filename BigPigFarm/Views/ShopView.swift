@@ -145,10 +145,14 @@ private struct FacilityRow: View {
         let position = Shop.findPlacementPosition(for: facilityType, in: gameState)
         guard position != nil else {
             onError("No space available for \(item.name). Try selling or moving other facilities.")
+            HapticManager.error()
             return
         }
-        if !Shop.purchaseItem(state: gameState, item: item, position: position) {
+        if Shop.purchaseItem(state: gameState, item: item, position: position) {
+            HapticManager.purchase()
+        } else {
             onError("Could not purchase \(item.name).")
+            HapticManager.error()
         }
     }
 }

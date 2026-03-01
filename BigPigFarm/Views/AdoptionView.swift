@@ -175,6 +175,7 @@ extension AdoptionView {
         guard !gameState.isAtCapacity else {
             errorMessage = "Farm is at capacity! Upgrade or sell pigs."
             showError = true
+            HapticManager.error()
             return
         }
 
@@ -182,12 +183,14 @@ extension AdoptionView {
         guard gameState.money >= cost else {
             errorMessage = "Not enough Squeaks!"
             showError = true
+            HapticManager.error()
             return
         }
 
         guard let position = Adoption.findSpawnPosition(in: gameState) else {
             errorMessage = "No space for new pig!"
             showError = true
+            HapticManager.error()
             return
         }
 
@@ -204,6 +207,7 @@ extension AdoptionView {
 
         availablePigs.removeAll { $0.id == pig.id }
         selectedPig = nil
+        HapticManager.purchase()
     }
 
     /// Generate a fresh batch of adoption pigs.

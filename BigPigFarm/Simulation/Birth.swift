@@ -104,6 +104,7 @@ enum Birth {
                 "Pigdex: \(pig.phenotype.displayName) discovered! (\(rarity.rawValue.capitalized)) +\(reward) Squeaks",
                 eventType: "pigdex"
             )
+            HapticManager.pigdexDiscovery()
 
             if gameState.hasUpgrade("lucky_clover"),
                Double.random(in: 0.0..<1.0) < 0.10 {

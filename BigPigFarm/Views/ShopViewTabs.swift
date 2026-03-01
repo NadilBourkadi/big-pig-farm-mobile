@@ -103,8 +103,11 @@ private struct PerkRow: View {
 
     @MainActor
     private func purchase() {
-        if !Shop.purchasePerk(perkID: perk.id, state: gameState) {
+        if Shop.purchasePerk(perkID: perk.id, state: gameState) {
+            HapticManager.purchase()
+        } else {
             onError("Could not purchase \(perk.name).")
+            HapticManager.error()
         }
     }
 }
@@ -244,17 +247,23 @@ struct FarmTab: View {
 
     @MainActor
     private func upgradeTier() {
-        if !Shop.purchaseTierUpgrade(state: gameState) {
+        if Shop.purchaseTierUpgrade(state: gameState) {
+            HapticManager.purchase()
+        } else {
             alertMessage = "Farm tier upgrade failed. Check requirements."
             showingAlert = true
+            HapticManager.error()
         }
     }
 
     @MainActor
     private func purchaseRoom(biome: BiomeType) {
-        if !Shop.purchaseNewRoom(state: gameState, biome: biome) {
+        if Shop.purchaseNewRoom(state: gameState, biome: biome) {
+            HapticManager.purchase()
+        } else {
             alertMessage = "Room purchase failed. Check your funds."
             showingAlert = true
+            HapticManager.error()
         }
     }
 }
