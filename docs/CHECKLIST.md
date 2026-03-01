@@ -101,7 +101,7 @@
 - [ ] Implement `BreedingView` (pair selection)
 - [ ] Implement `AlmanacView` (Pigdex + contracts)
 - [ ] Implement `BiomeSelectView` (biome picker)
-- [ ] Implement `AdoptionView` (bloodline adoption)
+- [x] Implement `AdoptionView` (bloodline adoption)
 - [x] Implement `SharedComponents` (currency, badges, bars)
 
 ### Phase 5 — Persistence & Polish (Weeks 13–14)
