@@ -8,10 +8,11 @@ struct FacilityManagerTests {
 
     // MARK: - Helpers
 
-    func makeManager() -> (FacilityManager, GameState) {
+    // swiftlint:disable:next large_tuple
+    func makeManager() -> (FacilityManager, GameState, BehaviorController) {
         let state = makeGameState()
         let controller = makeController(state: state)
-        return (controller.facilityManager, state)
+        return (controller.facilityManager, state, controller)
     }
 
     func placeFacility(type: FacilityType, x: Int, y: Int, state: GameState) -> Facility {
@@ -74,7 +75,7 @@ struct FacilityManagerTests {
 
     @Test("cachedFindPath from A to A returns single-element path")
     func testCachedFindPathSameStartGoal() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pos = GridPosition(x: 5, y: 5)
         let result = manager.cachedFindPath(from: pos, to: pos)
         #expect(result == [pos])
@@ -82,7 +83,7 @@ struct FacilityManagerTests {
 
     @Test("cachedFindPath increments cacheHits on repeated call")
     func testCachedFindPathIncrementsCacheHits() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let start = GridPosition(x: 5, y: 5)
         let goal = GridPosition(x: 5, y: 6)
         manager.resetPerfCounters()
@@ -95,7 +96,7 @@ struct FacilityManagerTests {
 
     @Test("tryStraightLine returns path between adjacent walkable cells")
     func testStraightLineAdjacentCells() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let start = GridPosition(x: 5, y: 5)
         let goal = GridPosition(x: 5, y: 6)
         let result = manager.tryStraightLine(from: start, to: goal)
@@ -107,7 +108,7 @@ struct FacilityManagerTests {
 
     @Test("addFailedFacility then getFailedFacilities returns the ID")
     func testAddFailedFacilityAndGet() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         let facilityId = UUID()
         manager.addFailedFacility(pigId, facilityId)
@@ -116,7 +117,7 @@ struct FacilityManagerTests {
 
     @Test("clearFailedFacilities removes all entries for a pig")
     func testClearFailedFacilities() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         manager.addFailedFacility(pigId, UUID())
         manager.clearFailedFacilities(pigId)
@@ -125,7 +126,7 @@ struct FacilityManagerTests {
 
     @Test("tickFailedCooldown clears failed list when cooldown expires")
     func testTickFailedCooldownClearsWhenExpired() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         manager.addFailedFacility(pigId, UUID())
         manager.setFailedCooldown(pigId, 1)
@@ -136,7 +137,7 @@ struct FacilityManagerTests {
 
     @Test("tickFailedCooldown decrements but keeps failed list when not expired")
     func testTickFailedCooldownDecrements() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         let facilityId = UUID()
         manager.addFailedFacility(pigId, facilityId)
@@ -150,7 +151,7 @@ struct FacilityManagerTests {
 
     @Test("cleanupPig removes all tracking state for that pig")
     func testCleanupPigRemovesAllTracking() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         manager.addFailedFacility(pigId, UUID())
         manager.setFailedCooldown(pigId, 5)
@@ -161,7 +162,7 @@ struct FacilityManagerTests {
 
     @Test("resetAll clears path cache and all pig tracking")
     func testResetAllClearsEverything() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pigId = UUID()
         manager.addFailedFacility(pigId, UUID())
         manager.setFailedCooldown(pigId, 5)
@@ -177,7 +178,7 @@ struct FacilityManagerTests {
 
     @Test("updateAreaPopulations counts pigs in the same area correctly")
     func testUpdateAreaPopulationsCountsPigsPerArea() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let areaId = state.farm.areas.first?.id
         #expect(areaId != nil)
 
@@ -196,7 +197,7 @@ struct FacilityManagerTests {
 
     @Test("getCandidateFacilitiesRanked returns empty when facility type absent")
     func testGetCandidatesReturnsEmptyWhenNoFacilities() {
-        let (manager, _) = makeManager()
+        let (manager, unusedState, unusedController) = makeManager()
         let pig = pigAt(x: 5.0, y: 5.0)
         let ranked = manager.getCandidateFacilitiesRanked(pig: pig, facilityType: .hotSpring)
         #expect(ranked.isEmpty)
@@ -204,7 +205,7 @@ struct FacilityManagerTests {
 
     @Test("getCandidateFacilitiesRanked omits pig's failed facilities")
     func testGetCandidatesFiltersFailedFacilities() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         let pig = pigAt(x: 5.0, y: 5.0)
         state.addGuineaPig(pig)
@@ -216,7 +217,7 @@ struct FacilityManagerTests {
 
     @Test("getCandidateFacilitiesRanked omits empty consumable facilities")
     func testGetCandidatesFiltersEmptyConsumables() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         var facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         facility.currentAmount = 0
         state.facilities[facility.id] = facility

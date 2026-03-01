@@ -8,10 +8,11 @@ struct FacilityManagerConsumptionTests {
 
     // MARK: - Helpers
 
-    func makeManager() -> (FacilityManager, GameState) {
+    // swiftlint:disable:next large_tuple
+    func makeManager() -> (FacilityManager, GameState, BehaviorController) {
         let state = makeGameState()
         let controller = makeController(state: state)
-        return (controller.facilityManager, state)
+        return (controller.facilityManager, state, controller)
     }
 
     func placeFacility(type: FacilityType, x: Int, y: Int, state: GameState) -> Facility {
@@ -32,7 +33,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility at food bowl sets eating state")
     func testArrivalAtFoodBowlSetsEating() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
 
         var pig = pigAt(x: 5.0, y: 9.0, state: .wandering)
@@ -46,7 +47,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility at empty food bowl marks facility as failed and goes idle")
     func testArrivalAtEmptyBowlMarksAsFailed() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         var facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         facility.currentAmount = 0
         state.facilities[facility.id] = facility
@@ -63,7 +64,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility at water bottle sets drinking state")
     func testArrivalAtWaterBottleSetsdrinking() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         placeFacility(type: .waterBottle, x: 5, y: 9, state: state)
 
         var pig = pigAt(x: 5.0, y: 9.0, state: .wandering)
@@ -77,10 +78,11 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility at hideout with low energy sets sleeping state")
     func testArrivalAtHideoutWithLowEnergySleeps() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         placeFacility(type: .hideout, x: 4, y: 9, state: state)
 
-        var pig = pigAt(x: 5.0, y: 9.0, state: .wandering)
+        // Pig at left-side interaction point (3,9) of hideout at (4,9) size 3x2
+        var pig = pigAt(x: 3.0, y: 9.0, state: .wandering)
         pig.needs.energy = 20.0
         pig.targetFacilityId = state.getFacilitiesByType(.hideout).first?.id
         state.addGuineaPig(pig)
@@ -91,10 +93,11 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility at therapy garden goes idle when pig is happy")
     func testArrivalAtTherapyGardenSkipsIfHappy() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         placeFacility(type: .therapyGarden, x: 4, y: 9, state: state)
 
-        var pig = pigAt(x: 5.0, y: 9.0, state: .wandering)
+        // Pig at left-side interaction point (3,9) of therapy garden at (4,9) size 5x5
+        var pig = pigAt(x: 3.0, y: 9.0, state: .wandering)
         pig.needs.happiness = 80.0
         pig.targetFacilityId = state.getFacilitiesByType(.therapyGarden).first?.id
         state.addGuineaPig(pig)
@@ -107,7 +110,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("checkArrivedAtFacility goes idle if no nearby facility found")
     func testArrivalWithNoFacilityGoesIdle() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         var pig = pigAt(x: 5.0, y: 5.0, state: .wandering)
         state.addGuineaPig(pig)
 
@@ -119,7 +122,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("consumeFromNearbyFacility eating reduces food bowl currentAmount")
     func testConsumeFromFoodBowlReducesAmount() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         let initialAmount = facility.currentAmount
 
@@ -134,9 +137,9 @@ struct FacilityManagerConsumptionTests {
 
     @Test("consumeFromNearbyFacility sets idle when food bowl is empty")
     func testConsumeFromEmptyBowlGoesIdle() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         var facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
-        facility.currentAmount = 0.001
+        facility.currentAmount = 0
         state.facilities[facility.id] = facility
 
         var pig = pigAt(x: 5.0, y: 9.0, state: .eating)
@@ -149,7 +152,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("consumeFromNearbyFacility hay rack applies health bonus")
     func testHayRackHealthBonus() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .hayRack, x: 4, y: 9, state: state)
 
         var pig = pigAt(x: 5.0, y: 9.0, state: .eating)
@@ -163,10 +166,12 @@ struct FacilityManagerConsumptionTests {
 
     @Test("consumeFromNearbyFacility hot spring claws back energy (multi-need trade-off)")
     func testHotSpringReducesEnergyRecovery() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .hotSpring, x: 4, y: 9, state: state)
 
-        var pig = pigAt(x: 5.0, y: 9.0, state: .sleeping)
+        // Pig at interactionPoint (7,15) of hot spring at (4,9) size 6x6
+        // interactionPoint = (positionX + width/2, positionY + height) = (4+3, 9+6) = (7,15)
+        var pig = pigAt(x: 7.0, y: 15.0, state: .sleeping)
         pig.needs.energy = 50.0
         pig.targetFacilityId = facility.id
         state.addGuineaPig(pig)
@@ -179,7 +184,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("rankFacilitiesBySpread mostly prefers the closer facility")
     func testRankFacilitiesBySpreadPrefersCloser() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         manager.updateAreaPopulations()
         let closeFacility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         let farFacility = placeFacility(type: .foodBowl, x: 18, y: 9, state: state)
@@ -197,7 +202,7 @@ struct FacilityManagerConsumptionTests {
 
     @Test("countPigsUsingFacility returns 0 when no pigs are near facility")
     func testCountPigsUsingFacilityZeroWhenNone() {
-        let (manager, state) = makeManager()
+        let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .hideout, x: 4, y: 9, state: state)
         let controller = makeController(state: state)
         controller.collision.rebuildSpatialGrid()

@@ -74,8 +74,9 @@ struct BehaviorDecisionCourtshipTimerTests {
         state.addGuineaPig(male)
         state.addGuineaPig(female)
         var updatedMale = state.getGuineaPig(male.id)!
-        // Pre-set decision timer to force a decision
-        controller.setDecisionTimer(updatedMale.id, 2.5)
+        // Do NOT pre-set decision timer: forcing a decision would call seekCourtingPartner,
+        // setting a non-empty path that blocks updateCurrentBehavior from advancing the timer.
+        // With no pre-set timer, newTimer < decisionIntervalSeconds so decision never fires.
         controller.update(pig: &updatedMale, gameMinutes: 0.5)
         // courtingTimer should have increased (updateCurrentBehavior advances it)
         #expect(updatedMale.courtingTimer > 0.0)
@@ -98,9 +99,9 @@ struct BehaviorDecisionCourtshipTimerTests {
         state.addGuineaPig(male)
         state.addGuineaPig(female)
         var updatedMale = state.getGuineaPig(male.id)!
-        // Force decision to fire
-        controller.setDecisionTimer(updatedMale.id, 2.5)
-        // Advance enough to cross the threshold
+        // Do NOT pre-set decision timer: forcing a decision calls seekCourtingPartner which
+        // sets a path, preventing updateCurrentBehavior from advancing the courtship timer.
+        // Advance enough to cross the threshold (3.9 + 0.2 = 4.1 >= courtshipTogetherSeconds=4.0)
         controller.update(pig: &updatedMale, gameMinutes: 0.2)
         let completed = controller.drainCompletedCourtships()
         #expect(!completed.isEmpty)
