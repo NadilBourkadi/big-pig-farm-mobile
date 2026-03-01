@@ -102,7 +102,7 @@
 - [ ] Implement `AlmanacView` (Pigdex + contracts)
 - [ ] Implement `BiomeSelectView` (biome picker)
 - [ ] Implement `AdoptionView` (bloodline adoption)
-- [ ] Implement `SharedComponents` (currency, badges, bars)
+- [x] Implement `SharedComponents` (currency, badges, bars)
 
 ### Phase 5 — Persistence & Polish (Weeks 13–14)
 

@@ -1,32 +1,215 @@
 /// SharedComponents — Reusable UI components (currency display, rarity badges, need bars).
 /// Maps from: ui/components/
-// TODO: Implement in doc 07
 import SwiftUI
 
-/// Displays a formatted currency amount.
+// MARK: - Free Functions
+
+/// Format a pig's breeding status as a short string (or verbose full reason).
+///
+/// Maps from: ui/utils.py format_breeding_status()
+func formatBreedingStatus(_ pig: GuineaPig, verbose: Bool = false) -> String {
+    // Special case: baby marked for auto-sell
+    if pig.isBaby && pig.markedForSale {
+        return verbose ? "Marked for auto-sell at adulthood" : "Sell@Adult"
+    }
+    if pig.canBreed { return "Ready" }
+    guard let reason = pig.breedingBlockReason else { return "Not ready" }
+    if verbose { return reason }
+    if reason.hasPrefix("Breeding locked") { return "LOCKED" }
+    if reason.hasPrefix("Too young") { return "Baby" }
+    if reason.hasPrefix("Too old") { return "Senior" }
+    if reason.hasPrefix("Unhappy") { return "Not ready" }
+    if reason.hasPrefix("Pregnant") { return "Pregnant" }
+    if reason.hasPrefix("Recovering") { return "Recovering" }
+    return "Not ready"
+}
+
+/// Format facility bonuses as a comma-separated summary string.
+///
+/// Maps from: ui/utils.py format_facility_bonuses()
+func formatFacilityBonuses(_ facilityType: FacilityType) -> String {
+    guard let info = facilityInfo[facilityType] else { return "" }
+    var parts: [String] = []
+    if info.healthBonus > 0 { parts.append("+\(Int(info.healthBonus * 100))% health") }
+    if info.happinessBonus > 0 { parts.append("+\(Int(info.happinessBonus * 100))% happiness") }
+    if info.socialBonus > 0 { parts.append("+\(Int(info.socialBonus * 100))% social") }
+    if info.breedingBonus > 0 { parts.append("+\(Int(info.breedingBonus * 100))% breeding") }
+    if info.growthBonus > 0 { parts.append("+\(Int(info.growthBonus * 100))% growth") }
+    if info.saleBonus > 0 { parts.append("+\(Int(info.saleBonus * 100))% sale value") }
+    if info.foodProduction > 0 { parts.append("produces \(info.foodProduction) food") }
+    return parts.joined(separator: ", ")
+}
+
+/// Map a BaseColor to the nearest SwiftUI Color for display.
+func pigColorSwiftUI(_ baseColor: BaseColor) -> Color {
+    switch baseColor {
+    case .black: return .black
+    case .chocolate: return .brown
+    case .golden: return .yellow
+    case .cream: return Color(red: 1.0, green: 0.95, blue: 0.8)
+    case .blue: return Color(red: 0.4, green: 0.5, blue: 0.6)
+    case .lilac: return Color(red: 0.7, green: 0.5, blue: 0.7)
+    case .saffron: return .orange
+    case .smoke: return .gray
+    }
+}
+
+// MARK: - CurrencyLabel
+
+/// Displays a formatted currency amount with the Squeaks prefix.
+///
+/// Used in StatusBarView, ShopView, PigListView, PigDetailView.
 struct CurrencyLabel: View {
     let amount: Int
 
     var body: some View {
-        Text("\(amount)")
+        Text(Currency.formatCurrency(amount))
+            .font(.caption.bold())
+            .foregroundStyle(.yellow)
     }
 }
 
-/// Displays a colored rarity badge.
-struct RarityBadge: View {
-    let rarity: Rarity
+// MARK: - NeedBar
 
-    var body: some View {
-        Text(rarity.rawValue.capitalized)
-    }
-}
-
-/// Displays a horizontal progress bar for a pig need.
+/// A horizontal bar visualizing a pig need level (value: 0.0–1.0).
+///
+/// Callers must normalize from the 0–100 need range: `pig.needs.hunger / 100.0`.
+/// Used in PigDetailView needs section and PigListView rows.
 struct NeedBar: View {
     let value: Double
     let label: String
 
     var body: some View {
-        ProgressView(label, value: value, total: 1.0)
+        HStack(spacing: 4) {
+            if !label.isEmpty {
+                Text(label)
+                    .font(.caption)
+                    .frame(width: 60, alignment: .leading)
+            }
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(.secondary.opacity(0.2))
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(needColor)
+                        .frame(width: max(0, geometry.size.width * min(1, max(0, value))))
+                }
+            }
+            .frame(height: 8)
+            Text("\(Int(min(1, max(0, value)) * 100))%")
+                .font(.caption2)
+                .frame(width: 30, alignment: .trailing)
+        }
+    }
+
+    private var needColor: Color {
+        if value >= 0.7 { return .green }
+        if value >= 0.4 { return .yellow }
+        return .red
+    }
+}
+
+// MARK: - RarityBadge
+
+/// Displays a colored pill badge for a pig's rarity tier.
+///
+/// Used in PigListView rows, PigDetailView header, ShopView items.
+struct RarityBadge: View {
+    let rarity: Rarity
+
+    var body: some View {
+        Text(rarityDisplayName)
+            .font(.caption2.bold())
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .foregroundStyle(.white)
+            .background(rarityColor)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+
+    /// Human-readable name; handles "very_rare" → "Very Rare".
+    private var rarityDisplayName: String {
+        switch rarity {
+        case .veryRare: return "Very Rare"
+        default: return rarity.rawValue.capitalized
+        }
+    }
+
+    private var rarityColor: Color {
+        switch rarity {
+        case .common: return .gray
+        case .uncommon: return .green
+        case .rare: return .blue
+        case .veryRare: return .purple
+        case .legendary: return .orange
+        }
+    }
+}
+
+// MARK: - BreedingStatusLabel
+
+/// Displays a concise breeding status for a pig.
+///
+/// Maps from: ui/utils.py format_breeding_status()
+struct BreedingStatusLabel: View {
+    let pig: GuineaPig
+
+    var body: some View {
+        Text(formatBreedingStatus(pig))
+            .font(.caption2)
+            .foregroundStyle(statusColor)
+    }
+
+    /// Color reflects urgency: locked → red, pregnant → orange, ready → green, else → secondary.
+    private var statusColor: Color {
+        if pig.breedingLocked { return .red }
+        if pig.isPregnant { return .orange }
+        if pig.canBreed { return .green }
+        return .secondary
+    }
+}
+
+// MARK: - FacilityBonusLabel
+
+/// Displays facility bonuses as a compact comma-separated summary.
+///
+/// Maps from: ui/utils.py format_facility_bonuses()
+struct FacilityBonusLabel: View {
+    let facilityType: FacilityType
+
+    var body: some View {
+        let bonuses = formatFacilityBonuses(facilityType)
+        if !bonuses.isEmpty {
+            Text(bonuses)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - PigPortraitView
+
+/// Displays a pre-rendered Pigdex portrait image from the asset catalog.
+///
+/// Maps from: pig_detail.py _build_portrait_text() — iOS loads PNGs
+/// exported by the sprite pipeline (Doc 03) instead of rendering at runtime.
+struct PigPortraitView: View {
+    let baseColor: BaseColor
+    let pattern: Pattern
+    let intensity: ColorIntensity
+    let roan: RoanType
+    /// Identity hint for SwiftUI's diffing algorithm when used in lists.
+    let pigID: UUID
+
+    var body: some View {
+        Image(imageName)
+            .resizable()
+            .interpolation(.none)
+            .scaledToFit()
+    }
+
+    private var imageName: String {
+        let parts = [baseColor.rawValue, pattern.rawValue, intensity.rawValue, roan.rawValue]
+        return "Sprites/Portraits/portrait_" + parts.joined(separator: "_")
     }
 }
