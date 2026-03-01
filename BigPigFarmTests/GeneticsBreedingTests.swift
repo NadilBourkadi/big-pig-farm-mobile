@@ -115,7 +115,7 @@ import Testing
 
 @Test func testCarrierSummaryNoCarriers() {
     let homozygous = makeBaseGenotype()
-    #expect(carrierSummary(homozygous) == "None")
+    #expect(carrierSummary(homozygous).isEmpty)
 }
 
 @Test func testCarrierSummaryAllCarriers() {
