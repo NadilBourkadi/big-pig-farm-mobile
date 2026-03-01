@@ -135,7 +135,10 @@ struct FarmTab: View {
         }
         .listStyle(.insetGrouped)
         .sheet(isPresented: $showingBiomePicker) {
-            BiomeSelectView(farmTier: gameState.farmTier) { biome in
+            BiomeSelectView(
+                farmTier: gameState.farmTier,
+                existingBiomes: Set(gameState.farm.areas.map(\.biome))
+            ) { biome in
                 if let biome {
                     purchaseRoom(biome: biome)
                 }
