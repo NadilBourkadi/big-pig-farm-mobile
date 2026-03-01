@@ -21,6 +21,8 @@ import QuartzCore
 final class SimulationRunner {
     private weak var state: GameState?
     private let behaviorController: BehaviorController
+    private let saveManager: SaveManager
+    private var isSaving: Bool = false
 
     // MARK: - Event Callbacks
 
@@ -50,9 +52,10 @@ final class SimulationRunner {
 
     // MARK: - Init
 
-    init(state: GameState, behaviorController: BehaviorController) {
+    init(state: GameState, behaviorController: BehaviorController, saveManager: SaveManager) {
         self.state = state
         self.behaviorController = behaviorController
+        self.saveManager = saveManager
     }
 
     // MARK: - Tick Entry Point
@@ -98,7 +101,7 @@ final class SimulationRunner {
         saveCounter += 1
         if saveCounter >= 300 {
             saveCounter = 0
-            // TODO(persistence): Call SaveManager.triggerAutoSave() when Doc 08 is implemented
+            backgroundSave()
         }
     }
 
@@ -181,6 +184,17 @@ final class SimulationRunner {
     }
 
     // MARK: - Private Helpers
+
+    /// Encode game state and write to disk. Guards against re-entrant saves.
+    private func backgroundSave() {
+        guard let state else { return }
+        guard !isSaving else { return }
+        isSaving = true
+        defer { isSaving = false }
+        guard let data = try? state.encodeToJSON() else { return }
+        try? saveManager.saveData(data)
+        state.lastSave = Date()
+    }
 
     private func recordTimestamp(_ time: CFTimeInterval) {
         tickTimestamps.append(time)
