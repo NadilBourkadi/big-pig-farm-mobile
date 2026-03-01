@@ -84,7 +84,7 @@
 
 ### Phase 3 — Farm Scene (Weeks 6–8)
 
-- [ ] Implement `FarmScene` (SKScene + tile map)
+- [x] Implement `FarmScene` (SKScene + tile map)
 - [ ] Implement `PigNode` (animated sprite)
 - [ ] Implement `FacilityNode`
 - [ ] Implement `CameraController` (pan/zoom/bounds)
