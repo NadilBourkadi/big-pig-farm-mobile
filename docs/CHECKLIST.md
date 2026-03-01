@@ -85,9 +85,9 @@
 ### Phase 3 — Farm Scene (Weeks 6–8)
 
 - [x] Implement `FarmScene` (SKScene + tile map)
-- [ ] Implement `PigNode` (animated sprite)
-- [ ] Implement `FacilityNode`
-- [ ] Implement `CameraController` (pan/zoom/bounds)
+- [x] Implement `PigNode` (animated sprite)
+- [x] Implement `FacilityNode`
+- [x] Implement `CameraController` (pan/zoom/bounds)
 - [ ] Wire `SpriteView` into `ContentView`
 - [ ] Implement touch handling (tap pig, place facility)
 - [ ] Performance test with 50+ pigs
