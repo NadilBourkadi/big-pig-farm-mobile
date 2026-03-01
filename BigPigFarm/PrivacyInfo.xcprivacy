@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- No required-reason APIs used (no UserDefaults, no file timestamps, no system info) -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array/>
+
+    <!-- No data collected from users -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+
+    <!-- App does not track users across apps or websites -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <!-- No tracking domains -->
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+</dict>
+</plist>
