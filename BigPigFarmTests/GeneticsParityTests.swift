@@ -12,27 +12,27 @@ import Testing
 
 /// Create a genotype from shorthand allele pairs.
 private func genotype(
-    e: (String, String), b: (String, String), s: (String, String),
-    c: (String, String), r: (String, String), d: (String, String)
+    ext: (String, String), brn: (String, String), spt: (String, String),
+    clr: (String, String), roa: (String, String), dil: (String, String)
 ) -> Genotype {
     Genotype(
-        eLocus: AllelePair(first: e.0, second: e.1),
-        bLocus: AllelePair(first: b.0, second: b.1),
-        sLocus: AllelePair(first: s.0, second: s.1),
-        cLocus: AllelePair(first: c.0, second: c.1),
-        rLocus: AllelePair(first: r.0, second: r.1),
-        dLocus: AllelePair(first: d.0, second: d.1)
+        eLocus: AllelePair(first: ext.0, second: ext.1),
+        bLocus: AllelePair(first: brn.0, second: brn.1),
+        sLocus: AllelePair(first: spt.0, second: spt.1),
+        cLocus: AllelePair(first: clr.0, second: clr.1),
+        rLocus: AllelePair(first: roa.0, second: roa.1),
+        dLocus: AllelePair(first: dil.0, second: dil.1)
     )
 }
 
 /// Create a fully homozygous genotype from single allele strings.
 private func homozygous(
-    e: String, b: String, s: String,
-    c: String, r: String, d: String
+    ext: String, brn: String, spt: String,
+    clr: String, roa: String, dil: String
 ) -> Genotype {
     genotype(
-        e: (e, e), b: (b, b), s: (s, s),
-        c: (c, c), r: (r, r), d: (d, d)
+        ext: (ext, ext), brn: (brn, brn), spt: (spt, spt),
+        clr: (clr, clr), roa: (roa, roa), dil: (dil, dil)
     )
 }
 
@@ -56,10 +56,10 @@ private func homozygous(
 
 @Test func parityHeterozygousDominanceSameAsDominant() {
     // EE/BB/DD (homozygous dominant) and Ee/Bb/Dd (heterozygous) both → black
-    let dominant = homozygous(e: "E", b: "B", s: "S", c: "C", r: "r", d: "D")
+    let dominant = homozygous(ext: "E", brn: "B", spt: "S", clr: "C", roa: "r", dil: "D")
     let carrier = genotype(
-        e: ("E", "e"), b: ("B", "b"), s: ("S", "S"),
-        c: ("C", "C"), r: ("r", "r"), d: ("D", "d")
+        ext: ("E", "e"), brn: ("B", "b"), spt: ("S", "S"),
+        clr: ("C", "C"), roa: ("r", "r"), dil: ("D", "d")
     )
 
     let phenoDom = calculatePhenotype(dominant)
@@ -71,8 +71,8 @@ private func homozygous(
 
     // Verify dilution: Dd is NOT diluted (D dominant), dd IS diluted
     let diluted = genotype(
-        e: ("E", "e"), b: ("B", "b"), s: ("S", "S"),
-        c: ("C", "C"), r: ("r", "r"), d: ("d", "d")
+        ext: ("E", "e"), brn: ("B", "b"), spt: ("S", "S"),
+        clr: ("C", "C"), roa: ("r", "r"), dil: ("d", "d")
     )
     #expect(calculatePhenotype(diluted).baseColor == .blue)
 }
@@ -127,8 +127,8 @@ private func homozygous(
     // Ee × Ee: expect ~75% has-E (black), ~25% ee (golden)
     // All other loci homozygous dominant to isolate E locus
     let parent = genotype(
-        e: ("E", "e"), b: ("B", "B"), s: ("S", "S"),
-        c: ("C", "C"), r: ("r", "r"), d: ("D", "D")
+        ext: ("E", "e"), brn: ("B", "B"), spt: ("S", "S"),
+        clr: ("C", "C"), roa: ("r", "r"), dil: ("D", "D")
     )
 
     var goldenCount = 0
@@ -151,8 +151,8 @@ private func homozygous(
 @Test func parityMendelianPatternRatio1to2to1() {
     // Ss × Ss: expect ~25% SS (solid), ~50% Ss (dutch), ~25% ss (dalmatian)
     let parent = genotype(
-        e: ("E", "E"), b: ("B", "B"), s: ("S", "s"),
-        c: ("C", "C"), r: ("r", "r"), d: ("D", "D")
+        ext: ("E", "E"), brn: ("B", "B"), spt: ("S", "s"),
+        clr: ("C", "C"), roa: ("r", "r"), dil: ("D", "D")
     )
 
     var solidCount = 0
@@ -190,7 +190,7 @@ private func homozygous(
 
 @Test func parityMutationDescriptionFormat() {
     // Use 100% mutation rate on a homozygous genotype to guarantee mutations
-    let parent = homozygous(e: "E", b: "B", s: "S", c: "C", r: "r", d: "D")
+    let parent = homozygous(ext: "E", brn: "B", spt: "S", clr: "C", roa: "r", dil: "D")
 
     // Collect mutation descriptions over many trials
     var descriptions: Set<String> = []
@@ -223,8 +223,8 @@ private func homozygous(
 @Test func parityAnalyticalPatternProbabilitySsxSs() {
     // Ss × Ss: P(solid)=0.25, P(dutch)=0.50, P(dalmatian)=0.25
     let parent = genotype(
-        e: ("E", "E"), b: ("B", "B"), s: ("S", "s"),
-        c: ("C", "C"), r: ("r", "r"), d: ("D", "D")
+        ext: ("E", "E"), brn: ("B", "B"), spt: ("S", "s"),
+        clr: ("C", "C"), roa: ("r", "r"), dil: ("D", "D")
     )
 
     let solidProb = calculateTargetProbability(
@@ -260,8 +260,8 @@ private func homozygous(
     // The Swift port uses the calculatePhenotype ordering in both calculatePhenotype
     // AND intensityProbability, making the analytical prediction self-consistent.
     let parent = genotype(
-        e: ("E", "E"), b: ("B", "B"), s: ("S", "S"),
-        c: ("C", "ch"), r: ("r", "r"), d: ("D", "D")
+        ext: ("E", "E"), brn: ("B", "B"), spt: ("S", "S"),
+        clr: ("C", "ch"), roa: ("r", "r"), dil: ("D", "D")
     )
 
     let fullProb = calculateTargetProbability(

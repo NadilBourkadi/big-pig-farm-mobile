@@ -34,7 +34,6 @@ enum Tunnels {
 
 // MARK: - Horizontal Tunnels
 
-// swiftlint:disable function_parameter_count
 private extension Tunnels {
 
     /// Carve two horizontal tunnels between left/right areas.
@@ -120,11 +119,9 @@ private extension Tunnels {
         )
     }
 }
-// swiftlint:enable function_parameter_count
 
 // MARK: - Vertical Tunnels
 
-// swiftlint:disable function_parameter_count
 private extension Tunnels {
 
     /// Carve two vertical tunnels between top/bottom areas.
@@ -213,4 +210,3 @@ private extension Tunnels {
         )
     }
 }
-// swiftlint:enable function_parameter_count

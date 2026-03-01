@@ -141,27 +141,31 @@ extension FarmGrid {
     /// Pre-compute isCorner and isHorizontalWall for all wall cells.
     /// Tunnel cells with manually-set flags are preserved.
     mutating func computeWallFlags() {
+        clearNonTunnelWallFlags()
+        for area in areas {
+            applyWallFlags(for: area)
+        }
+    }
+
+    private mutating func clearNonTunnelWallFlags() {
         for y in 0..<height {
-            for x in 0..<width {
-                if !cells[y][x].isTunnel {
-                    cells[y][x].isCorner = false
-                    cells[y][x].isHorizontalWall = false
-                }
+            for x in 0..<width where !cells[y][x].isTunnel {
+                cells[y][x].isCorner = false
+                cells[y][x].isHorizontalWall = false
             }
         }
-        for area in areas {
-            for x in area.x1...area.x2 {
-                for y in area.y1...area.y2 {
-                    guard isValidPosition(x, y) else { continue }
-                    guard cells[y][x].cellType == .wall else { continue }
-                    guard !cells[y][x].isTunnel else { continue }
-                    if (x == area.x1 || x == area.x2)
-                        && (y == area.y1 || y == area.y2) {
-                        cells[y][x].isCorner = true
-                    } else if (y == area.y1 || y == area.y2)
-                                && area.x1 <= x && x <= area.x2 {
-                        cells[y][x].isHorizontalWall = true
-                    }
+    }
+
+    private mutating func applyWallFlags(for area: FarmArea) {
+        for x in area.x1...area.x2 {
+            for y in area.y1...area.y2 {
+                guard isValidPosition(x, y) else { continue }
+                guard cells[y][x].cellType == .wall else { continue }
+                guard !cells[y][x].isTunnel else { continue }
+                if (x == area.x1 || x == area.x2) && (y == area.y1 || y == area.y2) {
+                    cells[y][x].isCorner = true
+                } else if (y == area.y1 || y == area.y2) && area.x1 <= x && x <= area.x2 {
+                    cells[y][x].isHorizontalWall = true
                 }
             }
         }
@@ -326,10 +330,8 @@ extension FarmGrid {
         if walkableCache == nil {
             var positions: [GridPosition] = []
             for y in 1..<(height - 1) {
-                for x in 1..<(width - 1) {
-                    if isWalkable(x, y) {
-                        positions.append(GridPosition(x: x, y: y))
-                    }
+                for x in 1..<(width - 1) where isWalkable(x, y) {
+                    positions.append(GridPosition(x: x, y: y))
                 }
             }
             walkableCache = positions

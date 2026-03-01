@@ -108,59 +108,15 @@ func breed(
     let hasMutations = mutationRate > 0 || locusRates != nil || directionalTargets != nil
 
     if hasMutations {
-        // Pair each locus variable with its metadata for iteration
-        // swiftlint:disable:next large_tuple
-        let loci: [(name: String, value: AllelePair, dominant: String, recessive: String)] = [
-            ("eLocus", eLocus, "E", "e"),
-            ("bLocus", bLocus, "B", "b"),
-            ("sLocus", sLocus, "S", "s"),
-            ("cLocus", cLocus, "C", "ch"),
-            ("rLocus", rLocus, "R", "r"),
-            ("dLocus", dLocus, "D", "d"),
-        ]
-
-        for (locusName, currentValue, dominant, recessive) in loci {
-            let newValue: AllelePair
-            let didMutate: Bool
-
-            if let targets = directionalTargets,
-               let targetAllele = targets[locusName],
-               directionalRate > 0 {
-                // Directional mutation for targeted loci
-                (newValue, didMutate) = mutateLocusDirectional(
-                    currentValue, targetAllele: targetAllele, rate: directionalRate
-                )
-            } else {
-                // Random mutation at per-locus or base rate
-                let rate = locusRates?[locusName] ?? mutationRate
-                guard rate > 0 else { continue }
-                (newValue, didMutate) = mutateLocus(
-                    currentValue, dominant: dominant, recessive: recessive, rate: rate
-                )
-            }
-
-            if didMutate {
-                // Suppress mutation if it creates lethal RR
-                if locusName == "rLocus" && newValue.isHomozygous("R") {
-                    continue
-                }
-                // Apply mutation to the corresponding locus
-                switch locusName {
-                case "eLocus": eLocus = newValue
-                case "bLocus": bLocus = newValue
-                case "sLocus": sLocus = newValue
-                case "cLocus": cLocus = newValue
-                case "rLocus": rLocus = newValue
-                case "dLocus": dLocus = newValue
-                default: break
-                }
-                let displayName = locusDisplayNames[locusName] ?? locusName
-                let description = "\(displayName) "
-                    + "(\(currentValue.first)/\(currentValue.second)"
-                    + " -> \(newValue.first)/\(newValue.second))"
-                mutations.append(description)
-            }
-        }
+        applyMutations(
+            to: &eLocus, bLocus: &bLocus, sLocus: &sLocus,
+            cLocus: &cLocus, rLocus: &rLocus, dLocus: &dLocus,
+            mutations: &mutations,
+            mutationRate: mutationRate,
+            locusRates: locusRates,
+            directionalTargets: directionalTargets,
+            directionalRate: directionalRate
+        )
     }
 
     let genotype = Genotype(
@@ -173,6 +129,87 @@ func breed(
     )
 
     return BreedResult(genotype: genotype, mutations: mutations)
+}
+
+// Apply per-locus mutations to the inherited loci and record descriptions.
+// swiftlint:disable:next function_parameter_count
+private func applyMutations(
+    to eLocus: inout AllelePair,
+    bLocus: inout AllelePair,
+    sLocus: inout AllelePair,
+    cLocus: inout AllelePair,
+    rLocus: inout AllelePair,
+    dLocus: inout AllelePair,
+    mutations: inout [String],
+    mutationRate: Double,
+    locusRates: [String: Double]?,
+    directionalTargets: [String: String]?,
+    directionalRate: Double
+) {
+    // Pair each locus variable with its metadata for iteration
+    // swiftlint:disable:next large_tuple
+    let loci: [(name: String, value: AllelePair, dominant: String, recessive: String)] = [
+        ("eLocus", eLocus, "E", "e"),
+        ("bLocus", bLocus, "B", "b"),
+        ("sLocus", sLocus, "S", "s"),
+        ("cLocus", cLocus, "C", "ch"),
+        ("rLocus", rLocus, "R", "r"),
+        ("dLocus", dLocus, "D", "d"),
+    ]
+
+    for (locusName, currentValue, dominant, recessive) in loci {
+        let (newValue, didMutate) = resolveMutation(
+            locusName: locusName,
+            currentValue: currentValue,
+            dominant: dominant,
+            recessive: recessive,
+            mutationRate: mutationRate,
+            locusRates: locusRates,
+            directionalTargets: directionalTargets,
+            directionalRate: directionalRate
+        )
+
+        guard didMutate else { continue }
+        // Suppress mutation if it creates lethal RR
+        if locusName == "rLocus" && newValue.isHomozygous("R") { continue }
+
+        // Apply mutation to the corresponding locus
+        switch locusName {
+        case "eLocus": eLocus = newValue
+        case "bLocus": bLocus = newValue
+        case "sLocus": sLocus = newValue
+        case "cLocus": cLocus = newValue
+        case "rLocus": rLocus = newValue
+        case "dLocus": dLocus = newValue
+        default: break
+        }
+        let displayName = locusDisplayNames[locusName] ?? locusName
+        mutations.append(
+            "\(displayName) (\(currentValue.first)/\(currentValue.second)"
+            + " -> \(newValue.first)/\(newValue.second))"
+        )
+    }
+}
+
+/// Compute the mutation result for a single locus, choosing directional or random.
+private func resolveMutation(
+    locusName: String,
+    currentValue: AllelePair,
+    dominant: String,
+    recessive: String,
+    mutationRate: Double,
+    locusRates: [String: Double]?,
+    directionalTargets: [String: String]?,
+    directionalRate: Double
+) -> (AllelePair, Bool) {
+    if let targets = directionalTargets,
+       let targetAllele = targets[locusName],
+       directionalRate > 0 {
+        return mutateLocusDirectional(currentValue, targetAllele: targetAllele, rate: directionalRate)
+    }
+    let rate = locusRates?[locusName] ?? mutationRate
+    guard rate > 0 else { return (currentValue, false) }
+    return mutateLocus(currentValue, dominant: dominant, recessive: recessive, rate: rate)
 }
 
 // MARK: - Carrier Summary

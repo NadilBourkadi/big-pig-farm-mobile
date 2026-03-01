@@ -189,7 +189,7 @@ struct BehaviorDecisionCourtshipTests {
     }
 
     @Test("Courting pig with critical hunger cancels courtship")
-    func testCourtingCancelsForCriticalHunger() {
+    func testCourtingCancelsForCriticalHunger() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
         var male = makePig()
@@ -203,7 +203,7 @@ struct BehaviorDecisionCourtshipTests {
         state.addGuineaPig(male)
         state.addGuineaPig(female)
         // Update male from state to get the added version
-        var updatedMale = state.getGuineaPig(male.id)!
+        var updatedMale = try #require(state.getGuineaPig(male.id))
         BehaviorDecision.makeDecision(controller: controller, pig: &updatedMale)
         #expect(updatedMale.courtingPartnerId == nil)
         // Partner's courtship should also be cleared via updateGuineaPig

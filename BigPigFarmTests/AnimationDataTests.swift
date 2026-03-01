@@ -171,10 +171,10 @@ import Testing
     }
 }
 
-@Test func cycleDurationMatchesProduct() {
+@Test func cycleDurationMatchesProduct() throws {
     for state in AnimationData.animatedStates {
-        let tpf = AnimationData.ticksPerFrame[state]!
-        let fc = AnimationData.frameCounts[state]!
+        let tpf = try #require(AnimationData.ticksPerFrame[state])
+        let fc = try #require(AnimationData.frameCounts[state])
         #expect(AnimationData.cycleDuration(for: state) == tpf * fc)
     }
 }

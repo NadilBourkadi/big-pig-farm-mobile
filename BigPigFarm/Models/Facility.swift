@@ -295,12 +295,12 @@ struct Facility: Identifiable, Codable, Sendable {
     }
 
     /// Create a new facility at the given position.
-    static func create(type: FacilityType, x: Int, y: Int) -> Facility {
+    static func create(type: FacilityType, x: Int, y: Int) -> Self {
         guard let info = facilityInfo[type] else {
             preconditionFailure("Missing facilityInfo for \(type)")
         }
         let capacity = Double(info.capacity)
-        return Facility(
+        return Self(
             id: UUID(),
             facilityType: type,
             positionX: x,

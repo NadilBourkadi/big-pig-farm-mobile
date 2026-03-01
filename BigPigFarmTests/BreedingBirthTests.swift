@@ -1,6 +1,6 @@
-/// BreedingBirthTests — Tests for Breeding, Birth, and BreedingProgram systems.
-/// Covers: clearCourtship, startPregnancy, advancePregnancies, checkBirths,
-/// ageAllPigs, shouldKeepPig, breedingValue, heterozygosityCount.
+/// BreedingBirthTests — Tests for Breeding and Birth systems.
+/// Covers: clearCourtship, startPregnancy, advancePregnancies, checkBirths, ageAllPigs.
+/// BreedingProgram tests are in BreedingProgramTests.swift.
 import Testing
 import Foundation
 @testable import BigPigFarm
@@ -70,7 +70,7 @@ import Foundation
 
 // MARK: - Birth.advancePregnancies
 
-@Test @MainActor func advancePregnanciesIncreasesPregnancyDays() {
+@Test @MainActor func advancePregnanciesIncreasesPregnancyDays() throws {
     let state = GameState()
     var pig = GuineaPig.create(name: "Mama", gender: .female)
     pig.isPregnant = true
@@ -79,11 +79,11 @@ import Foundation
 
     Birth.advancePregnancies(gameState: state, gameHours: 24.0)
 
-    let updated = state.getGuineaPig(pig.id)!
+    let updated = try #require(state.getGuineaPig(pig.id))
     #expect(updated.pregnancyDays == 1.0)
 }
 
-@Test @MainActor func advancePregnanciesSkipsNonPregnantPigs() {
+@Test @MainActor func advancePregnanciesSkipsNonPregnantPigs() throws {
     let state = GameState()
     var pig = GuineaPig.create(name: "NotPregnant", gender: .female)
     pig.isPregnant = false
@@ -92,11 +92,11 @@ import Foundation
 
     Birth.advancePregnancies(gameState: state, gameHours: 24.0)
 
-    let updated = state.getGuineaPig(pig.id)!
+    let updated = try #require(state.getGuineaPig(pig.id))
     #expect(updated.pregnancyDays == 0.0)
 }
 
-@Test @MainActor func speedBreedingPerkAcceleratesPregnancy() {
+@Test @MainActor func speedBreedingPerkAcceleratesPregnancy() throws {
     let state = GameState()
     state.purchasedUpgrades.insert("speed_breeding")
     var pig = GuineaPig.create(name: "Mama", gender: .female)
@@ -106,7 +106,7 @@ import Foundation
 
     Birth.advancePregnancies(gameState: state, gameHours: 24.0)
 
-    let updated = state.getGuineaPig(pig.id)!
+    let updated = try #require(state.getGuineaPig(pig.id))
     // With speed_breeding: 1 game day * 1.333 = 1.333 days
     #expect(abs(updated.pregnancyDays - 1.333) < 0.001)
 }
@@ -115,7 +115,7 @@ import Foundation
 
 @Test @MainActor func checkBirthsAtThresholdProducesBabies() throws {
     let state = makeGameState(withArea: true)
-    let fatherGenotype = makeHomozygousDominantGenotype()
+    let fatherGenotype = makeGameStateHomozygousGenotype()
     var mother = GuineaPig.create(name: "Mama", gender: .female)
     mother.position = Position(x: 5.0, y: 5.0)
     mother.isPregnant = true
@@ -130,19 +130,19 @@ import Foundation
     #expect(state.pigCount > 1)
 }
 
-@Test @MainActor func checkBirthsBelowThresholdProducesNoBabies() {
+@Test @MainActor func checkBirthsBelowThresholdProducesNoBabies() throws {
     let state = makeGameState(withArea: true)
     var mother = GuineaPig.create(name: "Mama", gender: .female)
     mother.isPregnant = true
     mother.pregnancyDays = Double(GameConfig.Breeding.gestationDays) - 1.0
-    mother.partnerGenotype = makeHomozygousDominantGenotype()
+    mother.partnerGenotype = makeGameStateHomozygousGenotype()
     state.addGuineaPig(mother)
 
     let births = Birth.checkBirths(gameState: state)
 
     #expect(births == 0)
     // Mother is still pregnant
-    let updated = state.getGuineaPig(mother.id)!
+    let updated = try #require(state.getGuineaPig(mother.id))
     #expect(updated.isPregnant)
 }
 
@@ -152,7 +152,7 @@ import Foundation
     mother.position = Position(x: 5.0, y: 5.0)
     mother.isPregnant = true
     mother.pregnancyDays = Double(GameConfig.Breeding.gestationDays) + 1.0
-    mother.partnerGenotype = makeHomozygousDominantGenotype()
+    mother.partnerGenotype = makeGameStateHomozygousGenotype()
     mother.partnerName = "Papa"
     let fatherId = UUID()
     mother.partnerId = fatherId
@@ -258,166 +258,9 @@ import Foundation
     #expect(deaths.isEmpty)
 }
 
-// MARK: - BreedingProgram.shouldKeepPig
-
-@Test func shouldKeepPigWhenProgramDisabled() {
-    var program = BreedingProgram()
-    program.enabled = false
-    program.targetColors = [.golden]
-    let pig = GuineaPig.create(name: "Any", gender: .female)
-    // Disabled program always keeps, regardless of phenotype
-    #expect(program.shouldKeepPig(pig, hasGeneticsLab: false))
-}
-
-@Test func shouldKeepPigMatchingColorTarget() {
-    var program = BreedingProgram()
-    program.enabled = true
-    program.targetColors = [.black]
-    // Default genotype pig is black (EE BB → black phenotype)
-    let pig = GuineaPig.create(name: "Black", gender: .female)
-    #expect(program.shouldKeepPig(pig, hasGeneticsLab: false))
-}
-
-@Test func shouldKeepPigNonMatchingColorTargetReturnsFalse() {
-    var program = BreedingProgram()
-    program.enabled = true
-    program.targetColors = [.golden]
-    // Default pig is black, not golden
-    let pig = GuineaPig.create(name: "Black", gender: .female)
-    #expect(!program.shouldKeepPig(pig, hasGeneticsLab: false))
-}
-
-@Test func shouldKeepPigCarrierRescueWithLabKeepsPig() {
-    var program = BreedingProgram()
-    program.enabled = true
-    program.targetColors = [.golden]
-    program.keepCarriers = true
-
-    // E/e pig is phenotypically black but carries the golden 'e' allele
-    let genotype = Genotype(
-        eLocus: AllelePair(first: "E", second: "e"),
-        bLocus: AllelePair(first: "B", second: "B"),
-        sLocus: AllelePair(first: "S", second: "S"),
-        cLocus: AllelePair(first: "C", second: "C"),
-        rLocus: AllelePair(first: "r", second: "r"),
-        dLocus: AllelePair(first: "D", second: "D")
-    )
-    let pig = GuineaPig.create(
-        name: "Carrier", gender: .female, genotype: genotype,
-        position: Position(x: 0, y: 0), ageDays: 0,
-        motherId: nil, fatherId: nil, motherName: nil, fatherName: nil
-    )
-    // Carrier rescue requires genetics lab
-    #expect(program.shouldKeepPig(pig, hasGeneticsLab: true))
-    #expect(!program.shouldKeepPig(pig, hasGeneticsLab: false))
-}
-
-@Test func shouldKeepPigMultipleAxesUsesAndLogic() {
-    var program = BreedingProgram()
-    program.enabled = true
-    program.targetColors = [.golden]
-    program.targetPatterns = [.dutch]
-    // Default black/solid pig: fails color AND pattern → should not keep
-    let pig = GuineaPig.create(name: "Black", gender: .female)
-    #expect(!program.shouldKeepPig(pig, hasGeneticsLab: false))
-}
-
-// MARK: - heterozygosityCount
-
-@Test func heterozygosityCountAllHomozygous() {
-    let genotype = makeHomozygousDominantGenotype()
-    #expect(heterozygosityCount(genotype) == 0)
-}
-
-@Test func heterozygosityCountAllHeterozygous() {
-    let genotype = Genotype(
-        eLocus: AllelePair(first: "E", second: "e"),
-        bLocus: AllelePair(first: "B", second: "b"),
-        sLocus: AllelePair(first: "S", second: "s"),
-        cLocus: AllelePair(first: "C", second: "ch"),
-        rLocus: AllelePair(first: "R", second: "r"),
-        dLocus: AllelePair(first: "D", second: "d")
-    )
-    #expect(heterozygosityCount(genotype) == 6)
-}
-
-@Test func heterozygosityCountPartialLoci() {
-    let genotype = Genotype(
-        eLocus: AllelePair(first: "E", second: "e"), // hetero
-        bLocus: AllelePair(first: "B", second: "B"), // homo
-        sLocus: AllelePair(first: "S", second: "S"), // homo
-        cLocus: AllelePair(first: "C", second: "ch"), // hetero
-        rLocus: AllelePair(first: "r", second: "r"), // homo
-        dLocus: AllelePair(first: "D", second: "d")  // hetero
-    )
-    #expect(heterozygosityCount(genotype) == 3)
-}
-
-// MARK: - buildDiversityCounters
-
-@Test func buildDiversityCountersCorrectlyCounts() {
-    let pig1 = GuineaPig.create(name: "A", gender: .female)
-    let pig2 = GuineaPig.create(name: "B", gender: .male)
-    let pig3 = GuineaPig.create(name: "C", gender: .female)
-    let pigs = [pig1, pig2, pig3]
-
-    let (phenoCounts, colorCounts) = buildDiversityCounters(pigs: pigs)
-
-    // All pigs have default black phenotype, so black count = 3
-    #expect(colorCounts[.black] == 3)
-    // All identical → one phenotype key with count 3
-    let totalPhenoCount = phenoCounts.values.reduce(0, +)
-    #expect(totalPhenoCount == 3)
-}
-
-// MARK: - breedingValue
-
-@Test func breedingValueWithNoTargetsReturnsAgeBonus() {
-    let program = BreedingProgram() // no targets
-    let pig = GuineaPig.create(name: "Young", gender: .female) // ageDays = 0
-    let value = breedingValue(pig: pig, program: program, hasLab: false)
-    // No target contributions; pure age tiebreaker = 5.0 for fresh pig
-    #expect(abs(value - 5.0) < 0.01)
-}
-
-@Test func breedingValueIncreasesWithTargetAllelesPresent() {
-    // E/e pig (1 recessive 'e') vs EE pig (0 recessive 'e'), both with .golden target
-    let carrierGenotype = Genotype(
-        eLocus: AllelePair(first: "E", second: "e"),
-        bLocus: AllelePair(first: "B", second: "B"),
-        sLocus: AllelePair(first: "S", second: "S"),
-        cLocus: AllelePair(first: "C", second: "C"),
-        rLocus: AllelePair(first: "r", second: "r"),
-        dLocus: AllelePair(first: "D", second: "D")
-    )
-    // Use explicit EE genotype so the comparison is deterministic (not randomCommon())
-    let baseGenotype = makeHomozygousDominantGenotype()
-    let carrierPig = GuineaPig.create(
-        name: "Carrier", gender: .female, genotype: carrierGenotype,
-        position: Position(x: 0, y: 0), ageDays: 0,
-        motherId: nil, fatherId: nil, motherName: nil, fatherName: nil
-    )
-    let basePig = GuineaPig.create(
-        name: "Base", gender: .female, genotype: baseGenotype,
-        position: Position(x: 0, y: 0), ageDays: 0,
-        motherId: nil, fatherId: nil, motherName: nil, fatherName: nil
-    )
-
-    var program = BreedingProgram()
-    program.targetColors = [.golden]
-
-    let carrierScore = breedingValue(pig: carrierPig, program: program, hasLab: false)
-    let baseScore = breedingValue(pig: basePig, program: program, hasLab: false)
-
-    // Carrier (1 'e' allele) should score higher than base (0 'e' alleles)
-    #expect(carrierScore > baseScore)
-    #expect(abs(carrierScore - 6.0) < 0.01) // 1.0 (allele) + 5.0 (age tiebreaker)
-    #expect(abs(baseScore - 5.0) < 0.01)    // 0.0 (no allele) + 5.0 (age tiebreaker)
-}
-
 // MARK: - Test Helpers
 
-private func makeHomozygousDominantGenotype() -> Genotype {
+private func makeGameStateHomozygousGenotype() -> Genotype {
     Genotype(
         eLocus: AllelePair(first: "E", second: "E"),
         bLocus: AllelePair(first: "B", second: "B"),

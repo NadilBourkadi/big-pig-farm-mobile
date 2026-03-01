@@ -17,9 +17,12 @@ struct FacilityManagerConsumptionTests {
 
     func placeFacility(type: FacilityType, x: Int, y: Int, state: GameState) -> Facility {
         let facility = Facility.create(type: type, x: x, y: y)
-        let placed = state.addFacility(facility)
-        precondition(placed, "Failed to place \(type) at (\(x), \(y))")
-        return state.getFacility(facility.id)!
+        let success = state.addFacility(facility)
+        precondition(success, "Failed to place \(type) at (\(x), \(y))")
+        guard let placed = state.getFacility(facility.id) else {
+            preconditionFailure("Facility missing after placement")
+        }
+        return placed
     }
 
     func pigAt(x: Double, y: Double, state: BehaviorState = .idle) -> GuineaPig {
@@ -92,7 +95,7 @@ struct FacilityManagerConsumptionTests {
     }
 
     @Test("checkArrivedAtFacility at therapy garden goes idle when pig is happy")
-    func testArrivalAtTherapyGardenSkipsIfHappy() {
+    func testArrivalAtTherapyGardenSkipsIfHappy() throws {
         let (manager, state, unusedController) = makeManager()
         placeFacility(type: .therapyGarden, x: 4, y: 9, state: state)
 
@@ -102,10 +105,10 @@ struct FacilityManagerConsumptionTests {
         pig.targetFacilityId = state.getFacilitiesByType(.therapyGarden).first?.id
         state.addGuineaPig(pig)
 
-        let savedTargetId = pig.targetFacilityId
+        let savedTargetId = try #require(pig.targetFacilityId)
         manager.checkArrivedAtFacility(pig: &pig)
         #expect(pig.behaviorState == .idle)
-        #expect(manager.getFailedFacilities(pig.id).contains(savedTargetId!))
+        #expect(manager.getFailedFacilities(pig.id).contains(savedTargetId))
     }
 
     @Test("checkArrivedAtFacility goes idle if no nearby facility found")
@@ -121,7 +124,7 @@ struct FacilityManagerConsumptionTests {
     // MARK: - Consumption Tests
 
     @Test("consumeFromNearbyFacility eating reduces food bowl currentAmount")
-    func testConsumeFromFoodBowlReducesAmount() {
+    func testConsumeFromFoodBowlReducesAmount() throws {
         let (manager, state, unusedController) = makeManager()
         let facility = placeFacility(type: .foodBowl, x: 4, y: 9, state: state)
         let initialAmount = facility.currentAmount
@@ -131,7 +134,7 @@ struct FacilityManagerConsumptionTests {
         state.addGuineaPig(pig)
 
         manager.consumeFromNearbyFacility(pig: &pig, gameMinutes: 1.0)
-        let updatedFacility = state.getFacility(facility.id)!
+        let updatedFacility = try #require(state.getFacility(facility.id))
         #expect(updatedFacility.currentAmount < initialAmount)
     }
 

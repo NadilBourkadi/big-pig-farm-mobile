@@ -103,14 +103,14 @@ struct PigNamesTests {
         #expect(existingNames.count == 100)
     }
 
-    @Test func uniqueNameFallsBackToNumberedName() {
+    @Test func uniqueNameFallsBackToNumberedName() throws {
         // Use maxAttempts: 0 to skip the random loop entirely and force the numbered fallback
         let existingNames = Set(PigNames.allNames)
         let name = PigNames.generateUniqueName(existingNames: existingNames, maxAttempts: 0)
         // The fallback name should be "BaseName N" where N is a number
         let parts = name.split(separator: " ")
         #expect(parts.count >= 2, "Fallback name '\(name)' should have at least two parts")
-        let lastPart = String(parts.last!)
+        let lastPart = String(try #require(parts.last))
         #expect(Int(lastPart) != nil, "Fallback name '\(name)' should end with a number")
     }
 

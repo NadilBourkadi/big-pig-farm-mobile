@@ -11,7 +11,7 @@ import Foundation
 
 /// Verify that Birth.advancePregnancies is called each tick by SimulationRunner,
 /// advancing pregnancyDays forward from zero.
-@Test @MainActor func simulationPregnancyAdvancesOverTicks() {
+@Test @MainActor func simulationPregnancyAdvancesOverTicks() throws {
     let state = GameState()
     state.farm = FarmGrid.createStarter()
 
@@ -37,7 +37,7 @@ import Foundation
 
     runTicks(runner, state: state, count: 5, gameMinutesPerTick: 6.0)
 
-    let updatedFemale = state.getGuineaPig(femaleId)!
+    let updatedFemale = try #require(state.getGuineaPig(femaleId))
     // Either still pregnant with advanced days, or birth already fired
     if updatedFemale.isPregnant {
         #expect(updatedFemale.pregnancyDays > 0.0)
@@ -122,7 +122,7 @@ import Foundation
 /// courtshipTogetherSeconds = 4.0 game-minutes.
 /// Pre-loading courtingTimer to 3.9 means one tick at 1.0 game-min completes it.
 /// The decision timer won't fire on tick 1 (initial random(0,1) + 1.0 < 2.0).
-@Test @MainActor func simulationCourtshipCompletesWhenAdjacent() {
+@Test @MainActor func simulationCourtshipCompletesWhenAdjacent() throws {
     let state = GameState()
     state.farm = FarmGrid.createStarter()
 
@@ -159,7 +159,7 @@ import Foundation
     // One tick at 1.0 game-min: timer goes 3.9 + 1.0 = 4.9 >= 4.0, courtship completes
     runTicks(runner, state: state, count: 1, gameMinutesPerTick: 1.0)
 
-    let updatedFemale = state.getGuineaPig(femaleId)!
+    let updatedFemale = try #require(state.getGuineaPig(femaleId))
     // Female is now pregnant (courtship completed → startPregnancyFromCourtship)
     // or at minimum the courtship has been processed
     let breedingEvents = state.events.filter { $0.eventType == "breeding" }

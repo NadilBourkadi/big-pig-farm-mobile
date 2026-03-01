@@ -204,11 +204,10 @@ import Foundation
     #expect(!grid.tunnels.isEmpty)
 }
 
-@Test func addRoomReturnsTunnels() {
+@Test func addRoomReturnsTunnels() throws {
     var grid = FarmGrid.createStarter()
-    let result = GridExpansion.addRoom(&grid, biome: .burrow)
-    #expect(result != nil)
-    #expect(!result!.tunnels.isEmpty)
+    let result = try #require(GridExpansion.addRoom(&grid, biome: .burrow))
+    #expect(!result.tunnels.isEmpty)
 }
 
 @Test func addRoomReturnsRoomDeltasForShiftedAreas() {
