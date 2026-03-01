@@ -49,7 +49,7 @@ private extension StatusBarView {
         guard !facilities.isEmpty else { return 0 }
         let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
             / Double(facilities.count)
-        return Int(average)
+        return Int(average.rounded())
     }
 
     /// Average fill percentage (0–100) across all water facilities.
@@ -58,7 +58,7 @@ private extension StatusBarView {
         guard !facilities.isEmpty else { return 0 }
         let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
             / Double(facilities.count)
-        return Int(average)
+        return Int(average.rounded())
     }
 
     /// True when breeding is enabled and adult pig count is at or below the minimum threshold.
