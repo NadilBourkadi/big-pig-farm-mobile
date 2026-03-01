@@ -81,7 +81,7 @@ struct SpatialGrid: Sendable {
 /// Handles collision detection and pig separation using the spatial grid.
 @MainActor
 final class CollisionHandler {
-    private unowned let gameState: GameState
+    private weak var gameState: GameState!
     var spatialGrid = SpatialGrid()
     private var facilityTargets: [UUID: Set<UUID>] = [:]
 
