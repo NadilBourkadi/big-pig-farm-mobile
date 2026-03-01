@@ -101,6 +101,17 @@ let shopItems: [ShopItem] = [
              facilityType: .stage, requiredTier: 5),
 ]
 
+// MARK: - RoomUpgradeInfo
+
+/// Metadata about the next available room expansion, bundled for the ShopView.
+struct RoomUpgradeInfo: Sendable {
+    let name: String
+    let cost: Int
+    let width: Int
+    let height: Int
+    let capacity: Int
+}
+
 // MARK: - Shop Logic
 
 /// Stateless namespace for shop purchase, sell, and tier upgrade logic.
@@ -207,5 +218,57 @@ enum Shop {
         guard let nextRoom = state.farm.nextRoomCost else { return 0 }
         let biomeCost = biomes[biome]?.cost ?? 0
         return nextRoom.cost + biomeCost
+    }
+
+    // MARK: - Shop Extensions (ShopView support)
+
+    /// Find the best available grid position to auto-place a newly purchased facility.
+    /// Delegates to AutoArrange.findGridPosition, scanning areas largest-first.
+    /// Returns nil if no valid position exists in any area.
+    @MainActor
+    static func findPlacementPosition(
+        for facilityType: FacilityType,
+        in state: GameState
+    ) -> GridPosition? {
+        let probe = Facility.create(type: facilityType, x: 0, y: 0)
+        return AutoArrange.findGridPosition(for: probe, in: state.farm)
+    }
+
+    /// All upgrade perks whose required tier is at or below `farmTier`, sorted by tier.
+    /// Does not filter out already-purchased perks — the caller handles "Owned" display.
+    static func getAvailablePerks(farmTier: Int, purchased: Set<String>) -> [UpgradeDefinition] {
+        upgrades.values
+            .filter { $0.requiredTier <= farmTier }
+            .sorted { $0.requiredTier < $1.requiredTier }
+    }
+
+    /// Purchase a perk by ID. Deducts cost and records the perk in `state.purchasedUpgrades`.
+    /// Returns true if the purchase succeeded. Delegates to Upgrades.purchasePerk.
+    @discardableResult
+    @MainActor
+    static func purchasePerk(perkID: String, state: GameState) -> Bool {
+        Upgrades.purchasePerk(state: state, upgradeId: perkID)
+    }
+
+    /// Metadata about the next room expansion, or nil when the farm is already at the
+    /// maximum room count for its current tier or all 8 room slots are filled.
+    @MainActor
+    static func getFarmUpgradeInfo(state: GameState) -> RoomUpgradeInfo? {
+        let currentTier = getTierUpgrade(tier: state.farmTier)
+        guard state.farm.areas.count < currentTier.maxRooms else { return nil }
+        guard let nextRoom = state.farm.nextRoomCost else { return nil }
+        return RoomUpgradeInfo(
+            name: nextRoom.name,
+            cost: nextRoom.cost,
+            width: currentTier.roomWidth,
+            height: currentTier.roomHeight,
+            capacity: currentTier.capacityPerRoom
+        )
+    }
+
+    /// Base purchase cost of a facility type. Positional-argument alias for getFacilityCost,
+    /// used at call sites that omit the label (e.g. `Shop.facilityCost(facility.facilityType)`).
+    static func facilityCost(_ facilityType: FacilityType) -> Int {
+        getFacilityCost(facilityType: facilityType)
     }
 }
