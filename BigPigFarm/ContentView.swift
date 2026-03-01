@@ -1,13 +1,219 @@
-/// ContentView — SpriteView root with sheet wiring for SwiftUI overlays.
-// TODO: Implement in doc 06, 07
+/// ContentView — SpriteView root with SwiftUI HUD overlay and sheet wiring.
+/// Maps from: ui/screens/main_game.py (MainGameScreen)
 import SwiftUI
+import SpriteKit
 
-struct ContentView: View {
-    var body: some View {
-        Text("Big Pig Farm")
+// MARK: - FarmSceneCoordinator
+
+/// Bridges FarmScene delegate callbacks to SwiftUI state in ContentView.
+///
+/// FarmScene holds a weak reference to its delegate. Since ContentView is
+/// a struct, this coordinator class acts as the intermediary. It uses
+/// closure callbacks (not a back-reference to ContentView, which is a struct
+/// and cannot be held weakly) to forward events to ContentView's @State.
+///
+/// Maps from: main_game.py event handlers (on_pig_tapped, on_facility_removed, etc.)
+@MainActor
+final class FarmSceneCoordinator: FarmSceneDelegate {
+    private let gameState: GameState
+
+    /// Called when the player taps a pig in the scene.
+    var onPigSelected: ((UUID) -> Void)?
+
+    /// Called when the player deselects a pig (tap on empty area).
+    var onPigDeselected: (() -> Void)?
+
+    init(gameState: GameState) {
+        self.gameState = gameState
+    }
+
+    func farmScene(_ scene: FarmScene, didSelectPig pigID: UUID) {
+        onPigSelected?(pigID)
+    }
+
+    func farmSceneDidDeselectPig(_ scene: FarmScene) {
+        onPigDeselected?()
+    }
+
+    func farmScene(_ scene: FarmScene, didSelectFacility facilityID: UUID) {
+        // Edit mode facility selection is handled visually within FarmScene.
+        // No sheet presentation needed for selection alone.
+    }
+
+    func farmScene(_ scene: FarmScene, didRemoveFacility facilityID: UUID) {
+        if let facility = gameState.removeFacility(facilityID) {
+            let refund = Shop.getFacilityCost(facilityType: facility.facilityType)
+            gameState.addMoney(refund)
+            gameState.logEvent(
+                "Removed \(facility.name) (+\(Currency.formatCurrency(refund)))",
+                eventType: "purchase"
+            )
+        }
     }
 }
 
-#Preview {
-    ContentView()
+// MARK: - ContentView
+
+/// Root view of the app. Embeds the SpriteKit farm scene and overlays
+/// SwiftUI HUD elements. Menu screens are presented as .sheet modifiers.
+///
+/// Maps from: ui/screens/main_game.py (MainGameScreen)
+///
+/// Architecture: SpriteView displays FarmScene. StatusBarView floats on top.
+/// Shop, PigList, Breeding, etc. are presented via .sheet when triggered
+/// by toolbar button taps in StatusBarView.
+struct ContentView: View {
+    /// The shared game state, created by BigPigFarmApp.
+    @State var gameState: GameState
+
+    /// The game engine managing the tick loop.
+    @State var engine: GameEngine
+
+    /// The farm scene displayed in SpriteView.
+    @State private var farmScene: FarmScene
+
+    /// Coordinator that bridges FarmScene delegate callbacks to SwiftUI state.
+    @State private var coordinator: FarmSceneCoordinator
+
+    // MARK: - Sheet Presentation State
+
+    @State private var showShop = false
+    @State private var showPigList = false
+    @State private var showBreeding = false
+    @State private var showAlmanac = false
+    @State private var showPigDetail = false
+
+    /// The pig currently selected for detail view.
+    @State private var selectedPigID: UUID?
+
+    /// Whether edit mode is currently active.
+    @State private var isEditMode = false
+
+    // MARK: - Init
+
+    init(gameState: GameState, engine: GameEngine) {
+        let gs = gameState
+        _gameState = State(initialValue: gs)
+        _engine = State(initialValue: engine)
+        _farmScene = State(initialValue: FarmScene(gameState: gs))
+        _coordinator = State(initialValue: FarmSceneCoordinator(gameState: gs))
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            // Farm scene — full screen, captures all touches not intercepted by HUD
+            SpriteView(
+                scene: farmScene,
+                transition: nil,
+                isPaused: false,
+                preferredFramesPerSecond: 60,
+                options: [],
+                debugOptions: []
+            )
+            .ignoresSafeArea()
+
+            // HUD overlay — StatusBarView at top, Spacer lets touches pass through below
+            VStack {
+                StatusBarView(
+                    gameState: gameState,
+                    isEditMode: $isEditMode,
+                    onShopTapped: { showShop = true },
+                    onPigListTapped: { showPigList = true },
+                    onBreedingTapped: { showBreeding = true },
+                    onAlmanacTapped: { showAlmanac = true },
+                    onEditTapped: { toggleEditMode() },
+                    onPauseTapped: { togglePause() },
+                    onSpeedTapped: { cycleSpeed() }
+                )
+                Spacer()
+            }
+        }
+        .sheet(isPresented: $showShop) {
+            ShopView(gameState: gameState)
+        }
+        .sheet(isPresented: $showPigList) {
+            PigListView(gameState: gameState, onFollowPig: handleFollowPig)
+        }
+        .sheet(isPresented: $showBreeding) {
+            BreedingView(gameState: gameState)
+        }
+        .sheet(isPresented: $showAlmanac) {
+            AlmanacView(gameState: gameState)
+        }
+        .sheet(isPresented: $showPigDetail) {
+            if let pigID = selectedPigID, let pig = gameState.getGuineaPig(pigID) {
+                NavigationStack {
+                    PigDetailView(gameState: gameState, pig: pig)
+                        .navigationTitle(pig.name)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") { showPigDetail = false }
+                            }
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button("Follow") {
+                                    handleFollowPig(pigID)
+                                    showPigDetail = false
+                                }
+                            }
+                        }
+                }
+            }
+        }
+        .onAppear {
+            farmScene.sceneDelegate = coordinator
+            coordinator.onPigSelected = { pigID in
+                selectedPigID = pigID
+                showPigDetail = true
+            }
+            coordinator.onPigDeselected = {
+                selectedPigID = nil
+                showPigDetail = false
+            }
+            engine.start()
+        }
+    }
+}
+
+// MARK: - ContentView Actions
+
+extension ContentView {
+
+    /// Toggle the game pause state.
+    ///
+    /// Maps from: main_game.py action_toggle_pause()
+    private func togglePause() {
+        _ = engine.togglePause()
+    }
+
+    /// Cycle the game speed setting.
+    ///
+    /// Maps from: main_game.py action_speed_up()
+    private func cycleSpeed() {
+        _ = engine.cycleSpeed()
+    }
+
+    /// Toggle edit mode on the farm scene.
+    ///
+    /// Maps from: main_game.py action_toggle_edit()
+    private func toggleEditMode() {
+        isEditMode.toggle()
+        farmScene.isEditMode = isEditMode
+        if !isEditMode {
+            farmScene.selectedFacilityID = nil
+            farmScene.isMovingFacility = false
+        }
+    }
+
+    /// Follow a pig on the farm, dismissing any open sheet.
+    ///
+    /// Maps from: main_game.py _follow_pig(), pig_list.py action_follow_pig()
+    private func handleFollowPig(_ pigID: UUID) {
+        selectedPigID = pigID
+        showPigList = false
+        showPigDetail = false
+        farmScene.centerOnPig(pigID)
+    }
 }
