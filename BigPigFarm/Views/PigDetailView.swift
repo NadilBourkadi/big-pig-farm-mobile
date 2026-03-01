@@ -119,7 +119,7 @@ private extension PigDetailView {
             NeedBar(value: pig.needs.happiness / 100.0, label: "Happiness")
             NeedBar(value: pig.needs.health / 100.0, label: "Health")
             NeedBar(value: pig.needs.social / 100.0, label: "Social")
-            NeedBar(value: (100.0 - pig.needs.boredom) / 100.0, label: "Fun")
+            NeedBar(value: (100.0 - pig.needs.boredom) / 100.0, label: "Fun")  // Boredom is inverse of fun
         }
     }
 }

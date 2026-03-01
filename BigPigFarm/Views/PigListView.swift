@@ -161,6 +161,7 @@ struct PigListView: View {
         } label: {
             Label("Sort: \(sortBy.rawValue)", systemImage: "arrow.up.arrow.down")
                 .font(.caption)
+                .accessibilityLabel("Sort by \(sortBy.rawValue)")
         }
     }
 }
