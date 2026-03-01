@@ -81,6 +81,17 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
     case rare
     case veryRare = "very_rare"
     case legendary
+
+    /// Numeric ordering for sort comparisons. Higher = rarer.
+    var sortOrder: Int {
+        switch self {
+        case .common: return 0
+        case .uncommon: return 1
+        case .rare: return 2
+        case .veryRare: return 3
+        case .legendary: return 4
+        }
+    }
 }
 
 // MARK: - AllelePair
