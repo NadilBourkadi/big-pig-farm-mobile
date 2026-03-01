@@ -5,7 +5,7 @@ import SpriteKit
 /// Manages camera pan, zoom, and bounds clamping for the farm scene.
 /// Inherits NSObject to support @objc gesture handler selectors.
 @MainActor
-class CameraController: NSObject {
+class CameraController: NSObject, UIGestureRecognizerDelegate {
     private let camera: SKCameraNode
     private weak var scene: FarmScene?
     private var farmWidth: Int
@@ -24,9 +24,17 @@ class CameraController: NSObject {
 
     func setupGestureRecognizers(in view: SKView) {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        pan.maximumNumberOfTouches = 1
+        pan.delegate = self
+
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        tap.require(toFail: pan)
+
         view.addGestureRecognizer(pan)
         view.addGestureRecognizer(pinch)
+        view.addGestureRecognizer(tap)
     }
 
     func follow(_ position: CGPoint) {
@@ -66,6 +74,28 @@ class CameraController: NSObject {
         camera.run(action) { [weak self] in
             self?.clampCameraPosition()
         }
+    }
+
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        guard let scene = scene, let view = scene.view else { return }
+        let viewPoint = gesture.location(in: view)
+        let scenePoint = scene.convertPoint(fromView: viewPoint)
+        scene.handleTap(at: scenePoint)
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+
+    /// Allow pinch and pan to recognize simultaneously (two-finger zoom + drag).
+    /// Tap is exclusive — it only fires after pan fails.
+    nonisolated func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        if gestureRecognizer is UIPinchGestureRecognizer
+            || otherGestureRecognizer is UIPinchGestureRecognizer {
+            return true
+        }
+        return false
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {

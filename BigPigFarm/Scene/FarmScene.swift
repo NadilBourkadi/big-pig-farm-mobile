@@ -52,7 +52,7 @@ class FarmScene: SKScene {
 
     // MARK: - Node Tracking
 
-    private var pigNodes: [UUID: PigNode] = [:]
+    var pigNodes: [UUID: PigNode] = [:]
     private var facilityNodes: [UUID: FacilityNode] = [:]
 
     // MARK: - Camera
@@ -316,56 +316,6 @@ extension FarmScene {
                 node.isSelectedInEditMode = (id == selectedFacilityID && isEditMode)
                 node.isBeingMoved = (id == selectedFacilityID && isMovingFacility)
             }
-        }
-    }
-}
-
-// MARK: - Touch
-
-extension FarmScene {
-
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-        let location = touch.location(in: self)
-
-        if isEditMode {
-            handleEditModeTap(at: location)
-            return
-        }
-
-        if let pigNode = pigNodeAt(location) {
-            if selectedPigID == pigNode.pigID {
-                selectedPigID = nil
-                sceneDelegate?.farmSceneDidDeselectPig(self)
-            } else {
-                selectedPigID = pigNode.pigID
-                sceneDelegate?.farmScene(self, didSelectPig: pigNode.pigID)
-            }
-        } else {
-            selectedPigID = nil
-            sceneDelegate?.farmSceneDidDeselectPig(self)
-        }
-    }
-
-    private func pigNodeAt(_ location: CGPoint) -> PigNode? {
-        for node in nodes(at: location) {
-            if let pig = node as? PigNode { return pig }
-        }
-        return nil
-    }
-
-    private func updateSelectionHighlight() {
-        for (id, node) in pigNodes {
-            node.isSelected = (id == selectedPigID)
-        }
-    }
-
-    /// Select a pig and immediately center the camera on it.
-    /// Called from ContentView when the player taps "Follow" in PigList or PigDetail.
-    func centerOnPig(_ pigID: UUID) {
-        selectedPigID = pigID
-        if let node = pigNodes[pigID] {
-            cameraController.follow(node.position)
         }
     }
 }
