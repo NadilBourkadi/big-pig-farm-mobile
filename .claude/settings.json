@@ -23,6 +23,8 @@
       "Bash(poetry run:*)",
       "Bash(bd close:*)",
       "Skill(code-review)",
+      "Skill(triage)",
+      "Skill(implement)",
       "Bash(bd export:*)",
       "Bash(bd sync:*)",
       "Bash(bd ls:*)",
