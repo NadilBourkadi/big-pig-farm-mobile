@@ -59,9 +59,9 @@ final class FarmSceneCoordinator: FarmSceneDelegate {
 ///
 /// Maps from: ui/screens/main_game.py (MainGameScreen)
 ///
-/// Architecture: SpriteView displays FarmScene. StatusBarView floats on top.
-/// Shop, PigList, Breeding, etc. are presented via .sheet when triggered
-/// by toolbar button taps in StatusBarView.
+/// Architecture: SpriteView displays FarmScene. StatusInfoRow is pinned at
+/// the top and StatusToolbar at the bottom. Shop, PigList, Breeding, etc.
+/// are presented via .sheet when triggered by toolbar button taps.
 struct ContentView: View {
     /// The shared game state, created by BigPigFarmApp.
     @State var gameState: GameState
@@ -114,9 +114,11 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            // HUD overlay — StatusBarView at top, Spacer lets touches pass through below
+            // HUD overlay — StatusInfoRow pinned top, StatusToolbar pinned bottom
             VStack {
-                StatusBarView(
+                StatusInfoRow(gameState: gameState)
+                Spacer()
+                StatusToolbar(
                     gameState: gameState,
                     isEditMode: $isEditMode,
                     onShopTapped: { showShop = true },
@@ -127,7 +129,6 @@ struct ContentView: View {
                     onPauseTapped: { togglePause() },
                     onSpeedTapped: { cycleSpeed() }
                 )
-                Spacer()
             }
         }
         .sheet(isPresented: $showShop) {
