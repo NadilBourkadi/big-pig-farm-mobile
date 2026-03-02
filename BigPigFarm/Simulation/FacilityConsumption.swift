@@ -187,7 +187,7 @@ extension FacilityManager {
 
         var mutableFacility = facility
         let consumed = mutableFacility.consume(gameMinutes * GameConfig.Behavior.resourceConsumeRate)
-        gameState.facilities[facility.id] = mutableFacility
+        gameState.updateFacility(mutableFacility)
 
         if consumed <= 0 {
             pig.behaviorState = .idle
@@ -213,7 +213,7 @@ extension FacilityManager {
         guard facility.facilityType == .waterBottle else { return }
         var mutableFacility = facility
         let consumed = mutableFacility.consume(gameMinutes * GameConfig.Behavior.resourceConsumeRate)
-        gameState.facilities[facility.id] = mutableFacility
+        gameState.updateFacility(mutableFacility)
         if consumed <= 0 { pig.behaviorState = .idle }
     }
 
