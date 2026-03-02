@@ -126,7 +126,7 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 - Never work on a task that has open blockers — use `bd show <id>` to check
 - Create discovered issues as you find them (bugs, tech debt, follow-ups)
 - Keep tasks granular — anything over ~2 files should be its own bead
-- Priority levels: P0 (foundation), P1 (core features), P2 (UI/scene), P3 (polish/investigation)
+- Priority levels: P0 (critical — blocks everything), P1 (high — significant impact), P2 (medium — normal priority), P3 (low — nice to have / polish)
 
 ## Working Style
 
