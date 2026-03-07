@@ -17,6 +17,18 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     var currentScale: CGFloat { camera.xScale }
 
+    /// The effective maximum zoom-out scale: whichever is larger of the fixed
+    /// constant and the scale needed to fit the entire farm on screen.
+    /// This lets the user zoom out to see the whole farm even when it exceeds
+    /// the default max.
+    var effectiveMaxScale: CGFloat {
+        guard let scene = scene, let view = scene.view,
+              view.frame.width > 0, view.frame.height > 0 else {
+            return SceneConstants.maxCameraScale
+        }
+        return max(SceneConstants.maxCameraScale, fitCameraScale(for: view))
+    }
+
     init(camera: SKCameraNode, scene: FarmScene, farmWidth: Int, farmHeight: Int) {
         self.camera = camera
         self.scene = scene
@@ -96,22 +108,33 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         return max(sceneW / visibleW, sceneH / visibleH)
     }
 
-    /// Compute and apply the camera scale that fits the entire farm on screen,
-    /// then clamp the camera position. Used for the deferred initial zoom when
-    /// the SKView frame is guaranteed to be laid out.
-    func applyFitToScreenZoom(for view: SKView) {
+    /// Zoom and center the camera so that `contentRect` (in scene points)
+    /// is fully visible, capped at the fixed max zoom-out.
+    func applyFitToScreenZoom(for view: SKView, contentRect: CGRect) {
         guard view.frame.width > 0, view.frame.height > 0 else { return }
-        let fitScale = fitCameraScale(for: view)
-        let clamped = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, fitScale))
-        camera.setScale(clamped)
+
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
         let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
-        camera.position = CGPoint(x: sceneW / 2, y: sceneH / 2)
-        clampCameraPosition()
+        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
+        let visibleAtScale1W = view.frame.width / ds
+        let visibleAtScale1H = view.frame.height / ds
+
+        // Scale needed to fit the content rect (not the whole grid).
+        let contentFitScale = max(
+            contentRect.width / visibleAtScale1W,
+            contentRect.height / visibleAtScale1H
+        )
+        let clamped = max(SceneConstants.minCameraScale,
+                          min(SceneConstants.maxCameraScale, contentFitScale))
+        camera.setScale(clamped)
+        camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY)
+        // No clampCameraPosition() here — the initial zoom must center on
+        // content, not get pulled to the full-grid center.  Normal panning
+        // still clamps via handlePan / handlePinch.
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
-        let clamped = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, scale))
+        let clamped = max(SceneConstants.minCameraScale, min(effectiveMaxScale, scale))
         let action = SKAction.scale(to: clamped, duration: duration)
         camera.run(action) { [weak self] in
             self?.clampCameraPosition()
@@ -168,7 +191,7 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
             pinchStartScale = camera.xScale
         }
         let newScale = pinchStartScale / gesture.scale
-        let clamped = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, newScale))
+        let clamped = max(SceneConstants.minCameraScale, min(effectiveMaxScale, newScale))
         camera.setScale(clamped)
         clampCameraPosition()
     }
