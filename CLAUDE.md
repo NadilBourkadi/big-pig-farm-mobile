@@ -66,7 +66,8 @@ Views (SwiftUI) + Scene (SpriteKit)
 
 ## Git Workflow — CRITICAL
 
-- **NEVER commit on main.** Always create a feature branch.
+- **ALL implementation work happens in a worktree — no exceptions.** Task size is irrelevant. Running `/implement` directly in the main repo directory is forbidden; it strands the main repo on a feature branch. Use `EnterWorktree` if not already in a worktree; if already inside `.claude/worktrees/`, create a fresh branch off `origin/main` directly.
+- **NEVER commit on main.** Always create a feature branch. This applies to every change without exception — code, tests, docs, CLAUDE.md itself, config files. "It's just a one-liner" and "it's only a docs change" are not exceptions.
 - **Always push and open PR** when work is complete.
 - **Merge with rebase** (not squash, not merge commit).
 - **NO "Co-Authored-By" lines** in commits.
