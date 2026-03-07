@@ -128,9 +128,7 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
                           min(SceneConstants.maxCameraScale, contentFitScale))
         camera.setScale(clamped)
         camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY)
-        // No clampCameraPosition() here — the initial zoom must center on
-        // content, not get pulled to the full-grid center.  Normal panning
-        // still clamps via handlePan / handlePinch.
+        clampCameraPosition()
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {

@@ -195,9 +195,9 @@ extension FarmScene {
         let bottomRight = gridToScene(CGFloat(maxGX), CGFloat(maxGY))
         let x = min(topLeft.x, bottomRight.x)
         let y = min(topLeft.y, bottomRight.y)
-        let w = abs(bottomRight.x - topLeft.x)
-        let h = abs(bottomRight.y - topLeft.y)
-        return CGRect(x: x, y: y, width: w, height: h)
+        let width = abs(bottomRight.x - topLeft.x)
+        let height = abs(bottomRight.y - topLeft.y)
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 }
 

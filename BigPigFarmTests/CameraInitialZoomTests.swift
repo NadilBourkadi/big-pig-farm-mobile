@@ -9,9 +9,9 @@ struct CameraInitialZoomTests {
 
     /// Helper: full-grid content rect for a starter farm.
     private func starterContentRect(_ state: GameState) -> CGRect {
-        let w = CGFloat(state.farm.width) * SceneConstants.cellSize
-        let h = CGFloat(state.farm.height) * SceneConstants.cellSize
-        return CGRect(x: 0, y: 0, width: w, height: h)
+        let width = CGFloat(state.farm.width) * SceneConstants.cellSize
+        let height = CGFloat(state.farm.height) * SceneConstants.cellSize
+        return CGRect(x: 0, y: 0, width: width, height: height)
     }
 
     @Test("fitCameraScale returns default for zero-frame view")
@@ -82,6 +82,26 @@ struct CameraInitialZoomTests {
         view.presentScene(scene)
         #expect(scene.cameraController.effectiveMaxScale > SceneConstants.maxCameraScale,
                 "Large farm should push effectiveMaxScale beyond the fixed constant")
+    }
+
+    @Test("applyFitToScreenZoom leaves camera in a clamp-stable position")
+    func applyFitToScreenZoomPositionIsClampStable() throws {
+        let state = GameState()
+        let scene = FarmScene(gameState: state)
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        scene.didMove(to: view)
+        let rect = starterContentRect(state)
+        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
+
+        let camera = try #require(scene.camera)
+        let positionAfterFit = camera.position
+
+        // A second clamp call must be a no-op: if applyFitToScreenZoom left
+        // the camera outside the valid scroll range, this would move it and
+        // the assertions below would fail — reproducing the original snap bug.
+        scene.cameraController.clampCameraPosition()
+        #expect(abs(camera.position.x - positionAfterFit.x) < 0.001)
+        #expect(abs(camera.position.y - positionAfterFit.y) < 0.001)
     }
 
     @Test("contentBounds returns area bounds, not full grid")
