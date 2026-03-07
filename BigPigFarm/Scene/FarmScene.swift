@@ -175,7 +175,11 @@ extension FarmScene {
         syncFacilities()
         syncPigs()
 
-        if let selectedID = selectedPigID, let pigNode = pigNodes[selectedID] {
+        // Only track a selected pig when the viewport is small enough that the
+        // pig could be off-screen. At fit-zoom the whole farm is visible, so
+        // tracking would lock the camera to the pig's position and fight panning.
+        if let selectedID = selectedPigID, let pigNode = pigNodes[selectedID],
+           cameraController.isZoomedInForPigTracking {
             cameraController.follow(pigNode.position)
         }
     }

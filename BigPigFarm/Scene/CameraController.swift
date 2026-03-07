@@ -64,6 +64,19 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         farmHeight = height
     }
 
+    /// True when the viewport is small enough that a pig could be off-screen,
+    /// making camera tracking meaningful. At fit-zoom the entire farm is visible
+    /// so tracking is a no-op and would fight against manual panning.
+    var isZoomedInForPigTracking: Bool {
+        guard let scene = scene, let view = scene.view else { return false }
+        let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
+        let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
+        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
+        let visibleW = (view.frame.width / ds) * camera.xScale
+        let visibleH = (view.frame.height / ds) * camera.yScale
+        return visibleW < sceneW || visibleH < sceneH
+    }
+
     func clampCameraPosition() {
         guard let scene = scene, let view = scene.view else { return }
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
