@@ -22,6 +22,7 @@ protocol FarmSceneDelegate: AnyObject {
     func farmScene(_ scene: FarmScene, didSelectPig pigID: UUID)
     func farmSceneDidDeselectPig(_ scene: FarmScene)
     func farmScene(_ scene: FarmScene, didSelectFacility facilityID: UUID)
+    func farmSceneDidDeselectFacility(_ scene: FarmScene)
     func farmScene(_ scene: FarmScene, didRemoveFacility facilityID: UUID)
 }
 
@@ -68,6 +69,10 @@ class FarmScene: SKScene {
     var isEditMode: Bool = false
     var selectedFacilityID: UUID?
     var isMovingFacility: Bool = false
+
+    /// Called by confirmFacilityPlacement() when a move gesture ends.
+    /// ContentView uses this to reset its editModeIsMovingFacility @State.
+    var onFacilityMoveEnded: (() -> Void)?
 
     // MARK: - Terrain State
 
