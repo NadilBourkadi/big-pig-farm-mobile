@@ -28,16 +28,21 @@ struct EditModeActionPanel: View {
             panelButton(
                 systemImage: "arrow.up.and.down.and.arrow.left.and.right",
                 label: isMovingFacility ? "Moving…" : "Move",
+                isDisabled: !hasSelection || isMovingFacility,
                 action: onMove
             )
-            .disabled(!hasSelection || isMovingFacility)
-
-            panelButton(systemImage: "trash", label: "Remove", action: onRemove)
-                .disabled(!hasSelection || isMovingFacility)
-
-            panelButton(systemImage: "square.grid.2x2", label: "Auto-Arrange", action: onAutoArrange)
-                .disabled(isMovingFacility)
-
+            panelButton(
+                systemImage: "trash",
+                label: "Remove",
+                isDisabled: !hasSelection || isMovingFacility,
+                action: onRemove
+            )
+            panelButton(
+                systemImage: "square.grid.2x2",
+                label: "Auto-Arrange",
+                isDisabled: isMovingFacility,
+                action: onAutoArrange
+            )
             Spacer()
         }
         .padding(.horizontal, 8)
@@ -52,6 +57,7 @@ private extension EditModeActionPanel {
     func panelButton(
         systemImage: String,
         label: String,
+        isDisabled: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -62,8 +68,11 @@ private extension EditModeActionPanel {
                     .font(.system(size: 9))
             }
             .foregroundStyle(.white)
+            .opacity(isDisabled ? 0.4 : 1.0)
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .accessibilityLabel(label)
     }
 }
 

@@ -57,6 +57,7 @@ extension FarmScene {
     }
 
     func confirmFacilityPlacement() {
+        guard isMovingFacility else { return }
         isMovingFacility = false
         onFacilityMoveEnded?()
     }
@@ -69,9 +70,12 @@ extension FarmScene {
     }
 
     /// Ends facility move mode without confirming placement (e.g. exiting edit mode mid-move).
+    /// Calls onFacilityMoveEnded so SwiftUI state stays in sync via the same
+    /// callback path used by confirmFacilityPlacement.
     func endFacilityMove() {
         cameraController.isInFacilityMoveMode = false
         isMovingFacility = false
+        onFacilityMoveEnded?()
     }
 
     func removeSelectedFacility() {

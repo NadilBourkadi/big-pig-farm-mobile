@@ -248,11 +248,11 @@ extension ContentView {
         farmScene.isEditMode = isEditMode
         if !isEditMode {
             if editModeIsMovingFacility {
+                // endFacilityMove calls onFacilityMoveEnded, which resets editModeIsMovingFacility.
                 farmScene.endFacilityMove()
             }
             farmScene.selectedFacilityID = nil
             editModeSelectedFacilityID = nil
-            editModeIsMovingFacility = false
         }
     }
 
@@ -271,6 +271,8 @@ extension ContentView {
     private func confirmRemoveFacility() {
         farmScene.removeSelectedFacility()
         editModeSelectedFacilityID = nil
+        // Defensive reset: the Remove button is disabled during an active move,
+        // but reset here in case the confirmation dialog outlives a move end.
         editModeIsMovingFacility = false
     }
 

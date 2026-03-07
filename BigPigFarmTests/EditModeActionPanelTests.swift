@@ -98,7 +98,18 @@ struct FarmSceneMoveStateTests {
     func confirmPlacementNoClosureNoCrash() {
         let farmScene = FarmScene(gameState: state)
         farmScene.onFacilityMoveEnded = nil
+        farmScene.isMovingFacility = true
         farmScene.confirmFacilityPlacement()   // must not crash
+    }
+
+    @Test("confirmFacilityPlacement does not call onFacilityMoveEnded when not moving")
+    func confirmPlacementGuardPreventsClosure() {
+        let farmScene = FarmScene(gameState: state)
+        var called = false
+        farmScene.onFacilityMoveEnded = { called = true }
+        farmScene.isMovingFacility = false
+        farmScene.confirmFacilityPlacement()
+        #expect(called == false)
     }
 }
 
