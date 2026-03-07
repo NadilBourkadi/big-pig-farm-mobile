@@ -127,6 +127,11 @@ extension FarmScene {
         )
         cameraController.setupGestureRecognizers(in: view)
 
+        // Zoom out so the entire farm is visible on launch.
+        let fitScale = cameraController.fitCameraScale(for: view)
+        let initialScale = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, fitScale))
+        cameraNode.setScale(initialScale)
+
         rebuildTerrain()
         syncFacilities()
         syncPigs()
