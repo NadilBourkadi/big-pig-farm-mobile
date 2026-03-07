@@ -7,8 +7,8 @@ import Foundation
 
 @Test func createStarterHasCorrectDimensions() {
     let grid = FarmGrid.createStarter()
-    #expect(grid.width == 62)
-    #expect(grid.height == 37)
+    #expect(grid.width == 18)
+    #expect(grid.height == 18)
     #expect(grid.tier == 1)
 }
 
@@ -29,8 +29,8 @@ import Foundation
     let area = grid.areas[0]
     #expect(area.x1 == 0)
     #expect(area.y1 == 0)
-    #expect(area.x2 == 61)
-    #expect(area.y2 == 36)
+    #expect(area.x2 == 17)
+    #expect(area.y2 == 17)
 }
 
 @Test func createStarterBorderCellsAreWalls() {
@@ -102,7 +102,7 @@ import Foundation
 @Test func isWalkableFloor() {
     let grid = FarmGrid.createStarter()
     #expect(grid.isWalkable(1, 1) == true)
-    #expect(grid.isWalkable(30, 18) == true)
+    #expect(grid.isWalkable(8, 8) == true)
 }
 
 @Test func getCellReturnsCorrectly() {
@@ -234,21 +234,21 @@ import Foundation
     let grid = FarmGrid.createStarter()
     // All four corners should be marked
     #expect(grid.cells[0][0].isCorner == true)
-    #expect(grid.cells[0][61].isCorner == true)
-    #expect(grid.cells[36][0].isCorner == true)
-    #expect(grid.cells[36][61].isCorner == true)
+    #expect(grid.cells[0][17].isCorner == true)
+    #expect(grid.cells[17][0].isCorner == true)
+    #expect(grid.cells[17][17].isCorner == true)
 }
 
 @Test func computeWallFlagsHorizontalWalls() {
     let grid = FarmGrid.createStarter()
     // Top wall (non-corner) should be horizontal
     #expect(grid.cells[0][1].isHorizontalWall == true)
-    #expect(grid.cells[0][30].isHorizontalWall == true)
+    #expect(grid.cells[0][8].isHorizontalWall == true)
     // Bottom wall (non-corner) should be horizontal
-    #expect(grid.cells[36][1].isHorizontalWall == true)
+    #expect(grid.cells[17][1].isHorizontalWall == true)
     // Side walls should NOT be horizontal
     #expect(grid.cells[1][0].isHorizontalWall == false)
-    #expect(grid.cells[18][0].isHorizontalWall == false)
+    #expect(grid.cells[8][0].isHorizontalWall == false)
 }
 
 @Test func computeWallFlagsPreservesTunnelFlags() {

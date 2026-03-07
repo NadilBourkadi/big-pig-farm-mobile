@@ -35,7 +35,7 @@ import Foundation
     GridExpansion.expandGrid(&grid, newWidth: 80, newHeight: 50, offsetX: 5, offsetY: 3)
     #expect(grid.areas[0].x1 == originalX1 + 5)
     #expect(grid.areas[0].y1 == originalY1 + 3)
-    #expect(grid.areas[0].x2 == grid.areas[0].x1 + 61)
+    #expect(grid.areas[0].x2 == grid.areas[0].x1 + 17)
 }
 
 @Test func expandGridWithOffsetShiftsTunnelCells() {

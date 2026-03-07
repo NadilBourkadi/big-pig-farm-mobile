@@ -17,11 +17,11 @@ import Foundation
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
     male.ageDays = 5.0
-    male.position = Position(x: 20.0, y: 15.0)
+    male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
     female.ageDays = 5.0
-    female.position = Position(x: 22.0, y: 15.0)
+    female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
     female.pregnancyDays = 0.0
     female.partnerGenotype = male.genotype
@@ -60,11 +60,11 @@ import Foundation
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
     male.ageDays = 5.0
-    male.position = Position(x: 20.0, y: 15.0)
+    male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
     female.ageDays = 5.0
-    female.position = Position(x: 22.0, y: 15.0)
+    female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
     female.pregnancyDays = 1.9
     female.partnerGenotype = male.genotype
@@ -90,11 +90,11 @@ import Foundation
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
     male.ageDays = 5.0
-    male.position = Position(x: 20.0, y: 15.0)
+    male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
     female.ageDays = 5.0
-    female.position = Position(x: 22.0, y: 15.0)
+    female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
     female.pregnancyDays = 1.9
     female.partnerGenotype = male.genotype
@@ -129,13 +129,13 @@ import Foundation
     var male = GuineaPig.create(name: "Romeo", gender: .male)
     male.ageDays = 5.0
     male.needs.happiness = 80.0
-    male.position = Position(x: 15.0, y: 15.0)
+    male.position = Position(x: 8.0, y: 10.0)
     male.path = []
 
     var female = GuineaPig.create(name: "Juliet", gender: .female)
     female.ageDays = 5.0
     female.needs.happiness = 80.0
-    female.position = Position(x: 17.0, y: 15.0)
+    female.position = Position(x: 10.0, y: 10.0)
     female.path = []
 
     // Pre-wire courtship state — timer just below threshold (4.0)
