@@ -239,6 +239,7 @@ struct TouchDelegateTests {
             deselectCallCount += 1
         }
         func farmScene(_ scene: FarmScene, didSelectFacility facilityID: UUID) {}
+        func farmSceneDidDeselectFacility(_ scene: FarmScene) {}
         func farmScene(_ scene: FarmScene, didRemoveFacility facilityID: UUID) {}
     }
 
