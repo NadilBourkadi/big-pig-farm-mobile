@@ -69,5 +69,6 @@
       "Bash(xcrun:*)"
     ]
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "Explanatory",
+  "model": "opusplan"
 }
