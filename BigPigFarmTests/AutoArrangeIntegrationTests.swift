@@ -198,7 +198,7 @@ private func addArrangeFacility(_ state: GameState, type: FacilityType, x: Int =
 
 // MARK: - findNearestWalkable Tests
 
-@Test func findNearestWalkableFindsAdjacentCell() {
+@Test @MainActor func findNearestWalkableFindsAdjacentCell() {
     var farm = FarmGrid.createStarter()
     let pos = GridPosition(x: 3, y: 3)
     let facility = Facility.create(type: .foodBowl, x: 3, y: 3)
@@ -208,7 +208,7 @@ private func addArrangeFacility(_ state: GameState, type: FacilityType, x: Int =
     }
 }
 
-@Test func findNearestWalkableReturnsNilWhenMaxDistanceIsZero() {
+@Test @MainActor func findNearestWalkableReturnsNilWhenMaxDistanceIsZero() {
     let farm = FarmGrid.createStarter()
     let result = farm.findNearestWalkable(GridPosition(x: 5, y: 5), maxDistance: 0)
     #expect(result == nil)

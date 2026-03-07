@@ -6,7 +6,7 @@ import Foundation
 // MARK: - Test Helpers
 
 /// Create a pig with known needs for deterministic testing.
-func makeNeedsPig(
+@MainActor func makeNeedsPig(
     hunger: Double = 100.0,
     thirst: Double = 100.0,
     energy: Double = 100.0,

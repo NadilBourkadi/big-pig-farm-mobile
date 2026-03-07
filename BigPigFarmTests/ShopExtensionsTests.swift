@@ -55,34 +55,34 @@ import Foundation
 
 // MARK: - getAvailablePerks
 
-@Test func shopGetAvailablePerksAtTierOneReturnsEmpty() {
+@Test @MainActor func shopGetAvailablePerksAtTierOneReturnsEmpty() {
     let result = Shop.getAvailablePerks(farmTier: 1)
     #expect(result.isEmpty)
 }
 
-@Test func getAvailablePerksAtTierTwoReturnsNonEmpty() {
+@Test @MainActor func getAvailablePerksAtTierTwoReturnsNonEmpty() {
     let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(!result.isEmpty)
 }
 
-@Test func getAvailablePerksAtTierTwoContainsOnlyEligibleTiers() {
+@Test @MainActor func getAvailablePerksAtTierTwoContainsOnlyEligibleTiers() {
     let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(result.allSatisfy { $0.requiredTier <= 2 })
 }
 
-@Test func getAvailablePerksAtTierFiveReturnsAllPerks() {
+@Test @MainActor func getAvailablePerksAtTierFiveReturnsAllPerks() {
     let result = Shop.getAvailablePerks(farmTier: 5)
     #expect(result.count == upgrades.count)
 }
 
-@Test func getAvailablePerksSortedAscendingByTier() {
+@Test @MainActor func getAvailablePerksSortedAscendingByTier() {
     let result = Shop.getAvailablePerks(farmTier: 5)
     for index in 1..<result.count {
         #expect(result[index - 1].requiredTier <= result[index].requiredTier)
     }
 }
 
-@Test func getAvailablePerksDoesNotFilterAlreadyPurchased() {
+@Test @MainActor func getAvailablePerksDoesNotFilterAlreadyPurchased() {
     // The view shows "Owned" badge for purchased perks, so they must remain in the list
     let result = Shop.getAvailablePerks(farmTier: 2)
     #expect(result.contains(where: { $0.id == "bulk_feeders" }))
@@ -186,24 +186,24 @@ import Foundation
 
 // MARK: - facilityCost
 
-@Test func facilityCostMatchesGetFacilityCostForFoodBowl() {
+@Test @MainActor func facilityCostMatchesGetFacilityCostForFoodBowl() {
     #expect(Shop.facilityCost(.foodBowl) == Shop.getFacilityCost(facilityType: .foodBowl))
 }
 
-@Test func facilityCostMatchesGetFacilityCostForHotSpring() {
+@Test @MainActor func facilityCostMatchesGetFacilityCostForHotSpring() {
     #expect(Shop.facilityCost(.hotSpring) == Shop.getFacilityCost(facilityType: .hotSpring))
 }
 
-@Test func facilityCostMatchesGetFacilityCostForAllTypes() {
+@Test @MainActor func facilityCostMatchesGetFacilityCostForAllTypes() {
     for type in FacilityType.allCases {
         #expect(Shop.facilityCost(type) == Shop.getFacilityCost(facilityType: type))
     }
 }
 
-@Test func facilityCostFoodBowlMatchesConfig() {
+@Test @MainActor func facilityCostFoodBowlMatchesConfig() {
     #expect(Shop.facilityCost(.foodBowl) == GameConfig.Economy.foodBowlCost)
 }
 
-@Test func facilityCostStageMatchesConfig() {
+@Test @MainActor func facilityCostStageMatchesConfig() {
     #expect(Shop.facilityCost(.stage) == GameConfig.Economy.stageCost)
 }

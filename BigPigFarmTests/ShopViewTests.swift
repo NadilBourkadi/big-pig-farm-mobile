@@ -5,11 +5,11 @@ import Foundation
 
 // MARK: - ShopTab Enum
 
-@Test func shopTabHasFourCases() {
+@Test @MainActor func shopTabHasFourCases() {
     #expect(ShopTab.allCases.count == 4)
 }
 
-@Test func shopTabRawValuesAreCorrect() {
+@Test @MainActor func shopTabRawValuesAreCorrect() {
     #expect(ShopTab.facilities.rawValue == "Facilities")
     #expect(ShopTab.perks.rawValue == "Perks")
     #expect(ShopTab.farm.rawValue == "Farm")
@@ -18,26 +18,26 @@ import Foundation
 
 // MARK: - Facilities Tab Item Filtering
 
-@Test func facilitiesTabItemsAreSortedByRequiredTier() {
+@Test @MainActor func facilitiesTabItemsAreSortedByRequiredTier() {
     let items = Shop.getShopItems(category: .facilities, farmTier: 5)
     for i in 1..<items.count {
         #expect(items[i - 1].requiredTier <= items[i].requiredTier)
     }
 }
 
-@Test func facilitiesTabShowsAllSeventeenItems() {
+@Test @MainActor func facilitiesTabShowsAllSeventeenItems() {
     let items = Shop.getShopItems(category: .facilities, farmTier: 5)
     #expect(items.count == 17)
 }
 
-@Test func facilitiesTabAtTierOneLocksTierTwoItems() {
+@Test @MainActor func facilitiesTabAtTierOneLocksTierTwoItems() {
     let items = Shop.getShopItems(category: .facilities, farmTier: 1)
     let locked = items.filter { !$0.unlocked }
     #expect(!locked.isEmpty)
     #expect(locked.allSatisfy { $0.requiredTier > 1 })
 }
 
-@Test func facilitiesTabAtTierOneUnlocksTierOneItems() {
+@Test @MainActor func facilitiesTabAtTierOneUnlocksTierOneItems() {
     let items = Shop.getShopItems(category: .facilities, farmTier: 1)
     let unlocked = items.filter { $0.unlocked }
     #expect(unlocked.allSatisfy { $0.requiredTier == 1 })

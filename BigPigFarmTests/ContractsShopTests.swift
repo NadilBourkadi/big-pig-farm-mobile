@@ -5,39 +5,39 @@ import Foundation
 
 // MARK: - Contracts: matchesPig
 
-@Test func matchesPigColorMatch() {
+@Test @MainActor func matchesPigColorMatch() {
     let pig = makeAdultPig(rarity: .common)
     let contract = makeContract(color: .black)
     #expect(contract.matchesPig(pig))
 }
 
-@Test func matchesPigColorMismatch() {
+@Test @MainActor func matchesPigColorMismatch() {
     let pig = makeAdultPig(rarity: .common)
     let contract = makeContract(color: .chocolate)
     #expect(!contract.matchesPig(pig))
 }
 
-@Test func matchesPigFulfilledReturnsFalse() {
+@Test @MainActor func matchesPigFulfilledReturnsFalse() {
     let pig = makeAdultPig(rarity: .common)
     let contract = makeContract(color: .black, fulfilled: true)
     #expect(!contract.matchesPig(pig))
 }
 
-@Test func matchesPigPatternMatch() {
+@Test @MainActor func matchesPigPatternMatch() {
     var pig = makeAdultPig()
     pig.phenotype = Phenotype(baseColor: .black, pattern: .dutch, intensity: .full, roan: .none, rarity: .uncommon)
     let contract = makeContract(color: .black, pattern: .dutch)
     #expect(contract.matchesPig(pig))
 }
 
-@Test func matchesPigPatternMismatch() {
+@Test @MainActor func matchesPigPatternMismatch() {
     var pig = makeAdultPig()
     pig.phenotype = Phenotype(baseColor: .black, pattern: .solid, intensity: .full, roan: .none, rarity: .common)
     let contract = makeContract(color: .black, pattern: .dutch)
     #expect(!contract.matchesPig(pig))
 }
 
-@Test func matchesPigBiomeRequirementWithNoBirthAreaReturnsFalse() {
+@Test @MainActor func matchesPigBiomeRequirementWithNoBirthAreaReturnsFalse() {
     var pig = makeAdultPig()
     pig.birthAreaId = nil
     let contract = makeContract(color: .black, biome: .meadow)
@@ -238,27 +238,27 @@ import Foundation
 
 // MARK: - Shop
 
-@Test func getShopItemsReturnsSortedByTier() {
+@Test @MainActor func getShopItemsReturnsSortedByTier() {
     let items = Shop.getShopItems()
     for index in 1..<items.count {
         #expect(items[index - 1].requiredTier <= items[index].requiredTier)
     }
 }
 
-@Test func getShopItemsFacilitiesCategoryFilterReturnsCorrectCount() {
+@Test @MainActor func getShopItemsFacilitiesCategoryFilterReturnsCorrectCount() {
     let items = Shop.getShopItems(category: .facilities)
     #expect(!items.isEmpty)
     #expect(items.allSatisfy { $0.category == .facilities })
 }
 
-@Test func getShopItemsMarksLockedAtTierOne() {
+@Test @MainActor func getShopItemsMarksLockedAtTierOne() {
     let items = Shop.getShopItems(farmTier: 1)
     // Tier-2 items should be locked
     let tier2Items = items.filter { $0.requiredTier == 2 }
     #expect(tier2Items.allSatisfy { !$0.unlocked })
 }
 
-@Test func getShopItemsMarksUnlockedAtCurrentTier() {
+@Test @MainActor func getShopItemsMarksUnlockedAtCurrentTier() {
     let items = Shop.getShopItems(farmTier: 1)
     let tier1Items = items.filter { $0.requiredTier == 1 }
     #expect(tier1Items.allSatisfy { $0.unlocked })

@@ -5,26 +5,26 @@ import Foundation
 
 // MARK: - Grid Creation
 
-@Test func createStarterHasCorrectDimensions() {
+@Test @MainActor func createStarterHasCorrectDimensions() {
     let grid = FarmGrid.createStarter()
     #expect(grid.width == 18)
     #expect(grid.height == 18)
     #expect(grid.tier == 1)
 }
 
-@Test func createStarterHasOneArea() {
+@Test @MainActor func createStarterHasOneArea() {
     let grid = FarmGrid.createStarter()
     #expect(grid.areas.count == 1)
 }
 
-@Test func createStarterAreaIsMeadow() {
+@Test @MainActor func createStarterAreaIsMeadow() {
     let grid = FarmGrid.createStarter()
     #expect(grid.areas[0].biome == .meadow)
     #expect(grid.areas[0].name == "Meadow Room")
     #expect(grid.areas[0].isStarter == true)
 }
 
-@Test func createStarterAreaCoversEntireGrid() {
+@Test @MainActor func createStarterAreaCoversEntireGrid() {
     let grid = FarmGrid.createStarter()
     let area = grid.areas[0]
     #expect(area.x1 == 0)
@@ -33,7 +33,7 @@ import Foundation
     #expect(area.y2 == 17)
 }
 
-@Test func createStarterBorderCellsAreWalls() {
+@Test @MainActor func createStarterBorderCellsAreWalls() {
     let grid = FarmGrid.createStarter()
     // Top row
     for x in 0..<grid.width {
@@ -55,7 +55,7 @@ import Foundation
     }
 }
 
-@Test func createStarterInteriorCellsAreWalkable() {
+@Test @MainActor func createStarterInteriorCellsAreWalkable() {
     let grid = FarmGrid.createStarter()
     for y in 1..<(grid.height - 1) {
         for x in 1..<(grid.width - 1) {
@@ -65,7 +65,7 @@ import Foundation
     }
 }
 
-@Test func createStarterAreaIdSetOnAllCells() {
+@Test @MainActor func createStarterAreaIdSetOnAllCells() {
     let grid = FarmGrid.createStarter()
     let areaId = grid.areas[0].id
     for y in 0..<grid.height {
@@ -77,14 +77,14 @@ import Foundation
 
 // MARK: - Cell Queries
 
-@Test func isValidPositionInBounds() {
+@Test @MainActor func isValidPositionInBounds() {
     let grid = FarmGrid(width: 10, height: 8)
     #expect(grid.isValidPosition(0, 0) == true)
     #expect(grid.isValidPosition(9, 7) == true)
     #expect(grid.isValidPosition(5, 3) == true)
 }
 
-@Test func isValidPositionOutOfBounds() {
+@Test @MainActor func isValidPositionOutOfBounds() {
     let grid = FarmGrid(width: 10, height: 8)
     #expect(grid.isValidPosition(-1, 0) == false)
     #expect(grid.isValidPosition(0, -1) == false)
@@ -92,20 +92,20 @@ import Foundation
     #expect(grid.isValidPosition(0, 8) == false)
 }
 
-@Test func isWalkableWall() {
+@Test @MainActor func isWalkableWall() {
     let grid = FarmGrid.createStarter()
     #expect(grid.isWalkable(0, 0) == false)   // corner wall
     #expect(grid.isWalkable(5, 0) == false)   // top wall
     #expect(grid.isWalkable(-1, 0) == false)  // out of bounds
 }
 
-@Test func isWalkableFloor() {
+@Test @MainActor func isWalkableFloor() {
     let grid = FarmGrid.createStarter()
     #expect(grid.isWalkable(1, 1) == true)
     #expect(grid.isWalkable(8, 8) == true)
 }
 
-@Test func getCellReturnsCorrectly() {
+@Test @MainActor func getCellReturnsCorrectly() {
     let grid = FarmGrid.createStarter()
     let cell = grid.getCell(1, 1)
     #expect(cell != nil)
@@ -116,28 +116,28 @@ import Foundation
 
 // MARK: - Facility Placement
 
-@Test func placeFacilitySuccess() {
+@Test @MainActor func placeFacilitySuccess() {
     var grid = FarmGrid.createStarter()
     let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
     let result = grid.placeFacility(facility)
     #expect(result == true)
 }
 
-@Test func placeFacilityOutOfBounds() {
+@Test @MainActor func placeFacilityOutOfBounds() {
     var grid = FarmGrid.createStarter()
     let facility = Facility.create(type: .foodBowl, x: 61, y: 36)
     let result = grid.placeFacility(facility)
     #expect(result == false)
 }
 
-@Test func placeFacilityOnWall() {
+@Test @MainActor func placeFacilityOnWall() {
     var grid = FarmGrid.createStarter()
     let facility = Facility.create(type: .foodBowl, x: 0, y: 0)
     let result = grid.placeFacility(facility)
     #expect(result == false)
 }
 
-@Test func placeFacilityOverlap() {
+@Test @MainActor func placeFacilityOverlap() {
     var grid = FarmGrid.createStarter()
     let f1 = Facility.create(type: .foodBowl, x: 5, y: 5)
     _ = grid.placeFacility(f1)
@@ -146,7 +146,7 @@ import Foundation
     #expect(result == false)
 }
 
-@Test func placeFacilitySetsIdAndWalkable() {
+@Test @MainActor func placeFacilitySetsIdAndWalkable() {
     var grid = FarmGrid.createStarter()
     let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
     _ = grid.placeFacility(facility)
@@ -157,7 +157,7 @@ import Foundation
     }
 }
 
-@Test func removeFacilityRestoresState() {
+@Test @MainActor func removeFacilityRestoresState() {
     var grid = FarmGrid.createStarter()
     let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
     _ = grid.placeFacility(facility)
@@ -169,7 +169,7 @@ import Foundation
     }
 }
 
-@Test func placeFacilityIncrementsGeneration() {
+@Test @MainActor func placeFacilityIncrementsGeneration() {
     var grid = FarmGrid.createStarter()
     let genBefore = grid.gridGeneration
     let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -179,27 +179,27 @@ import Foundation
 
 // MARK: - Area Lookups
 
-@Test func getAreaAtValidPosition() {
+@Test @MainActor func getAreaAtValidPosition() {
     let grid = FarmGrid.createStarter()
     let area = grid.getAreaAt(5, 5)
     #expect(area != nil)
     #expect(area?.biome == .meadow)
 }
 
-@Test func getAreaAtOutOfBounds() {
+@Test @MainActor func getAreaAtOutOfBounds() {
     let grid = FarmGrid.createStarter()
     #expect(grid.getAreaAt(-1, 0) == nil)
     #expect(grid.getAreaAt(100, 100) == nil)
 }
 
-@Test func getAreaByIDFoundAndNotFound() {
+@Test @MainActor func getAreaByIDFoundAndNotFound() {
     let grid = FarmGrid.createStarter()
     let area = grid.areas[0]
     #expect(grid.getAreaByID(area.id) != nil)
     #expect(grid.getAreaByID(UUID()) == nil)
 }
 
-@Test func findAreasByBiome() {
+@Test @MainActor func findAreasByBiome() {
     var grid = FarmGrid.createStarter()
     let meadows = grid.findAreasByBiome("meadow")
     #expect(meadows.count == 1)
@@ -207,19 +207,19 @@ import Foundation
     #expect(deserts.isEmpty)
 }
 
-@Test func getBiomeAtReturnsCorrectBiome() {
+@Test @MainActor func getBiomeAtReturnsCorrectBiome() {
     let grid = FarmGrid.createStarter()
     #expect(grid.getBiomeAt(5, 5) == .meadow)
     #expect(grid.getBiomeAt(-1, -1) == nil)
 }
 
-@Test func capacityCalculation() {
+@Test @MainActor func capacityCalculation() {
     let grid = FarmGrid.createStarter()
     // Tier 1: 1 area * 8 capacityPerRoom = 8
     #expect(grid.capacity == 8)
 }
 
-@Test func nextRoomCostForStarter() {
+@Test @MainActor func nextRoomCostForStarter() {
     let grid = FarmGrid.createStarter()
     // Starter has 1 area, so next room is index 1 (Cozy Enclosure, 500)
     let cost = grid.nextRoomCost
@@ -230,7 +230,7 @@ import Foundation
 
 // MARK: - Wall Flags
 
-@Test func computeWallFlagsCorners() {
+@Test @MainActor func computeWallFlagsCorners() {
     let grid = FarmGrid.createStarter()
     // All four corners should be marked
     #expect(grid.cells[0][0].isCorner == true)
@@ -239,7 +239,7 @@ import Foundation
     #expect(grid.cells[17][17].isCorner == true)
 }
 
-@Test func computeWallFlagsHorizontalWalls() {
+@Test @MainActor func computeWallFlagsHorizontalWalls() {
     let grid = FarmGrid.createStarter()
     // Top wall (non-corner) should be horizontal
     #expect(grid.cells[0][1].isHorizontalWall == true)
@@ -251,7 +251,7 @@ import Foundation
     #expect(grid.cells[8][0].isHorizontalWall == false)
 }
 
-@Test func computeWallFlagsPreservesTunnelFlags() {
+@Test @MainActor func computeWallFlagsPreservesTunnelFlags() {
     var grid = FarmGrid.createStarter()
     // Manually mark a cell as tunnel with flags
     grid.cells[0][5].isTunnel = true
@@ -263,7 +263,7 @@ import Foundation
 
 // MARK: - Random Walkable
 
-@Test func findRandomWalkableReturnsInteriorPosition() {
+@Test @MainActor func findRandomWalkableReturnsInteriorPosition() {
     var grid = FarmGrid.createStarter()
     let pos = grid.findRandomWalkable()
     #expect(pos != nil)
@@ -274,7 +274,7 @@ import Foundation
     }
 }
 
-@Test func findRandomWalkableInAreaReturnsPositionInArea() {
+@Test @MainActor func findRandomWalkableInAreaReturnsPositionInArea() {
     var grid = FarmGrid.createStarter()
     let areaId = grid.areas[0].id
     let pos = grid.findRandomWalkableInArea(areaId)
@@ -285,7 +285,7 @@ import Foundation
     }
 }
 
-@Test func findRandomWalkableInUnknownAreaReturnsNil() {
+@Test @MainActor func findRandomWalkableInUnknownAreaReturnsNil() {
     var grid = FarmGrid.createStarter()
     let pos = grid.findRandomWalkableInArea(UUID())
     #expect(pos == nil)
@@ -293,7 +293,7 @@ import Foundation
 
 // MARK: - Cache Invalidation
 
-@Test func invalidateCacheIncrementsGeneration() {
+@Test @MainActor func invalidateCacheIncrementsGeneration() {
     var grid = FarmGrid.createStarter()
     let gen = grid.gridGeneration
     grid.invalidateWalkableCache()
@@ -302,7 +302,7 @@ import Foundation
 
 // MARK: - Codable Round-Trip
 
-@Test func farmGridCodableRoundTrip() throws {
+@Test @MainActor func farmGridCodableRoundTrip() throws {
     let original = FarmGrid.createStarter()
     let data = try JSONEncoder().encode(original)
     let decoded = try JSONDecoder().decode(FarmGrid.self, from: data)

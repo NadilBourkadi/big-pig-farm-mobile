@@ -28,14 +28,14 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
 
 // MARK: - Farm Classification Tests
 
-@Test func isSmallFarmTier1() {
+@Test @MainActor func isSmallFarmTier1() {
     let tierInfo = getTierUpgrade(tier: 1)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 1)
     farm.createLegacyStarterArea()
     #expect(AutoArrange.isSmallFarm(farm) == true)
 }
 
-@Test func isSmallFarmTier2() {
+@Test @MainActor func isSmallFarmTier2() {
     let tierInfo = getTierUpgrade(tier: 2)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 2)
     let area = FarmArea(
@@ -46,7 +46,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     #expect(AutoArrange.isSmallFarm(farm) == true)
 }
 
-@Test func isLargeFarmTier3() {
+@Test @MainActor func isLargeFarmTier3() {
     let tierInfo = getTierUpgrade(tier: 3)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 3)
     let area = FarmArea(
@@ -59,7 +59,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
 
 // MARK: - Zone Calculation Tests
 
-@Test func smallFarmProduces3Zones() {
+@Test @MainActor func smallFarmProduces3Zones() {
     let farm = FarmGrid.createStarter()
     let zones = AutoArrange.calculateZones(farm: farm)
     #expect(zones.count == 3)
@@ -69,7 +69,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     #expect(names.contains("utility"))
 }
 
-@Test func zonesWithinFarmBounds() {
+@Test @MainActor func zonesWithinFarmBounds() {
     let farm = FarmGrid.createStarter()
     let zones = AutoArrange.calculateZones(farm: farm)
     for zone in zones {
@@ -80,7 +80,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     }
 }
 
-@Test func zonesNoOverlap() {
+@Test @MainActor func zonesNoOverlap() {
     let farm = FarmGrid.createStarter()
     let zones = AutoArrange.calculateZones(farm: farm)
     for idx1 in 0..<zones.count {
@@ -94,7 +94,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     }
 }
 
-@Test func neighborhoodZonesWithinBounds() {
+@Test @MainActor func neighborhoodZonesWithinBounds() {
     let tierInfo = getTierUpgrade(tier: 3)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 3)
     let area = FarmArea(
@@ -111,7 +111,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     }
 }
 
-@Test func neighborhoodZonesNoOverlap() {
+@Test @MainActor func neighborhoodZonesNoOverlap() {
     let tierInfo = getTierUpgrade(tier: 4)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 4)
     let area = FarmArea(
@@ -131,7 +131,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     }
 }
 
-@Test func neighborhoodZoneCountEqualsNeighborhoodsPlusUtility() {
+@Test @MainActor func neighborhoodZoneCountEqualsNeighborhoodsPlusUtility() {
     let tierInfo = getTierUpgrade(tier: 5)
     var farm = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight, tier: 5)
     let area = FarmArea(
@@ -150,7 +150,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
 
 // MARK: - Neighborhood Count Tests
 
-@Test func neighborhoodCountMinAcrossCategories() {
+@Test @MainActor func neighborhoodCountMinAcrossCategories() {
     let facilities: [Facility] = [
         Facility.create(type: .foodBowl, x: 1, y: 1),
         Facility.create(type: .foodBowl, x: 5, y: 1),
@@ -165,7 +165,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     #expect(AutoArrange.determineNeighborhoodCount(facilities: facilities) == 1)
 }
 
-@Test func neighborhoodCountBalanced() {
+@Test @MainActor func neighborhoodCountBalanced() {
     let facilities: [Facility] = [
         Facility.create(type: .foodBowl, x: 1, y: 1),
         Facility.create(type: .foodBowl, x: 5, y: 1),
@@ -180,7 +180,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     #expect(AutoArrange.determineNeighborhoodCount(facilities: facilities) == 2)
 }
 
-@Test func neighborhoodCountCappedAt4() {
+@Test @MainActor func neighborhoodCountCappedAt4() {
     var facilities: [Facility] = []
     for idx in 0..<6 {
         facilities.append(Facility.create(type: .foodBowl, x: idx * 3 + 1, y: 1))
@@ -192,7 +192,7 @@ private func addFacility(_ state: GameState, type: FacilityType, x: Int = 5, y: 
     #expect(AutoArrange.determineNeighborhoodCount(facilities: facilities) == 4)
 }
 
-@Test func utilityOnlyFacilitiesGiveOneNeighborhood() {
+@Test @MainActor func utilityOnlyFacilitiesGiveOneNeighborhood() {
     let facilities: [Facility] = [
         Facility.create(type: .breedingDen, x: 1, y: 1),
         Facility.create(type: .nursery, x: 5, y: 1),

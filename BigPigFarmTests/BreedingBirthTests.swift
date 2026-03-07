@@ -7,7 +7,7 @@ import Foundation
 
 // MARK: - Breeding.clearCourtship
 
-@Test func clearCourtshipResetsAllFields() {
+@Test @MainActor func clearCourtshipResetsAllFields() {
     var pig = GuineaPig.create(name: "Pig", gender: .female)
     pig.behaviorState = .courting
     pig.courtingPartnerId = UUID()
@@ -24,7 +24,7 @@ import Foundation
     #expect(pig.targetDescription == nil)
 }
 
-@Test func clearCourtshipPreservesNonCourtingBehaviorState() {
+@Test @MainActor func clearCourtshipPreservesNonCourtingBehaviorState() {
     var pig = GuineaPig.create(name: "Pig", gender: .female)
     pig.behaviorState = .wandering
     pig.courtingPartnerId = UUID()

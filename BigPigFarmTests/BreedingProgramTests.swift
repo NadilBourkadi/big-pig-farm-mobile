@@ -6,7 +6,7 @@ import Foundation
 
 // MARK: - BreedingProgram.shouldKeepPig
 
-@Test func shouldKeepPigWhenProgramDisabled() {
+@Test @MainActor func shouldKeepPigWhenProgramDisabled() {
     var program = BreedingProgram()
     program.enabled = false
     program.targetColors = [.golden]
@@ -15,7 +15,7 @@ import Foundation
     #expect(program.shouldKeepPig(pig, hasGeneticsLab: false))
 }
 
-@Test func shouldKeepPigMatchingColorTarget() {
+@Test @MainActor func shouldKeepPigMatchingColorTarget() {
     var program = BreedingProgram()
     program.enabled = true
     program.targetColors = [.black]
@@ -24,7 +24,7 @@ import Foundation
     #expect(program.shouldKeepPig(pig, hasGeneticsLab: false))
 }
 
-@Test func shouldKeepPigNonMatchingColorTargetReturnsFalse() {
+@Test @MainActor func shouldKeepPigNonMatchingColorTargetReturnsFalse() {
     var program = BreedingProgram()
     program.enabled = true
     program.targetColors = [.golden]
@@ -33,7 +33,7 @@ import Foundation
     #expect(!program.shouldKeepPig(pig, hasGeneticsLab: false))
 }
 
-@Test func shouldKeepPigCarrierRescueWithLabKeepsPig() {
+@Test @MainActor func shouldKeepPigCarrierRescueWithLabKeepsPig() {
     var program = BreedingProgram()
     program.enabled = true
     program.targetColors = [.golden]
@@ -58,7 +58,7 @@ import Foundation
     #expect(!program.shouldKeepPig(pig, hasGeneticsLab: false))
 }
 
-@Test func shouldKeepPigMultipleAxesUsesAndLogic() {
+@Test @MainActor func shouldKeepPigMultipleAxesUsesAndLogic() {
     var program = BreedingProgram()
     program.enabled = true
     program.targetColors = [.golden]
@@ -70,12 +70,12 @@ import Foundation
 
 // MARK: - heterozygosityCount
 
-@Test func heterozygosityCountAllHomozygous() {
+@Test @MainActor func heterozygosityCountAllHomozygous() {
     let genotype = makeProgramHomozygousDominantGenotype()
     #expect(heterozygosityCount(genotype) == 0)
 }
 
-@Test func heterozygosityCountAllHeterozygous() {
+@Test @MainActor func heterozygosityCountAllHeterozygous() {
     let genotype = Genotype(
         eLocus: AllelePair(first: "E", second: "e"),
         bLocus: AllelePair(first: "B", second: "b"),
@@ -87,7 +87,7 @@ import Foundation
     #expect(heterozygosityCount(genotype) == 6)
 }
 
-@Test func heterozygosityCountPartialLoci() {
+@Test @MainActor func heterozygosityCountPartialLoci() {
     let genotype = Genotype(
         eLocus: AllelePair(first: "E", second: "e"), // hetero
         bLocus: AllelePair(first: "B", second: "B"), // homo
@@ -101,7 +101,7 @@ import Foundation
 
 // MARK: - buildDiversityCounters
 
-@Test func buildDiversityCountersCorrectlyCounts() {
+@Test @MainActor func buildDiversityCountersCorrectlyCounts() {
     let pig1 = GuineaPig.create(name: "A", gender: .female)
     let pig2 = GuineaPig.create(name: "B", gender: .male)
     let pig3 = GuineaPig.create(name: "C", gender: .female)
@@ -118,7 +118,7 @@ import Foundation
 
 // MARK: - breedingValue
 
-@Test func breedingValueWithNoTargetsReturnsAgeBonus() {
+@Test @MainActor func breedingValueWithNoTargetsReturnsAgeBonus() {
     let program = BreedingProgram() // no targets
     let pig = GuineaPig.create(name: "Young", gender: .female) // ageDays = 0
     let value = breedingValue(pig: pig, program: program, hasLab: false)
@@ -126,7 +126,7 @@ import Foundation
     #expect(abs(value - 5.0) < 0.01)
 }
 
-@Test func breedingValueIncreasesWithTargetAllelesPresent() {
+@Test @MainActor func breedingValueIncreasesWithTargetAllelesPresent() {
     // E/e pig (1 recessive 'e') vs EE pig (0 recessive 'e'), both with .golden target
     let carrierGenotype = Genotype(
         eLocus: AllelePair(first: "E", second: "e"),

@@ -7,6 +7,7 @@ import SpriteKit
 // MARK: - SceneConstants Tests
 
 @Suite("SceneConstants")
+@MainActor
 struct SceneConstantsTests {
 
     @Test("Cell size equals 8 art pixels times pointsPerArtPixel")
@@ -39,6 +40,7 @@ struct SceneConstantsTests {
 /// Tests the coordinate conversion math directly without needing a running SKScene.
 /// Formula: sceneX = gridX * cellSize, sceneY = (farmHeight - gridY) * cellSize
 @Suite("Coordinate Conversion Formulas")
+@MainActor
 struct CoordinateConversionTests {
 
     private let cellSize = SceneConstants.cellSize
@@ -264,6 +266,7 @@ struct PigNodeSizeTests {
 
 /// Tests the Y-flip formula used in fillTiles(into:with:farm:) without needing a tile map.
 @Suite("Tile Mapping Y-Flip")
+@MainActor
 struct TileMappingTests {
 
     @Test("Grid row 0 maps to tile row (height-1)")

@@ -124,7 +124,7 @@ import Foundation
 
 // MARK: - Speed Raw Values
 
-@Test func speedMultiplierValues() {
+@Test @MainActor func speedMultiplierValues() {
     #expect(GameSpeed.paused.rawValue == 0)
     #expect(GameSpeed.normal.rawValue == 3)
     #expect(GameSpeed.fast.rawValue == 6)
@@ -134,7 +134,7 @@ import Foundation
     #expect(GameSpeed.debugFast.rawValue == 900)
 }
 
-@Test func speedDisplayLabels() {
+@Test @MainActor func speedDisplayLabels() {
     #expect(GameSpeed.paused.displayLabel == "0x")
     #expect(GameSpeed.normal.displayLabel == "1x")
     #expect(GameSpeed.fast.displayLabel == "2x")
@@ -212,7 +212,7 @@ import Foundation
 
 // MARK: - GameTime Advancement
 
-@Test func gameTimeAdvanceMinutes() {
+@Test @MainActor func gameTimeAdvanceMinutes() {
     var time = GameTime()
     time.hour = 8
     time.minute = 0
@@ -221,7 +221,7 @@ import Foundation
     #expect(time.minute == 30)
 }
 
-@Test func gameTimeAdvanceRollsOverHour() {
+@Test @MainActor func gameTimeAdvanceRollsOverHour() {
     var time = GameTime()
     time.hour = 8
     time.minute = 0
@@ -230,7 +230,7 @@ import Foundation
     #expect(time.minute == 30)
 }
 
-@Test func gameTimeAdvanceRollsOverDay() {
+@Test @MainActor func gameTimeAdvanceRollsOverDay() {
     var time = GameTime()
     time.day = 1
     time.hour = 23
@@ -241,7 +241,7 @@ import Foundation
     #expect(time.minute == 0)
 }
 
-@Test func gameTimeTracksTotalMinutes() {
+@Test @MainActor func gameTimeTracksTotalMinutes() {
     var time = GameTime()
     time.advance(minutes: 100)
     time.advance(minutes: 50)
