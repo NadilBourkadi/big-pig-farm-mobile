@@ -210,6 +210,26 @@ import Foundation
     #expect(abs(elapsed - expected) < 0.001)
 }
 
+@Test @MainActor func tickAdvancesDayCounterAtNormalSpeed() {
+    // Regression guard: at normal speed (rawValue=3) a full game day must pass in a
+    // reasonable number of ticks. The tick loop fires at 10 TPS with 100ms intervals;
+    // each tick passes delta = 0.1s * speed.rawValue = 0.3 scaled seconds.
+    // game-minutes per tick = 0.3 / realSecondsPerGameMinute
+    // ticks per day = (24 * 60) / (0.3 / realSecondsPerGameMinute)
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    let scaledDeltaPerTick = 0.1 * Double(GameSpeed.normal.rawValue)
+    let gameMinutesPerTick = scaledDeltaPerTick / GameConfig.Time.realSecondsPerGameMinute
+    let minutesPerDay = Double(GameConfig.Time.gameMinutesPerHour * GameConfig.Time.gameHoursPerDay)
+    let ticksPerDay = Int(ceil(minutesPerDay / gameMinutesPerTick))
+
+    let initialDay = state.gameTime.day
+    for _ in 0..<ticksPerDay {
+        engine.tick(scaledDeltaPerTick)
+    }
+    #expect(state.gameTime.day > initialDay)
+}
+
 // MARK: - GameTime Advancement
 
 @Test @MainActor func gameTimeAdvanceMinutes() {

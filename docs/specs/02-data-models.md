@@ -892,7 +892,7 @@ All config constants live in caseless `enum` namespaces inside a top-level `Game
 ```swift
 enum GameConfig {
     enum Time {
-        static let realSecondsPerGameMinute: Double = 1.0
+        static let realSecondsPerGameMinute: Double = 0.1
         static let gameMinutesPerHour: Int = 60
         static let gameHoursPerDay: Int = 24
         static let dayStartHour: Int = 6
