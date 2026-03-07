@@ -50,24 +50,44 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
     }
 
     func clampCameraPosition() {
-        guard let scene = scene else { return }
+        guard let scene = scene, let view = scene.view else { return }
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
         let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
-        let viewW = scene.view?.frame.width ?? sceneW
-        let viewH = scene.view?.frame.height ?? sceneH
 
-        let halfViewW = (viewW / 2) * camera.xScale
-        let halfViewH = (viewH / 2) * camera.yScale
+        // SpriteKit's aspectFill applies a display scale so the scene fills the view.
+        // Divide view dimensions by this scale to get the visible area in scene units.
+        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
+        let visibleW = (view.frame.width / ds) * camera.xScale
+        let visibleH = (view.frame.height / ds) * camera.yScale
 
-        let minX = halfViewW
-        let maxX = max(halfViewW, sceneW - halfViewW)
-        let minY = halfViewH
-        let maxY = max(halfViewH, sceneH - halfViewH)
+        if visibleW >= sceneW {
+            camera.position.x = sceneW / 2
+        } else {
+            let hw = visibleW / 2
+            camera.position.x = max(hw, min(sceneW - hw, camera.position.x))
+        }
 
-        camera.position = CGPoint(
-            x: max(minX, min(maxX, camera.position.x)),
-            y: max(minY, min(maxY, camera.position.y))
-        )
+        if visibleH >= sceneH {
+            camera.position.y = sceneH / 2
+        } else {
+            let hh = visibleH / 2
+            camera.position.y = max(hh, min(sceneH - hh, camera.position.y))
+        }
+    }
+
+    /// Returns the scale factor SpriteKit uses to map scene pts to view pts under aspectFill.
+    private func displayScale(sceneW: CGFloat, sceneH: CGFloat, view: SKView) -> CGFloat {
+        max(view.frame.width / sceneW, view.frame.height / sceneH)
+    }
+
+    /// Returns the camera scale needed to fit the entire farm on screen.
+    func fitCameraScale(for view: SKView) -> CGFloat {
+        let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
+        let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
+        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
+        let visibleW = view.frame.width / ds   // scene units visible at camera scale 1.0
+        let visibleH = view.frame.height / ds
+        return max(sceneW / visibleW, sceneH / visibleH)
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
@@ -102,13 +122,15 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
-        guard let scene = scene else { return }
+        guard let scene = scene, let view = scene.view else { return }
+        let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
+        let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
+        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
         let translation = gesture.translation(in: gesture.view)
-        camera.position.x -= translation.x * camera.xScale
-        camera.position.y += translation.y * camera.yScale
+        camera.position.x -= translation.x * camera.xScale / ds
+        camera.position.y += translation.y * camera.yScale / ds
         clampCameraPosition()
         gesture.setTranslation(.zero, in: gesture.view)
-        _ = scene  // suppress unused warning
     }
 
     @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
