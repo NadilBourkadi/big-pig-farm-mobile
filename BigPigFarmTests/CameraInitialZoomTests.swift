@@ -44,6 +44,10 @@ struct CameraInitialZoomTests {
         scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
 
         let camera = try #require(scene.camera)
+        // Camera is centered on rect.midX/Y then clamped to the full-grid scroll range.
+        // For a full-grid content rect the midpoint is always in-range, so centering
+        // survives the clamp. See applyFitToScreenZoomPositionIsClampStable for the
+        // authoritative regression test.
         #expect(abs(camera.position.x - rect.midX) < 1.0)
         #expect(abs(camera.position.y - rect.midY) < 1.0)
     }
