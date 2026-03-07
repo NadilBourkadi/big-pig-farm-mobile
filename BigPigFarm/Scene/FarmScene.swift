@@ -147,7 +147,7 @@ extension FarmScene {
         frameCount += 1
 
         if needsInitialZoom, let view = self.view, view.frame.width > 0, view.frame.height > 0 {
-            cameraController.applyFitToScreenZoom(for: view)
+            cameraController.applyFitToScreenZoom(for: view, contentRect: contentBounds())
             needsInitialZoom = false
         }
 
@@ -169,6 +169,35 @@ extension FarmScene {
         if let selectedID = selectedPigID, let pigNode = pigNodes[selectedID] {
             cameraController.follow(pigNode.position)
         }
+    }
+}
+
+// MARK: - Content Bounds
+
+extension FarmScene {
+
+    /// Bounding rect of all farm areas in scene points.
+    /// Falls back to the full grid if no areas exist.
+    func contentBounds() -> CGRect {
+        let farm = gameState.farm
+        guard !farm.areas.isEmpty else {
+            return CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        }
+        var minGX = Int.max, minGY = Int.max, maxGX = 0, maxGY = 0
+        for area in farm.areas {
+            minGX = min(minGX, area.x1)
+            minGY = min(minGY, area.y1)
+            maxGX = max(maxGX, area.x2 + 1) // +1: x2 is inclusive
+            maxGY = max(maxGY, area.y2 + 1)
+        }
+        // Convert grid bounds to scene coordinates (Y is flipped).
+        let topLeft = gridToScene(CGFloat(minGX), CGFloat(minGY))
+        let bottomRight = gridToScene(CGFloat(maxGX), CGFloat(maxGY))
+        let x = min(topLeft.x, bottomRight.x)
+        let y = min(topLeft.y, bottomRight.y)
+        let w = abs(bottomRight.x - topLeft.x)
+        let h = abs(bottomRight.y - topLeft.y)
+        return CGRect(x: x, y: y, width: w, height: h)
     }
 }
 
