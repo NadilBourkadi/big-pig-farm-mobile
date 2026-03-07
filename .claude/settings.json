@@ -25,6 +25,7 @@
       "Skill(code-review)",
       "Skill(triage)",
       "Skill(implement)",
+      "Skill(sim)",
       "Bash(bd export:*)",
       "Bash(bd sync:*)",
       "Bash(bd ls:*)",
@@ -56,7 +57,13 @@
       "Bash(poetry:*)",
       "Bash(echo:*)",
       "Bash(pwd:*)",
-      "Bash(uv:*)"
+      "Bash(uv:*)",
+      "Bash(xcrun simctl boot:*)",
+      "Bash(xcrun simctl install:*)",
+      "Bash(xcrun simctl launch:*)",
+      "Bash(xcrun simctl list:*)",
+      "Bash(open -a Simulator:*)",
+      "Bash(xcrun:*)"
     ]
   },
   "outputStyle": "Explanatory"
