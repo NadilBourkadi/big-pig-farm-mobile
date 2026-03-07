@@ -90,6 +90,7 @@ struct FarmSceneMoveStateTests {
         let farmScene = FarmScene(gameState: state)
         var called = false
         farmScene.onFacilityMoveEnded = { called = true }
+        farmScene.isMovingFacility = true
         farmScene.confirmFacilityPlacement()
         #expect(called == true)
     }
