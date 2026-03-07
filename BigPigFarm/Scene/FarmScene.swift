@@ -59,6 +59,8 @@ class FarmScene: SKScene {
     // MARK: - Camera
 
     private(set) var cameraController: CameraController!
+    /// Deferred zoom flag — cleared after the first update() with a valid view frame.
+    private var needsInitialZoom = true
 
     // MARK: - Selection
 
@@ -132,10 +134,9 @@ extension FarmScene {
         )
         cameraController.setupGestureRecognizers(in: view)
 
-        // Zoom out so the entire farm is visible on launch.
-        let fitScale = cameraController.fitCameraScale(for: view)
-        let initialScale = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, fitScale))
-        cameraNode.setScale(initialScale)
+        // Set a safe default; the fit-to-screen zoom is deferred to the first
+        // update() frame where the view has its final layout dimensions.
+        cameraNode.setScale(SceneConstants.defaultCameraScale)
 
         rebuildTerrain()
         syncFacilities()
@@ -144,6 +145,11 @@ extension FarmScene {
 
     override func update(_ currentTime: TimeInterval) {
         frameCount += 1
+
+        if needsInitialZoom, let view = self.view, view.frame.width > 0, view.frame.height > 0 {
+            cameraController.applyFitToScreenZoom(for: view)
+            needsInitialZoom = false
+        }
 
         let farm = gameState.farm
         if farm.gridGeneration != lastGridGeneration {
