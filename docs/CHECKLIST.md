@@ -114,9 +114,3 @@
 - [x] Add app icon
 - [ ] Polish animations and transitions
 - [x] TestFlight build and testing (code-complete: PrivacyInfo, metadata, 1.0.0, 1187 tests passing, clean build; upload gated on paid Apple Developer account)
-
----
-
-## Bug Fixes & Balance
-
-- [x] Fix day counter appearing frozen — reduce `realSecondsPerGameMinute` 1.0 → 0.1 so a game day passes in ~48 real seconds at normal speed (bead 44n)

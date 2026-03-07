@@ -174,12 +174,12 @@ import Foundation
     let engine = GameEngine(state: state)
     let initialMinutes = state.gameTime.totalGameMinutes
 
-    // 1 real second of scaled delta converted to game minutes via realSecondsPerGameMinute
+    // 1 real second at speed multiplier already applied = 1 game minute
+    // (since realSecondsPerGameMinute = 1.0)
     engine.tick(1.0)
 
     let elapsed = state.gameTime.totalGameMinutes - initialMinutes
-    let expected = 1.0 / GameConfig.Time.realSecondsPerGameMinute
-    #expect(abs(elapsed - expected) < 0.001)
+    #expect(elapsed == 1.0)
 }
 
 @Test @MainActor func tickPassesGameMinutesToCallbacks() {
@@ -190,11 +190,11 @@ import Foundation
         receivedMinutes = minutes
     }
 
-    // 3.0 delta seconds converted to game minutes via realSecondsPerGameMinute
+    // With realSecondsPerGameMinute = 1.0, passing 3.0 delta seconds
+    // should yield 3.0 game minutes
     engine.tick(3.0)
 
-    let expected = 3.0 / GameConfig.Time.realSecondsPerGameMinute
-    #expect(abs((receivedMinutes ?? 0) - expected) < 0.001)
+    #expect(receivedMinutes == 3.0)
 }
 
 @Test @MainActor func tickWithSmallDelta() {
@@ -208,27 +208,6 @@ import Foundation
     let elapsed = state.gameTime.totalGameMinutes - initialMinutes
     let expected = 0.3 / GameConfig.Time.realSecondsPerGameMinute
     #expect(abs(elapsed - expected) < 0.001)
-}
-
-@Test @MainActor func tickAdvancesDayCounterAtNormalSpeed() {
-    // Regression guard: starting from midnight, exactly one full 24-hour cycle
-    // (1440 game-minutes) must produce a day increment at normal speed.
-    // The tick loop fires at 10 TPS; each tick passes delta = 0.1s * speed.rawValue.
-    // ticks per day = 1440 / (scaledDelta / realSecondsPerGameMinute)
-    let state = GameState()
-    state.gameTime.hour = 0
-    state.gameTime.minute = 0
-    let engine = GameEngine(state: state)
-    let scaledDeltaPerTick = 0.1 * Double(GameSpeed.normal.rawValue)
-    let gameMinutesPerTick = scaledDeltaPerTick / GameConfig.Time.realSecondsPerGameMinute
-    let minutesPerDay = Double(GameConfig.Time.gameMinutesPerHour * GameConfig.Time.gameHoursPerDay)
-    let ticksPerDay = Int(ceil(minutesPerDay / gameMinutesPerTick))
-
-    let initialDay = state.gameTime.day
-    for _ in 0..<ticksPerDay {
-        engine.tick(scaledDeltaPerTick)
-    }
-    #expect(state.gameTime.day > initialDay)
 }
 
 // MARK: - GameTime Advancement

@@ -50,7 +50,7 @@ struct StatusToolbar: View {
                 action: onSpeedTapped
             )
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(.ultraThinMaterial)
     }
