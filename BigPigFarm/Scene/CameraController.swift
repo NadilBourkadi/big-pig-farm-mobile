@@ -112,6 +112,10 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     /// Zoom and center the camera so that `contentRect` (in scene points)
     /// is fully visible, capped at the fixed max zoom-out.
+    ///
+    /// - Precondition: `contentRect` must lie within the farm grid bounds.
+    ///   The camera position is set to `contentRect.midX/midY` without a
+    ///   subsequent clamp — callers must ensure the midpoint is in-range.
     func applyFitToScreenZoom(for view: SKView, contentRect: CGRect) {
         guard view.frame.width > 0, view.frame.height > 0 else { return }
 

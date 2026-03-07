@@ -44,10 +44,10 @@ struct CameraInitialZoomTests {
         scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
 
         let camera = try #require(scene.camera)
-        // Camera is centered on rect.midX/Y then clamped to the full-grid scroll range.
-        // For a full-grid content rect the midpoint is always in-range, so centering
-        // survives the clamp. See applyFitToScreenZoomPositionIsClampStable for the
-        // authoritative regression test.
+        // Camera is centered on rect.midX/Y. No post-clamp is applied inside
+        // applyFitToScreenZoom; the midpoint of a full-grid content rect is always
+        // within the valid scroll range so no correction is needed.
+        // See applyFitToScreenZoomPositionIsClampStable for the regression test.
         #expect(abs(camera.position.x - rect.midX) < 1.0)
         #expect(abs(camera.position.y - rect.midY) < 1.0)
     }
@@ -106,6 +106,31 @@ struct CameraInitialZoomTests {
         scene.cameraController.clampCameraPosition()
         #expect(abs(camera.position.x - positionAfterFit.x) < 0.001)
         #expect(abs(camera.position.y - positionAfterFit.y) < 0.001)
+    }
+
+    @Test("clampCameraPosition preserves valid off-center position when over-zoomed")
+    func clampCameraPositionPreservesOffCenterPositionWhenOverZoomed() throws {
+        let state = GameState()
+        let scene = FarmScene(gameState: state)
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        scene.didMove(to: view)
+        // Apply fit zoom first so camera.scale is at the fit level (~2.1x),
+        // which makes visibleH >> sceneH (the over-zoomed branch).
+        let rect = starterContentRect(state)
+        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
+
+        let camera = try #require(scene.camera)
+        // Place camera at 70% of farmH — inside the soft-clamp range [sceneH-hh, hh].
+        // The old code would have hard-snapped this to sceneH/2; the new soft
+        // clamp must leave any already-valid off-center position untouched.
+        let farmH = CGFloat(state.farm.height) * SceneConstants.cellSize
+        let offCenter = farmH * 0.7
+        camera.position.y = offCenter
+
+        scene.cameraController.clampCameraPosition()
+
+        #expect(abs(camera.position.y - offCenter) < 0.001,
+                "clampCameraPosition must not move a valid off-center position when over-zoomed")
     }
 
     @Test("contentBounds returns area bounds, not full grid")
