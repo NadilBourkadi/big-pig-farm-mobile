@@ -147,7 +147,7 @@ Multiple Claude agents may run simultaneously on this project. This causes state
 - **Do NOT close a bead until its PR is merged to main.** Closing the bead while the branch is still unmerged marks the work as done when it isn't yet reflected in main. Close the bead in the same commit that updates the checklist, just before or after the merge.
 - **Do NOT update `docs/CHECKLIST.md` until the PR is merged to main.** Same reason: the checklist is main-branch truth, not worktree truth.
 - **Commit checklist + bead snapshot on the feature branch, not on main directly.** Both `docs/CHECKLIST.md` and `.beads/issues.jsonl` updates belong in the feature PR commit, applied just before the merge.
-- **At the start of any session, run `git log origin/main..HEAD`** to check whether the current branch has already-merged commits. If any appear, the branch is stale — create a fresh branch off main.
+- **At the start of any task (not just any session), run `git fetch origin main` then `git log origin/main..HEAD`** to check whether the current branch has already-merged commits. If any appear, the branch is stale — create a fresh branch off `origin/main` within the current worktree (`git checkout -b feature/<id>-<slug> origin/main`). A new session is NOT required.
 - **If you discover that a bead is closed but its code is not in main,** reopen the task on main (via `bd update <id> --status in_progress`), find the worktree branch, push it, and open a PR. Do not start duplicate work.
 - **Beads state is shared** (Dolt DB is local, not git-tracked), so two agents CAN see each other's bead updates. But checklist and code state is per-branch until merged. Treat the checklist as write-once per merge.
 
