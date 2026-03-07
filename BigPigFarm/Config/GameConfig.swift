@@ -188,8 +188,8 @@ enum GameConfig {
         static let horizontalGap: Int = 2
         static let verticalGap: Int = 3
         static let zoneMargin: Int = 1
-        static let smallFarmThresholdW: Int = 70
-        static let smallFarmThresholdH: Int = 35
+        static let smallFarmThresholdW: Int = 15
+        static let smallFarmThresholdH: Int = 15
         static let smallHorizontalGap: Int = 1
         static let smallVerticalGap: Int = 2
         static let neighborhoodUtilityFraction: Double = 0.2

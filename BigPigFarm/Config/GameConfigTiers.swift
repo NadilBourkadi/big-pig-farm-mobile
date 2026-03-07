@@ -49,19 +49,19 @@ struct TierUpgrade: Codable, Sendable {
 let tierUpgrades: [TierUpgrade] = [
     TierUpgrade(name: "Starter", tier: 1, cost: 0,
                 requiredPigsBorn: 0, requiredPigdex: 0, requiredContracts: 0,
-                maxRooms: 1, roomWidth: 62, roomHeight: 37, capacityPerRoom: 8),
+                maxRooms: 1, roomWidth: 12, roomHeight: 12, capacityPerRoom: 8),
     TierUpgrade(name: "Apprentice", tier: 2, cost: 300,
                 requiredPigsBorn: 3, requiredPigdex: 2, requiredContracts: 0,
-                maxRooms: 2, roomWidth: 68, roomHeight: 40, capacityPerRoom: 10),
+                maxRooms: 2, roomWidth: 14, roomHeight: 14, capacityPerRoom: 10),
     TierUpgrade(name: "Expert", tier: 3, cost: 1500,
                 requiredPigsBorn: 10, requiredPigdex: 8, requiredContracts: 2,
-                maxRooms: 3, roomWidth: 76, roomHeight: 44, capacityPerRoom: 14),
+                maxRooms: 3, roomWidth: 16, roomHeight: 16, capacityPerRoom: 14),
     TierUpgrade(name: "Master", tier: 4, cost: 5000,
                 requiredPigsBorn: 25, requiredPigdex: 18, requiredContracts: 5,
-                maxRooms: 6, roomWidth: 86, roomHeight: 50, capacityPerRoom: 18),
+                maxRooms: 6, roomWidth: 18, roomHeight: 18, capacityPerRoom: 18),
     TierUpgrade(name: "Grand Master", tier: 5, cost: 15000,
                 requiredPigsBorn: 50, requiredPigdex: 30, requiredContracts: 10,
-                maxRooms: 8, roomWidth: 96, roomHeight: 56, capacityPerRoom: 24),
+                maxRooms: 8, roomWidth: 20, roomHeight: 20, capacityPerRoom: 24),
 ]
 
 /// Get the tier upgrade definition for a given tier number.
