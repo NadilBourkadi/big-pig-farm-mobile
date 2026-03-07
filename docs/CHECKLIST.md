@@ -90,6 +90,7 @@
 - [x] Implement `CameraController` (pan/zoom/bounds)
 - [x] Wire `SpriteView` into `ContentView`
 - [x] Implement touch handling (tap pig, place facility)
+- [x] Implement edit mode action panel (Move/Remove/Auto-Arrange) — bead v85
 - [x] Performance test with 50+ pigs
 
 ### Phase 4 — SwiftUI Screens (Weeks 9–12)
