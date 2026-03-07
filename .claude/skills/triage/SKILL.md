@@ -21,18 +21,17 @@ Run all of the following before any user interaction:
 Print a brief "Ready" summary:
 - Active bead count and how many are ready to work
 - Confirmation that CLAUDE.md conventions are loaded
-- Prompt: "Describe the bug or feature you'd like me to investigate."
 
 If `$ARGUMENTS` was provided, treat each whitespace-separated token as either a file path to read
 or extra context to note, and include it in the Ready summary.
 
 ## Phase 2 — Problem Input
 
-Use `AskUserQuestion` with a single question:
+Output this question as plain text (no tool call — the user replies via normal chat):
 
 > "What issue would you like me to investigate? (bug, feature request, or performance problem)"
 
-Accept a freeform description. This is the only user input required for the rest of the workflow.
+Wait for the user's reply. Accept any freeform description. This is the only user input required for the rest of the workflow.
 
 ## Phase 3 — Launch Shallow-Dive Agent
 
