@@ -85,12 +85,29 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     /// Returns the camera scale needed to fit the entire farm on screen.
     func fitCameraScale(for view: SKView) -> CGFloat {
+        guard view.frame.width > 0, view.frame.height > 0 else {
+            return SceneConstants.defaultCameraScale
+        }
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
         let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
         let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
         let visibleW = view.frame.width / ds   // scene units visible at camera scale 1.0
         let visibleH = view.frame.height / ds
         return max(sceneW / visibleW, sceneH / visibleH)
+    }
+
+    /// Compute and apply the camera scale that fits the entire farm on screen,
+    /// then clamp the camera position. Used for the deferred initial zoom when
+    /// the SKView frame is guaranteed to be laid out.
+    func applyFitToScreenZoom(for view: SKView) {
+        guard view.frame.width > 0, view.frame.height > 0 else { return }
+        let fitScale = fitCameraScale(for: view)
+        let clamped = max(SceneConstants.minCameraScale, min(SceneConstants.maxCameraScale, fitScale))
+        camera.setScale(clamped)
+        let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
+        let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
+        camera.position = CGPoint(x: sceneW / 2, y: sceneH / 2)
+        clampCameraPosition()
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
