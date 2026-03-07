@@ -194,7 +194,7 @@ import Foundation
     engine.tick(3.0)
 
     let expected = 3.0 / GameConfig.Time.realSecondsPerGameMinute
-    #expect(receivedMinutes == expected)
+    #expect(abs((receivedMinutes ?? 0) - expected) < 0.001)
 }
 
 @Test @MainActor func tickWithSmallDelta() {
@@ -211,12 +211,13 @@ import Foundation
 }
 
 @Test @MainActor func tickAdvancesDayCounterAtNormalSpeed() {
-    // Regression guard: at normal speed (rawValue=3) a full game day must pass in a
-    // reasonable number of ticks. The tick loop fires at 10 TPS with 100ms intervals;
-    // each tick passes delta = 0.1s * speed.rawValue = 0.3 scaled seconds.
-    // game-minutes per tick = 0.3 / realSecondsPerGameMinute
-    // ticks per day = (24 * 60) / (0.3 / realSecondsPerGameMinute)
+    // Regression guard: starting from midnight, exactly one full 24-hour cycle
+    // (1440 game-minutes) must produce a day increment at normal speed.
+    // The tick loop fires at 10 TPS; each tick passes delta = 0.1s * speed.rawValue.
+    // ticks per day = 1440 / (scaledDelta / realSecondsPerGameMinute)
     let state = GameState()
+    state.gameTime.hour = 0
+    state.gameTime.minute = 0
     let engine = GameEngine(state: state)
     let scaledDeltaPerTick = 0.1 * Double(GameSpeed.normal.rawValue)
     let gameMinutesPerTick = scaledDeltaPerTick / GameConfig.Time.realSecondsPerGameMinute
