@@ -174,12 +174,12 @@ import Foundation
     let engine = GameEngine(state: state)
     let initialMinutes = state.gameTime.totalGameMinutes
 
-    // 1 real second at speed multiplier already applied = 1 game minute
-    // (since realSecondsPerGameMinute = 1.0)
+    // 1 real second of scaled delta converted to game minutes via realSecondsPerGameMinute
     engine.tick(1.0)
 
     let elapsed = state.gameTime.totalGameMinutes - initialMinutes
-    #expect(elapsed == 1.0)
+    let expected = 1.0 / GameConfig.Time.realSecondsPerGameMinute
+    #expect(abs(elapsed - expected) < 0.001)
 }
 
 @Test @MainActor func tickPassesGameMinutesToCallbacks() {
@@ -190,11 +190,11 @@ import Foundation
         receivedMinutes = minutes
     }
 
-    // With realSecondsPerGameMinute = 1.0, passing 3.0 delta seconds
-    // should yield 3.0 game minutes
+    // 3.0 delta seconds converted to game minutes via realSecondsPerGameMinute
     engine.tick(3.0)
 
-    #expect(receivedMinutes == 3.0)
+    let expected = 3.0 / GameConfig.Time.realSecondsPerGameMinute
+    #expect(receivedMinutes == expected)
 }
 
 @Test @MainActor func tickWithSmallDelta() {
