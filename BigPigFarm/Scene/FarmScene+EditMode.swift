@@ -10,11 +10,14 @@ extension FarmScene {
                 selectedFacilityID = (selectedFacilityID == tappedID) ? nil : tappedID
                 if let id = selectedFacilityID {
                     sceneDelegate?.farmScene(self, didSelectFacility: id)
+                } else {
+                    sceneDelegate?.farmSceneDidDeselectFacility(self)
                 }
                 return
             }
         }
         selectedFacilityID = nil
+        sceneDelegate?.farmSceneDidDeselectFacility(self)
     }
 
     func startMovingSelectedFacility() {
@@ -54,6 +57,20 @@ extension FarmScene {
     }
 
     func confirmFacilityPlacement() {
+        isMovingFacility = false
+        onFacilityMoveEnded?()
+    }
+
+    /// Begins a facility move gesture: marks the facility as moving and routes
+    /// pan gestures from the camera to the facility.
+    func beginFacilityMove() {
+        startMovingSelectedFacility()
+        cameraController.isInFacilityMoveMode = true
+    }
+
+    /// Ends facility move mode without confirming placement (e.g. exiting edit mode mid-move).
+    func endFacilityMove() {
+        cameraController.isInFacilityMoveMode = false
         isMovingFacility = false
     }
 
