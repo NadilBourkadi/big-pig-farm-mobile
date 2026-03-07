@@ -63,7 +63,18 @@ class PigNode: SKSpriteNode {
         if animKey != currentAnimationKey {
             currentAnimationKey = animKey
             baseColor = pig.phenotype.baseColor
-            isBaby = pig.isBaby
+            let newIsBaby = pig.isBaby
+            if newIsBaby != isBaby {
+                isBaby = newIsBaby
+                let artSize = isBaby ? SpriteAssets.babySpriteSize : SpriteAssets.adultSpriteSize
+                size = CGSize(
+                    width: artSize.width * SpriteAssets.pointsPerArtPixel,
+                    height: artSize.height * SpriteAssets.pointsPerArtPixel
+                )
+                nameLabel.position = CGPoint(x: 0, y: size.height / 2 + 4)
+            } else {
+                isBaby = newIsBaby
+            }
             startAnimation(state: newState, direction: newDir)
         }
 
