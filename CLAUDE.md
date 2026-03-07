@@ -15,7 +15,7 @@
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
-- Test: `xcodebuild -scheme BigPigFarmTests -destination 'platform=iOS Simulator,name=iPhone 17' test`
+- Test: `xcodebuild -scheme BigPigFarmTests -destination 'platform=iOS Simulator,name=iPhone 16e' test` (uses a different sim so tests don't kill the app running via `/sim`)
 - Lint: `swiftlint lint`
 
 ## Tech Stack
