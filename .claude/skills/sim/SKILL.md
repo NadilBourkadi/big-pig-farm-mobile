@@ -41,11 +41,14 @@ If the build fails, print the last 40 lines of output and stop. Do not proceed t
 
 ### Step 4 — Find the .app
 
-Use the Glob tool to locate the built app in DerivedData:
+Use `xcodebuild -showBuildSettings` to get the exact DerivedData path for this worktree.
+Multiple worktrees produce different DerivedData hashes — Glob cannot reliably pick the right one.
 
-Pattern: `~/Library/Developer/Xcode/DerivedData/BigPigFarm-*/Build/Products/Debug-iphonesimulator/BigPigFarm.app`
+```
+xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=<device-name>' -showBuildSettings build 2>/dev/null | grep "BUILT_PRODUCTS_DIR" | head -1
+```
 
-Take the first result. If none found, report the error and stop.
+Extract the path value and append `/BigPigFarm.app`. If the query fails or returns empty, report the error and stop.
 
 ### Step 5 — Install and launch
 
