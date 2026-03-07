@@ -23,6 +23,10 @@ final class FarmSceneCoordinator: FarmSceneDelegate {
     /// Called when the player deselects a pig (tap on empty area).
     var onPigDeselected: (() -> Void)?
 
+    /// Called when the player selects or deselects a facility in edit mode.
+    /// Passes the selected facility's UUID, or nil when deselected.
+    var onFacilitySelected: ((UUID?) -> Void)?
+
     init(gameState: GameState) {
         self.gameState = gameState
     }
@@ -36,8 +40,11 @@ final class FarmSceneCoordinator: FarmSceneDelegate {
     }
 
     func farmScene(_ scene: FarmScene, didSelectFacility facilityID: UUID) {
-        // Edit mode facility selection is handled visually within FarmScene.
-        // No sheet presentation needed for selection alone.
+        onFacilitySelected?(facilityID)
+    }
+
+    func farmSceneDidDeselectFacility(_ scene: FarmScene) {
+        onFacilitySelected?(nil)
     }
 
     func farmScene(_ scene: FarmScene, didRemoveFacility facilityID: UUID) {
@@ -89,6 +96,17 @@ struct ContentView: View {
     /// Whether edit mode is currently active.
     @State private var isEditMode = false
 
+    // MARK: - Edit Mode Panel State
+
+    /// The facility currently selected in edit mode, mirrored from scene delegate callbacks.
+    @State private var editModeSelectedFacilityID: UUID?
+
+    /// True while the user is actively dragging a facility to a new position.
+    @State private var editModeIsMovingFacility = false
+
+    /// Controls visibility of the remove-facility confirmation dialog.
+    @State private var showRemoveConfirmation = false
+
     // MARK: - Init
 
     init(gameState: GameState, engine: GameEngine) {
@@ -114,10 +132,20 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            // HUD overlay — StatusInfoRow pinned top, StatusToolbar pinned bottom
+            // HUD overlay — StatusInfoRow pinned top, StatusToolbar pinned bottom.
+            // EditModeActionPanel appears above the toolbar while edit mode is active.
             VStack {
                 StatusInfoRow(gameState: gameState)
                 Spacer()
+                if isEditMode {
+                    EditModeActionPanel(
+                        selectedFacilityID: editModeSelectedFacilityID,
+                        isMovingFacility: editModeIsMovingFacility,
+                        onMove: { startMoveFacility() },
+                        onRemove: { handleRemoveFacility() },
+                        onAutoArrange: { performAutoArrange() }
+                    )
+                }
                 StatusToolbar(
                     gameState: gameState,
                     isEditMode: $isEditMode,
@@ -163,6 +191,16 @@ struct ContentView: View {
                 }
             }
         }
+        .confirmationDialog(
+            "Remove Facility",
+            isPresented: $showRemoveConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) { confirmRemoveFacility() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The facility will be removed and its cost refunded.")
+        }
         .onAppear {
             farmScene.sceneDelegate = coordinator
             coordinator.onPigSelected = { pigID in
@@ -172,6 +210,12 @@ struct ContentView: View {
             coordinator.onPigDeselected = {
                 selectedPigID = nil
                 showPigDetail = false
+            }
+            coordinator.onFacilitySelected = { facilityID in
+                editModeSelectedFacilityID = facilityID
+            }
+            farmScene.onFacilityMoveEnded = {
+                editModeIsMovingFacility = false
             }
             engine.start()
         }
@@ -203,9 +247,40 @@ extension ContentView {
         isEditMode.toggle()
         farmScene.isEditMode = isEditMode
         if !isEditMode {
+            if editModeIsMovingFacility {
+                farmScene.endFacilityMove()
+            }
             farmScene.selectedFacilityID = nil
-            farmScene.isMovingFacility = false
+            editModeSelectedFacilityID = nil
+            editModeIsMovingFacility = false
         }
+    }
+
+    /// Start moving the currently selected facility.
+    private func startMoveFacility() {
+        farmScene.beginFacilityMove()
+        editModeIsMovingFacility = true
+    }
+
+    /// Show the remove-facility confirmation dialog.
+    private func handleRemoveFacility() {
+        showRemoveConfirmation = true
+    }
+
+    /// Execute facility removal after the user confirms the destructive action.
+    private func confirmRemoveFacility() {
+        farmScene.removeSelectedFacility()
+        editModeSelectedFacilityID = nil
+        editModeIsMovingFacility = false
+    }
+
+    /// Compute and apply the auto-arrange layout, then reset pig navigation paths.
+    ///
+    /// Maps from: game/auto_arrange.py AutoArrange.apply_arrangement()
+    private func performAutoArrange() {
+        let (placements, overflow) = AutoArrange.computeArrangement(state: gameState)
+        AutoArrange.applyArrangement(state: gameState, placements: placements, overflow: overflow)
+        AutoArrange.clearPigNavigation(state: gameState)
     }
 
     /// Follow a pig on the farm, dismissing any open sheet.
