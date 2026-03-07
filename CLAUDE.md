@@ -82,7 +82,9 @@ Views (SwiftUI) + Scene (SpriteKit)
 2. Fix worthwhile findings
 3. Run `/code-review swift` again
 4. Clean up WIP/fixup commits (preserve logically distinct commits)
-5. Push with `--force-with-lease` and request review
+5. **Push immediately** — `git push -u origin <branch>` (use `--force-with-lease` if rebased). Do NOT pause to ask for permission. Pushing is automatic after a clean review.
+6. **Open the PR** — `gh pr create`. Present the PR URL and a brief summary to the user.
+7. **STOP and wait for explicit merge approval.** Do not merge until the user says to proceed (e.g. "go ahead", "merge it", "lgtm", "approved"). The rule: **push is automatic; merge is gated.**
 
 ## Checklist — CRITICAL
 
