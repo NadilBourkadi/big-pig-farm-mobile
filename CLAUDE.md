@@ -76,6 +76,7 @@ Views (SwiftUI) + Scene (SpriteKit)
 - **Clean up WIP noise before pushing** — use interactive rebase to collapse fixup/WIP commits into their logical parent. Only squash when intermediate commits have no standalone meaning.
 - **Commit messages:** Write to `.tmp/commit-msg.txt` (via the Write tool), then `git commit -F .tmp/commit-msg.txt`. Never use heredocs, subshells, or `/tmp/`.
 - **PR bodies:** Write to `.tmp/pr-body.md` (via the Write tool), then `gh pr create --body-file .tmp/pr-body.md`. Never pass markdown with `#` headers inline — it triggers a built-in security heuristic about hidden arguments that cannot be overridden via settings.
+- **Bead descriptions:** Write to `.tmp/bead-desc.txt` (via the Write tool), then `bd update <id> --body-file .tmp/bead-desc.txt`. Never use `$()` command substitution or inline `#`-prefixed markdown headers in `--description` arguments — both trigger non-overridable Claude Code security heuristics.
 
 ## Pre-Push Workflow — CRITICAL
 
