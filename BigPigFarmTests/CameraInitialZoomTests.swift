@@ -92,8 +92,9 @@ struct CameraInitialZoomTests {
     func applyFitToScreenZoomPositionIsClampStable() throws {
         let state = GameState()
         let scene = FarmScene(gameState: state)
+        // presentScene sets scene.view so clampCameraPosition actually runs.
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        scene.didMove(to: view)
+        view.presentScene(scene)
         let rect = starterContentRect(state)
         scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
 
@@ -112,8 +113,9 @@ struct CameraInitialZoomTests {
     func clampCameraPositionPreservesOffCenterPositionWhenOverZoomed() throws {
         let state = GameState()
         let scene = FarmScene(gameState: state)
+        // presentScene sets scene.view so clampCameraPosition actually runs.
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
-        scene.didMove(to: view)
+        view.presentScene(scene)
         // Apply fit zoom first so camera.scale is at the fit level (~2.1x),
         // which makes visibleH >> sceneH (the over-zoomed branch).
         let rect = starterContentRect(state)
@@ -131,6 +133,34 @@ struct CameraInitialZoomTests {
 
         #expect(abs(camera.position.y - offCenter) < 0.001,
                 "clampCameraPosition must not move a valid off-center position when over-zoomed")
+    }
+
+    @Test("clampCameraPosition allows viewportPadding scroll leeway at fit-zoom")
+    func clampCameraPositionAllowsPaddingLeewayAtFitZoom() throws {
+        let state = GameState()
+        let scene = FarmScene(gameState: state)
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        view.presentScene(scene)
+        let rect = starterContentRect(state)
+        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
+
+        let camera = try #require(scene.camera)
+        let farmW = CGFloat(state.farm.width) * SceneConstants.cellSize
+        let pad = SceneConstants.viewportPadding
+
+        // At fit-zoom hw ≈ farmW/2. The padded left boundary is farmW/2 - pad.
+        // The camera must be allowed to reach that boundary without being clamped.
+        let leftBoundary = farmW / 2 - pad
+        camera.position.x = leftBoundary
+        scene.cameraController.clampCameraPosition()
+        #expect(abs(camera.position.x - leftBoundary) < 0.5,
+                "Camera must reach the viewportPadding left boundary at fit-zoom")
+
+        // One unit beyond the padded boundary must be clamped back.
+        camera.position.x = leftBoundary - 1.0
+        scene.cameraController.clampCameraPosition()
+        #expect(camera.position.x > leftBoundary - 1.0,
+                "Camera must not go past the viewportPadding boundary")
     }
 
     @Test("isZoomedInForPigTracking returns false at fit-zoom despite FP rounding")
