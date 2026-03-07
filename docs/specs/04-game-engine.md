@@ -437,8 +437,9 @@ final class GameEngine {
 
     private func tick(_ deltaSeconds: Double) {
         // Convert real seconds to game minutes
-        // At normal speed (rawValue=3): 1 real second ≈ 30 game minutes.
-        // Adjust realSecondsPerGameMinute in GameConfig.Time to change pacing.
+        // At normal speed (rawValue=3): 1 real second = 30 game minutes
+        // (speed.rawValue / realSecondsPerGameMinute). Adjust realSecondsPerGameMinute
+        // in GameConfig.Time to change pacing.
         let gameMinutes = deltaSeconds / TimeConfig.realSecondsPerGameMinute
 
         // Advance game time
