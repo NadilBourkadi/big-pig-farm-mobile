@@ -76,14 +76,16 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         let visibleH = (view.frame.height / ds) * camera.yScale
 
         if visibleW >= sceneW {
-            camera.position.x = sceneW / 2
+            let hw = visibleW / 2
+            camera.position.x = max(sceneW - hw, min(hw, camera.position.x))
         } else {
             let hw = visibleW / 2
             camera.position.x = max(hw, min(sceneW - hw, camera.position.x))
         }
 
         if visibleH >= sceneH {
-            camera.position.y = sceneH / 2
+            let hh = visibleH / 2
+            camera.position.y = max(sceneH - hh, min(hh, camera.position.y))
         } else {
             let hh = visibleH / 2
             camera.position.y = max(hh, min(sceneH - hh, camera.position.y))
@@ -128,7 +130,6 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
                           min(SceneConstants.maxCameraScale, contentFitScale))
         camera.setScale(clamped)
         camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY)
-        clampCameraPosition()
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
