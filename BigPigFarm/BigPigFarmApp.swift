@@ -14,14 +14,18 @@ struct BigPigFarmApp: App {
 
     init() {
         let sm = SaveManager()
-        let state = GameState()
+        let loaded = sm.load()
+        let isNewGame = loaded == nil
+        let state = loaded ?? GameState()
         let behaviorController = BehaviorController(gameState: state)
         let sim = SimulationRunner(state: state, behaviorController: behaviorController, saveManager: sm)
         let eng = GameEngine(state: state)
         eng.registerTickCallback { [weak sim] minutes in
             sim?.tick(gameMinutes: minutes)
         }
-        setupNewGame(state: state)
+        if isNewGame {
+            setupNewGame(state: state)
+        }
         saveManager = sm
         _gameState = State(initialValue: state)
         _engine = State(initialValue: eng)
