@@ -68,7 +68,7 @@ import Foundation
     let state = GameState()
     let bowl1 = Facility.create(type: .foodBowl, x: 5, y: 5)
     let bowl2 = Facility.create(type: .foodBowl, x: 15, y: 5)
-    let water = Facility.create(type: .waterBottle, x: 25, y: 5)
+    let water = Facility.create(type: .waterBottle, x: 10, y: 5)
     _ = state.addFacility(bowl1)
     _ = state.addFacility(bowl2)
     _ = state.addFacility(water)

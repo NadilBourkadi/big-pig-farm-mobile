@@ -104,7 +104,7 @@ func makeIntegrationState(
         _ = state.addFacility(water)
     }
     if addHideout {
-        let hideout = Facility.create(type: .hideout, x: 15, y: 5)
+        let hideout = Facility.create(type: .hideout, x: 12, y: 5)
         _ = state.addFacility(hideout)
     }
 
@@ -113,7 +113,7 @@ func makeIntegrationState(
         var pig = GuineaPig.create(name: "IntegPig\(i)", gender: gender)
         pig.ageDays = 5.0          // Adult (adultAgeDays = 3)
         pig.needs.happiness = 80.0 // Above minHappinessToBreed (70)
-        pig.position = Position(x: Double(25 + (i % 3) * 5), y: Double(15 + (i / 3) * 5))
+        pig.position = Position(x: Double(5 + (i % 3) * 3), y: Double(10 + (i / 3) * 3))
         state.addGuineaPig(pig)
     }
 

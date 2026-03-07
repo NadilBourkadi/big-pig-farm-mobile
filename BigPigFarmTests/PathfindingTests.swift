@@ -142,11 +142,11 @@ private func makeLargeGrid() -> FarmGrid {
 @Test func findPathOnStarterGrid() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
-    // Interior corners: top-left (1,1) to bottom-right (60,35)
-    let path = pf.findPath(from: GridPosition(x: 1, y: 1), to: GridPosition(x: 60, y: 35))
+    // Interior corners: top-left (1,1) to bottom-right (16,16)
+    let path = pf.findPath(from: GridPosition(x: 1, y: 1), to: GridPosition(x: 16, y: 16))
     #expect(!path.isEmpty)
     #expect(path.first == GridPosition(x: 1, y: 1))
-    #expect(path.last == GridPosition(x: 60, y: 35))
+    #expect(path.last == GridPosition(x: 16, y: 16))
 
     // All positions must be within grid bounds
     for pos in path {
@@ -181,10 +181,10 @@ private func makeLargeGrid() -> FarmGrid {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // Top-left interior corner (1,1) to far cell
-    let path = pf.findPath(from: GridPosition(x: 1, y: 1), to: GridPosition(x: 30, y: 20))
+    let path = pf.findPath(from: GridPosition(x: 1, y: 1), to: GridPosition(x: 12, y: 10))
     #expect(!path.isEmpty, "Corner pig must be able to reach distant target")
     #expect(path.first == GridPosition(x: 1, y: 1))
-    #expect(path.last == GridPosition(x: 30, y: 20))
+    #expect(path.last == GridPosition(x: 12, y: 10))
 }
 
 @Test func findPathToCompletelyIsolatedGoalReturnsEmpty() {
