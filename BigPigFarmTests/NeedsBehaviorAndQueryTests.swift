@@ -109,74 +109,74 @@ import Foundation
 
 // MARK: - getMostUrgentNeed
 
-@Test func mostUrgentThirstCritical() {
+@Test @MainActor func mostUrgentThirstCritical() {
     let pig = makeNeedsPig(hunger: 50.0, thirst: 10.0)
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "thirst")
 }
 
-@Test func mostUrgentHungerCritical() {
+@Test @MainActor func mostUrgentHungerCritical() {
     let pig = makeNeedsPig(hunger: 10.0, thirst: 50.0)
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "hunger")
 }
 
-@Test func mostUrgentEnergyLow() {
+@Test @MainActor func mostUrgentEnergyLow() {
     let pig = makeNeedsPig(hunger: 50.0, thirst: 50.0, energy: 30.0)
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "energy")
 }
 
-@Test func mostUrgentModeratelyLow() {
+@Test @MainActor func mostUrgentModeratelyLow() {
     let pig = makeNeedsPig(
         hunger: 80.0, thirst: 60.0, energy: 80.0, happiness: 80.0, social: 80.0
     )
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "thirst")
 }
 
-@Test func mostUrgentNoneWhenAllHigh() {
+@Test @MainActor func mostUrgentNoneWhenAllHigh() {
     let pig = makeNeedsPig(
         hunger: 80.0, thirst: 80.0, energy: 80.0, happiness: 80.0, social: 80.0
     )
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "none")
 }
 
-@Test func mostUrgentThirstBeforeHunger() {
+@Test @MainActor func mostUrgentThirstBeforeHunger() {
     let pig = makeNeedsPig(hunger: 10.0, thirst: 10.0)
     #expect(NeedsSystem.getMostUrgentNeed(pig) == "thirst")
 }
 
 // MARK: - getTargetFacilityForNeed
 
-@Test func facilityForHunger() {
+@Test @MainActor func facilityForHunger() {
     #expect(NeedsSystem.getTargetFacilityForNeed("hunger") == [.hayRack, .feastTable, .foodBowl])
 }
 
-@Test func facilityForThirst() {
+@Test @MainActor func facilityForThirst() {
     #expect(NeedsSystem.getTargetFacilityForNeed("thirst") == [.waterBottle])
 }
 
-@Test func facilityForEnergy() {
+@Test @MainActor func facilityForEnergy() {
     #expect(NeedsSystem.getTargetFacilityForNeed("energy") == [.hideout])
 }
 
-@Test func facilityForHappiness() {
+@Test @MainActor func facilityForHappiness() {
     let result = NeedsSystem.getTargetFacilityForNeed("happiness")
     #expect(result == [.playArea, .exerciseWheel, .tunnel])
 }
 
-@Test func facilityForSocial() {
+@Test @MainActor func facilityForSocial() {
     #expect(NeedsSystem.getTargetFacilityForNeed("social") == [.playArea])
 }
 
-@Test func facilityForNoneReturnsNil() {
+@Test @MainActor func facilityForNoneReturnsNil() {
     #expect(NeedsSystem.getTargetFacilityForNeed("none") == nil)
 }
 
-@Test func facilityForUnknownReturnsNil() {
+@Test @MainActor func facilityForUnknownReturnsNil() {
     #expect(NeedsSystem.getTargetFacilityForNeed("xyz") == nil)
 }
 
 // MARK: - calculateOverallWellbeing
 
-@Test func wellbeingPerfectNeeds() {
+@Test @MainActor func wellbeingPerfectNeeds() {
     let pig = makeNeedsPig(
         hunger: 100.0, thirst: 100.0, energy: 100.0,
         happiness: 100.0, health: 100.0
@@ -184,7 +184,7 @@ import Foundation
     #expect(abs(NeedsSystem.calculateOverallWellbeing(pig) - 100.0) < 0.01)
 }
 
-@Test func wellbeingAllZero() {
+@Test @MainActor func wellbeingAllZero() {
     let pig = makeNeedsPig(
         hunger: 0.0, thirst: 0.0, energy: 0.0,
         happiness: 0.0, health: 0.0
@@ -192,7 +192,7 @@ import Foundation
     #expect(abs(NeedsSystem.calculateOverallWellbeing(pig)) < 0.01)
 }
 
-@Test func wellbeingWeightedCorrectly() {
+@Test @MainActor func wellbeingWeightedCorrectly() {
     let pig = makeNeedsPig(
         hunger: 80.0, thirst: 60.0, energy: 40.0,
         happiness: 50.0, health: 90.0
@@ -203,7 +203,7 @@ import Foundation
 
 // MARK: - precomputeNearbyCounts
 
-@Test func nearbyCountsTwoPigsClose() {
+@Test @MainActor func nearbyCountsTwoPigsClose() {
     var pigA = GuineaPig.create(name: "A", gender: .male)
     pigA.position = Position(x: 5.0, y: 5.0)
     var pigB = GuineaPig.create(name: "B", gender: .female)
@@ -213,7 +213,7 @@ import Foundation
     #expect(counts[pigB.id] == 1)
 }
 
-@Test func nearbyCountsTwoPigsFar() {
+@Test @MainActor func nearbyCountsTwoPigsFar() {
     var pigA = GuineaPig.create(name: "A", gender: .male)
     pigA.position = Position(x: 0.0, y: 0.0)
     var pigB = GuineaPig.create(name: "B", gender: .female)
@@ -223,7 +223,7 @@ import Foundation
     #expect(counts[pigB.id] == 0)
 }
 
-@Test func nearbyCountsThreePigsPartial() {
+@Test @MainActor func nearbyCountsThreePigsPartial() {
     var pigA = GuineaPig.create(name: "A", gender: .male)
     pigA.position = Position(x: 5.0, y: 5.0)
     var pigB = GuineaPig.create(name: "B", gender: .female)
@@ -236,7 +236,7 @@ import Foundation
     #expect(counts[pigC.id] == 0)
 }
 
-@Test func nearbyCountsEmptyList() {
+@Test @MainActor func nearbyCountsEmptyList() {
     let counts = NeedsSystem.precomputeNearbyCounts(pigs: [], radius: 8.0)
     #expect(counts.isEmpty)
 }

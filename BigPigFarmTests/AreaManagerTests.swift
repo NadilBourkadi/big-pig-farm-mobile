@@ -7,7 +7,7 @@ import Foundation
 // MARK: - Test Helpers
 
 /// Two side-by-side areas separated by a 7-cell horizontal gap.
-private func makeAreaManagerTwoAreaGrid() -> FarmGrid {
+@MainActor private func makeAreaManagerTwoAreaGrid() -> FarmGrid {
     let gap = 7
     let roomWidth = 20
     let roomHeight = 15
@@ -34,7 +34,7 @@ private func makeAreaManagerTwoAreaGrid() -> FarmGrid {
 }
 
 /// Two stacked areas separated by a 7-cell vertical gap.
-private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
+@MainActor private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     let gap = 7
     let roomWidth = 30
     let roomHeight = 12
@@ -62,19 +62,19 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - AreaManager: Adjacency
 
-@Test func getAdjacentPairsHorizontal() {
+@Test @MainActor func getAdjacentPairsHorizontal() {
     let grid = makeAreaManagerTwoAreaGrid()
     let pairs = AreaManager.getAdjacentPairs(grid)
     #expect(pairs.count == 1)
 }
 
-@Test func getAdjacentPairsVertical() {
+@Test @MainActor func getAdjacentPairsVertical() {
     let grid = makeAreaManagerTwoAreaGridVertical()
     let pairs = AreaManager.getAdjacentPairs(grid)
     #expect(pairs.count == 1)
 }
 
-@Test func getAdjacentPairsNonAdjacent() {
+@Test @MainActor func getAdjacentPairsNonAdjacent() {
     // Two areas at grid slots (0,0) and (2,0) — not adjacent (gap of 1 slot)
     var grid = FarmGrid(width: 50, height: 15)
     let areaA = FarmArea(id: UUID(), name: "A", biome: .meadow,
@@ -88,7 +88,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     #expect(pairs.isEmpty)
 }
 
-@Test func getAdjacentPairsFourAreaGrid() {
+@Test @MainActor func getAdjacentPairsFourAreaGrid() {
     // 2x2 layout: should produce 4 pairs (2 horizontal + 2 vertical)
     let size = 20
     let gap = 5
@@ -115,20 +115,20 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - AreaManager: Tunnel Rebuild
 
-@Test func rebuildTunnelsSkipsSingleArea() {
+@Test @MainActor func rebuildTunnelsSkipsSingleArea() {
     var grid = FarmGrid.createStarter()
     AreaManager.rebuildTunnels(&grid)
     #expect(grid.tunnels.isEmpty)
 }
 
-@Test func rebuildTunnelsCreatesNewConnections() {
+@Test @MainActor func rebuildTunnelsCreatesNewConnections() {
     var grid = makeAreaManagerTwoAreaGrid()
     AreaManager.rebuildTunnels(&grid)
     #expect(grid.tunnels.count == 2)
     #expect(grid.tunnels.allSatisfy { !$0.cells.isEmpty })
 }
 
-@Test func rebuildTunnelsClearsOldTunnels() {
+@Test @MainActor func rebuildTunnelsClearsOldTunnels() {
     var grid = makeAreaManagerTwoAreaGrid()
     AreaManager.rebuildTunnels(&grid)
     let firstCellCount = grid.tunnels.flatMap { $0.cells }.count
@@ -143,7 +143,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - AreaManager: Cell Repair
 
-@Test func repairAreaCellsStampsInteriorCells() {
+@Test @MainActor func repairAreaCellsStampsInteriorCells() {
     var grid = makeAreaManagerTwoAreaGrid()
     AreaManager.repairAreaCells(&grid)
 
@@ -159,7 +159,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func repairAreaCellsStampsBorderCellsAsWalls() {
+@Test @MainActor func repairAreaCellsStampsBorderCellsAsWalls() {
     var grid = makeAreaManagerTwoAreaGrid()
     AreaManager.repairAreaCells(&grid)
 
@@ -174,7 +174,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func repairAreaCellsPreservesFacilityOccupancy() {
+@Test @MainActor func repairAreaCellsPreservesFacilityOccupancy() {
     var grid = makeAreaManagerTwoAreaGrid()
     let area = grid.areas[0]
     let facilityX = area.interiorX1 + 2
@@ -188,7 +188,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     #expect(grid.cells[facilityY][facilityX].facilityId != nil)
 }
 
-@Test func repairAreaCellsMarksVoidNonWalkable() {
+@Test @MainActor func repairAreaCellsMarksVoidNonWalkable() {
     var grid = makeAreaManagerTwoAreaGrid()
     AreaManager.repairAreaCells(&grid)
 
@@ -202,7 +202,7 @@ private func makeAreaManagerTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func repairAreaCellsClearsOrphanedAreaId() {
+@Test @MainActor func repairAreaCellsClearsOrphanedAreaId() {
     var grid = makeAreaManagerTwoAreaGrid()
     let leftArea = grid.areas[0]
     let rightArea = grid.areas[1]

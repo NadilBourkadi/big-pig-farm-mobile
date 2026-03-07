@@ -7,7 +7,7 @@ import Foundation
 
 /// Create a small grid with all interior cells walkable and border cells as walls.
 /// The area covers the entire grid; walkable positions run from (1,1) to (width-2, height-2).
-private func makeSimpleGrid(width: Int, height: Int) -> FarmGrid {
+@MainActor private func makeSimpleGrid(width: Int, height: Int) -> FarmGrid {
     var grid = FarmGrid(width: width, height: height)
     let area = FarmArea(
         id: UUID(),
@@ -22,7 +22,7 @@ private func makeSimpleGrid(width: Int, height: Int) -> FarmGrid {
 }
 
 /// Create a large 96x56 grid (maximum farm size) for performance tests.
-private func makeLargeGrid() -> FarmGrid {
+@MainActor private func makeLargeGrid() -> FarmGrid {
     var grid = FarmGrid(width: 96, height: 56)
     let area = FarmArea(
         id: UUID(),
@@ -38,13 +38,13 @@ private func makeLargeGrid() -> FarmGrid {
 
 // MARK: - Graph Construction
 
-@Test func pathfindingBuildsFromStarterGrid() {
+@Test @MainActor func pathfindingBuildsFromStarterGrid() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     #expect(pf.isValid(for: grid))
 }
 
-@Test func pathfindingIsValidMatchesGeneration() {
+@Test @MainActor func pathfindingIsValidMatchesGeneration() {
     var grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     #expect(pf.isValid(for: grid))
@@ -61,7 +61,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(!pf.isValid(for: grid))
 }
 
-@Test func pathfindingRebuildsCorrectlyAfterFacilityPlacement() {
+@Test @MainActor func pathfindingRebuildsCorrectlyAfterFacilityPlacement() {
     var grid = FarmGrid.createStarter()
     let facility = Facility(
         id: UUID(),
@@ -88,7 +88,7 @@ private func makeLargeGrid() -> FarmGrid {
 
 // MARK: - Simple Path Finding
 
-@Test func findPathAdjacentCells() {
+@Test @MainActor func findPathAdjacentCells() {
     let grid = makeSimpleGrid(width: 5, height: 5)
     let pf = Pathfinding(farm: grid)
     let path = pf.findPath(from: GridPosition(x: 1, y: 1), to: GridPosition(x: 1, y: 2))
@@ -97,14 +97,14 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(path.last == GridPosition(x: 1, y: 2))
 }
 
-@Test func findPathSameCell() {
+@Test @MainActor func findPathSameCell() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     let path = pf.findPath(from: GridPosition(x: 5, y: 5), to: GridPosition(x: 5, y: 5))
     #expect(path == [GridPosition(x: 5, y: 5)])
 }
 
-@Test func findPathStraightLine() {
+@Test @MainActor func findPathStraightLine() {
     let grid = makeSimpleGrid(width: 10, height: 5)
     let pf = Pathfinding(farm: grid)
     // Horizontal straight path from (1,1) to (8,1)
@@ -114,7 +114,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(path.last == GridPosition(x: 8, y: 1))
 }
 
-@Test func findPathAroundObstacle() {
+@Test @MainActor func findPathAroundObstacle() {
     var grid = makeSimpleGrid(width: 10, height: 7)
     // Block a horizontal wall at y=3 from x=1 to x=7 (leaving x=8 open)
     for x in 1...7 {
@@ -139,7 +139,7 @@ private func makeLargeGrid() -> FarmGrid {
     }
 }
 
-@Test func findPathOnStarterGrid() {
+@Test @MainActor func findPathOnStarterGrid() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // Interior corners: top-left (1,1) to bottom-right (16,16)
@@ -157,7 +157,7 @@ private func makeLargeGrid() -> FarmGrid {
 
 // MARK: - No Path / Edge Cases
 
-@Test func findPathFromNonWalkableReturnsEmpty() {
+@Test @MainActor func findPathFromNonWalkableReturnsEmpty() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // Border walls are non-walkable
@@ -165,7 +165,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(path.isEmpty, "Path from wall cell must be empty")
 }
 
-@Test func findPathToNonWalkableFallsBackToNearest() {
+@Test @MainActor func findPathToNonWalkableFallsBackToNearest() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // Goal is a border wall — path should reach the nearest walkable cell
@@ -177,7 +177,7 @@ private func makeLargeGrid() -> FarmGrid {
     }
 }
 
-@Test func findPathPigInCornerCanEscape() {
+@Test @MainActor func findPathPigInCornerCanEscape() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // Top-left interior corner (1,1) to far cell
@@ -187,7 +187,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(path.last == GridPosition(x: 12, y: 10))
 }
 
-@Test func findPathToCompletelyIsolatedGoalReturnsEmpty() {
+@Test @MainActor func findPathToCompletelyIsolatedGoalReturnsEmpty() {
     var grid = makeSimpleGrid(width: 9, height: 9)
     // Surround (4,4) with walls on all 4 sides
     grid.cells[3][4].isWalkable = false
@@ -211,7 +211,7 @@ private func makeLargeGrid() -> FarmGrid {
 
 // MARK: - Nearest Walkable
 
-@Test func findNearestWalkableFromWallCell() {
+@Test @MainActor func findNearestWalkableFromWallCell() {
     let grid = FarmGrid.createStarter()
     let pf = Pathfinding(farm: grid)
     // (0,5) is a wall — nearest walkable should be (1,5)
@@ -222,7 +222,7 @@ private func makeLargeGrid() -> FarmGrid {
     }
 }
 
-@Test func findNearestWalkableMaxDistanceExceeded() {
+@Test @MainActor func findNearestWalkableMaxDistanceExceeded() {
     let grid = makeSimpleGrid(width: 5, height: 5)
     let pf = Pathfinding(farm: grid)
     // All border cells are walls. From (0,0), nearest walkable is at distance 2: (1,1)
@@ -233,7 +233,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(nearest2 != nil, "Distance 2 from corner finds interior cell")
 }
 
-@Test func findNearestWalkableRespectsMaxDistance() {
+@Test @MainActor func findNearestWalkableRespectsMaxDistance() {
     var grid = FarmGrid.createStarter()
     // Block a 3x3 ring around (10,10)
     let center = GridPosition(x: 10, y: 10)
@@ -260,7 +260,7 @@ private func makeLargeGrid() -> FarmGrid {
 
 // MARK: - Performance
 
-@Test func pathfindingGraphBuildPerformanceLargeGrid() {
+@Test @MainActor func pathfindingGraphBuildPerformanceLargeGrid() {
     let grid = makeLargeGrid()
     let start = Date()
     _ = Pathfinding(farm: grid)
@@ -269,7 +269,7 @@ private func makeLargeGrid() -> FarmGrid {
     #expect(elapsed < 3.0, "Graph construction must complete in under 3s debug (actual: \(elapsed)s)")
 }
 
-@Test func pathfindingPerformance50CallsLargeGrid() {
+@Test @MainActor func pathfindingPerformance50CallsLargeGrid() {
     let grid = makeLargeGrid()
     let pf = Pathfinding(farm: grid)
 

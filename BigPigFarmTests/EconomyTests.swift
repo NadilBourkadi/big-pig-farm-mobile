@@ -6,7 +6,7 @@ import Foundation
 // MARK: - Test Helpers
 
 /// Make an adult common pig with full health.
-func makeAdultPig(name: String = "Test", rarity: Rarity = .common) -> GuineaPig {
+@MainActor func makeAdultPig(name: String = "Test", rarity: Rarity = .common) -> GuineaPig {
     var pig = GuineaPig.create(name: name, gender: .female)
     pig.ageDays = 10.0
     pig.phenotype = Phenotype(
@@ -17,7 +17,7 @@ func makeAdultPig(name: String = "Test", rarity: Rarity = .common) -> GuineaPig 
 }
 
 /// Make a contract requiring the given color (easy difficulty by default).
-func makeContract(
+@MainActor func makeContract(
     color: BaseColor = .black,
     pattern: Pattern? = nil,
     intensity: ColorIntensity? = nil,
@@ -44,27 +44,27 @@ func makeContract(
 
 // MARK: - Currency: formatMoney
 
-@Test func formatMoneySmallValue() {
+@Test @MainActor func formatMoneySmallValue() {
     #expect(Currency.formatMoney(500) == "500")
 }
 
-@Test func formatMoneyThousandExact() {
+@Test @MainActor func formatMoneyThousandExact() {
     #expect(Currency.formatMoney(1000) == "1.0K")
 }
 
-@Test func formatMoneyThousands() {
+@Test @MainActor func formatMoneyThousands() {
     #expect(Currency.formatMoney(1500) == "1.5K")
 }
 
-@Test func formatMoneyMillions() {
+@Test @MainActor func formatMoneyMillions() {
     #expect(Currency.formatMoney(2_300_000) == "2.3M")
 }
 
-@Test func formatMoney999() {
+@Test @MainActor func formatMoney999() {
     #expect(Currency.formatMoney(999) == "999")
 }
 
-@Test func formatCurrencyPrefix() {
+@Test @MainActor func formatCurrencyPrefix() {
     #expect(Currency.formatCurrency(1500) == "Sq1.5K")
 }
 

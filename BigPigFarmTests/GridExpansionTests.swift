@@ -5,14 +5,14 @@ import Foundation
 
 // MARK: - expandGrid Tests
 
-@Test func expandGridGrowsWidthAndHeight() {
+@Test @MainActor func expandGridGrowsWidthAndHeight() {
     var grid = FarmGrid.createStarter()
     GridExpansion.expandGrid(&grid, newWidth: 80, newHeight: 50)
     #expect(grid.width == 80)
     #expect(grid.height == 50)
 }
 
-@Test func expandGridPreservesExistingCells() {
+@Test @MainActor func expandGridPreservesExistingCells() {
     var grid = FarmGrid.createStarter()
     let originalCell = grid.cells[5][5]
     GridExpansion.expandGrid(&grid, newWidth: 80, newHeight: 50)
@@ -20,7 +20,7 @@ import Foundation
     #expect(grid.cells[5][5].isWalkable == originalCell.isWalkable)
 }
 
-@Test func expandGridWithOffsetShiftsCells() {
+@Test @MainActor func expandGridWithOffsetShiftsCells() {
     var grid = FarmGrid.createStarter()
     let original = grid.cells[4][3]
     GridExpansion.expandGrid(&grid, newWidth: 80, newHeight: 50, offsetX: 5, offsetY: 3)
@@ -28,7 +28,7 @@ import Foundation
     #expect(grid.cells[7][8].isWalkable == original.isWalkable)
 }
 
-@Test func expandGridWithOffsetShiftsAreaCoordinates() {
+@Test @MainActor func expandGridWithOffsetShiftsAreaCoordinates() {
     var grid = FarmGrid.createStarter()
     let originalX1 = grid.areas[0].x1
     let originalY1 = grid.areas[0].y1
@@ -38,7 +38,7 @@ import Foundation
     #expect(grid.areas[0].x2 == grid.areas[0].x1 + 17)
 }
 
-@Test func expandGridWithOffsetShiftsTunnelCells() {
+@Test @MainActor func expandGridWithOffsetShiftsTunnelCells() {
     var grid = makeTwoRoomGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
     grid.tunnels.append(contentsOf: tunnels)
@@ -50,14 +50,14 @@ import Foundation
     #expect(shifted.y == originalFirstCell.y + 5)
 }
 
-@Test func expandGridNewCellsAreNonWalkable() {
+@Test @MainActor func expandGridNewCellsAreNonWalkable() {
     var grid = FarmGrid.createStarter()
     GridExpansion.expandGrid(&grid, newWidth: 100, newHeight: 60)
     #expect(grid.cells[55][90].isWalkable == false)
     #expect(grid.cells[0][80].isWalkable == false)
 }
 
-@Test func expandGridInvalidatesCache() {
+@Test @MainActor func expandGridInvalidatesCache() {
     var grid = FarmGrid.createStarter()
     let generationBefore = grid.gridGeneration
     GridExpansion.expandGrid(&grid, newWidth: 80, newHeight: 50)
@@ -66,7 +66,7 @@ import Foundation
 
 // MARK: - computeGridLayout Tests
 
-@Test func computeGridLayoutSingleArea() {
+@Test @MainActor func computeGridLayoutSingleArea() {
     var grid = FarmGrid(width: 62, height: 37)
     let area = FarmArea(
         id: UUID(), name: "Room", biome: .meadow,
@@ -78,7 +78,7 @@ import Foundation
     #expect(origins[0] == GridPosition(x: 0, y: 0))
 }
 
-@Test func computeGridLayoutTwoAreasHorizontal() {
+@Test @MainActor func computeGridLayoutTwoAreasHorizontal() {
     var grid = FarmGrid(width: 140, height: 40)
     let left = FarmArea(
         id: UUID(), name: "Left", biome: .meadow,
@@ -98,7 +98,7 @@ import Foundation
     #expect(origins[1] == GridPosition(x: 69, y: 0))
 }
 
-@Test func computeGridLayoutFourAreas() {
+@Test @MainActor func computeGridLayoutFourAreas() {
     var grid = FarmGrid(width: 200, height: 100)
     let gap = 7
     let roomWidth = 62; let roomHeight = 37
@@ -124,7 +124,7 @@ import Foundation
     }
 }
 
-@Test func computeGridLayoutCentersUnequalRooms() {
+@Test @MainActor func computeGridLayoutCentersUnequalRooms() {
     var grid = FarmGrid(width: 200, height: 100)
     let wide = FarmArea(
         id: UUID(), name: "Wide", biome: .meadow,
@@ -146,7 +146,7 @@ import Foundation
     #expect(origins[1]?.x == 77)
 }
 
-@Test func computeGridLayoutEmptyReturnsEmpty() {
+@Test @MainActor func computeGridLayoutEmptyReturnsEmpty() {
     let grid = FarmGrid(width: 62, height: 37)
     let origins = GridExpansion.computeGridLayout(grid)
     #expect(origins.isEmpty)
@@ -154,13 +154,13 @@ import Foundation
 
 // MARK: - addRoom Tests
 
-@Test func addRoomCreatesStarterOnEmptyGrid() {
+@Test @MainActor func addRoomCreatesStarterOnEmptyGrid() {
     var grid = FarmGrid(width: 62, height: 37)
     _ = GridExpansion.addRoom(&grid, biome: .burrow)
     #expect(grid.areas.count == 2)
 }
 
-@Test func addRoomSecondRoomExpandsGrid() {
+@Test @MainActor func addRoomSecondRoomExpandsGrid() {
     var grid = FarmGrid.createStarter()
     let originalWidth = grid.width
     _ = GridExpansion.addRoom(&grid, biome: .burrow)
@@ -168,7 +168,7 @@ import Foundation
     #expect(grid.areas.count == 2)
 }
 
-@Test func addRoomAssignsCorrectGridSlots() {
+@Test @MainActor func addRoomAssignsCorrectGridSlots() {
     var grid = FarmGrid.createStarter()
     #expect(grid.areas[0].gridCol == 0)
     #expect(grid.areas[0].gridRow == 0)
@@ -186,37 +186,37 @@ import Foundation
     #expect(grid.areas[3].gridRow == 1)
 }
 
-@Test func addRoomUsesSuppliedName() {
+@Test @MainActor func addRoomUsesSuppliedName() {
     var grid = FarmGrid.createStarter()
     let result = GridExpansion.addRoom(&grid, biome: .burrow, roomName: "My Burrow")
     #expect(result?.area.name == "My Burrow")
 }
 
-@Test func addRoomUsesDefaultName() {
+@Test @MainActor func addRoomUsesDefaultName() {
     var grid = FarmGrid.createStarter()
     let result = GridExpansion.addRoom(&grid, biome: .burrow)
     #expect(result?.area.name == "Burrow Room")
 }
 
-@Test func addRoomRebuildsAllTunnels() {
+@Test @MainActor func addRoomRebuildsAllTunnels() {
     var grid = FarmGrid.createStarter()
     _ = GridExpansion.addRoom(&grid, biome: .burrow)
     #expect(!grid.tunnels.isEmpty)
 }
 
-@Test func addRoomReturnsTunnels() throws {
+@Test @MainActor func addRoomReturnsTunnels() throws {
     var grid = FarmGrid.createStarter()
     let result = try #require(GridExpansion.addRoom(&grid, biome: .burrow))
     #expect(!result.tunnels.isEmpty)
 }
 
-@Test func addRoomReturnsRoomDeltasForShiftedAreas() {
+@Test @MainActor func addRoomReturnsRoomDeltasForShiftedAreas() {
     var grid = FarmGrid.createStarter()
     let result = GridExpansion.addRoom(&grid, biome: .burrow)
     #expect(result != nil)
 }
 
-@Test func addRoomAtMaxCapacityReturnsNil() {
+@Test @MainActor func addRoomAtMaxCapacityReturnsNil() {
     // roomCosts has 8 entries (indices 0..7). Index 8 should return nil.
     var grid = FarmGrid.createStarter()
     grid.tier = 5
@@ -229,20 +229,20 @@ import Foundation
     #expect(result == nil)
 }
 
-@Test func addRoomEntityOffsetIsZeroWhenNoShiftNeeded() {
+@Test @MainActor func addRoomEntityOffsetIsZeroWhenNoShiftNeeded() {
     var grid = FarmGrid.createStarter()
     let result = GridExpansion.addRoom(&grid, biome: .burrow)
     #expect(result?.offsetX == 0)
     #expect(result?.offsetY == 0)
 }
 
-@Test func addRoomNewAreaHasCorrectBiome() {
+@Test @MainActor func addRoomNewAreaHasCorrectBiome() {
     var grid = FarmGrid.createStarter()
     let result = GridExpansion.addRoom(&grid, biome: .alpine)
     #expect(result?.area.biome == .alpine)
 }
 
-@Test func addRoomNewAreaIsInGrid() {
+@Test @MainActor func addRoomNewAreaIsInGrid() {
     var grid = FarmGrid.createStarter()
     _ = GridExpansion.addRoom(&grid, biome: .burrow)
     let newArea = grid.areas[1]

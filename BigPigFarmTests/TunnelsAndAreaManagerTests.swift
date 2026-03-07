@@ -8,7 +8,7 @@ import Foundation
 
 /// Two side-by-side areas separated by a 7-cell horizontal gap.
 /// areaA is on the left (col 0), areaB is on the right (col 1).
-private func makeTwoAreaGrid() -> FarmGrid {
+@MainActor private func makeTwoAreaGrid() -> FarmGrid {
     let gap = 7
     let roomWidth = 20
     let roomHeight = 15
@@ -36,7 +36,7 @@ private func makeTwoAreaGrid() -> FarmGrid {
 
 /// Two stacked areas separated by a 7-cell vertical gap.
 /// areaA is on top (row 0), areaB is on the bottom (row 1).
-private func makeTwoAreaGridVertical() -> FarmGrid {
+@MainActor private func makeTwoAreaGridVertical() -> FarmGrid {
     let gap = 7
     let roomWidth = 30
     let roomHeight = 12
@@ -64,21 +64,21 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - Tunnels: Basic Connection
 
-@Test func connectAreasCreatesHorizontalTunnels() {
+@Test @MainActor func connectAreasCreatesHorizontalTunnels() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
     #expect(tunnels.count == 2)
     #expect(tunnels.allSatisfy { $0.orientation == "horizontal" })
 }
 
-@Test func connectAreasCreatesVerticalTunnels() {
+@Test @MainActor func connectAreasCreatesVerticalTunnels() {
     var grid = makeTwoAreaGridVertical()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
     #expect(tunnels.count == 2)
     #expect(tunnels.allSatisfy { $0.orientation == "vertical" })
 }
 
-@Test func connectAreasOrderDoesNotMatter() {
+@Test @MainActor func connectAreasOrderDoesNotMatter() {
     var gridAB = makeTwoAreaGrid()
     let tunnelsAB = Tunnels.connectAreas(&gridAB, areaA: gridAB.areas[0], areaB: gridAB.areas[1])
 
@@ -94,7 +94,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - Tunnels: Cell Properties
 
-@Test func horizontalTunnelCorridorCellsAreWalkable() {
+@Test @MainActor func horizontalTunnelCorridorCellsAreWalkable() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -110,7 +110,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func horizontalTunnelBarrierWallsAreNotWalkable() {
+@Test @MainActor func horizontalTunnelBarrierWallsAreNotWalkable() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -127,7 +127,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func verticalTunnelBarrierWallsAreNotHorizontal() {
+@Test @MainActor func verticalTunnelBarrierWallsAreNotHorizontal() {
     var grid = makeTwoAreaGridVertical()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -144,7 +144,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func tunnelCorridorCellTypeIsFloor() {
+@Test @MainActor func tunnelCorridorCellTypeIsFloor() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -158,7 +158,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func tunnelBarrierCellTypeIsWall() {
+@Test @MainActor func tunnelBarrierCellTypeIsWall() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -174,7 +174,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - Tunnels: TunnelConnection Record
 
-@Test func tunnelConnectionRecordsCorrectAreaIDs() {
+@Test @MainActor func tunnelConnectionRecordsCorrectAreaIDs() {
     var grid = makeTwoAreaGrid()
     let leftArea = grid.areas[0]
     let rightArea = grid.areas[1]
@@ -187,7 +187,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func tunnelConnectionRecordsCells() {
+@Test @MainActor func tunnelConnectionRecordsCells() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -199,7 +199,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func tunnelHalfWidthProduces5CellWideCorridor() {
+@Test @MainActor func tunnelHalfWidthProduces5CellWideCorridor() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -214,14 +214,14 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func connectAreasIncreasesGridGeneration() {
+@Test @MainActor func connectAreasIncreasesGridGeneration() {
     var grid = makeTwoAreaGrid()
     let generationBefore = grid.gridGeneration
     _ = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
     #expect(grid.gridGeneration > generationBefore)
 }
 
-@Test func tunnelCellsInGapHaveNoAreaId() {
+@Test @MainActor func tunnelCellsInGapHaveNoAreaId() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -235,7 +235,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
     }
 }
 
-@Test func tunnelFlagPreservedDuringComputeWallFlags() {
+@Test @MainActor func tunnelFlagPreservedDuringComputeWallFlags() {
     var grid = makeTwoAreaGrid()
     let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
 
@@ -250,7 +250,7 @@ private func makeTwoAreaGridVertical() -> FarmGrid {
 
 // MARK: - Tunnels: Pathfinding Integration
 
-@Test func pathfindingCanRouteThroughTunnel() {
+@Test @MainActor func pathfindingCanRouteThroughTunnel() {
     var grid = makeTwoAreaGrid()
     let leftArea = grid.areas[0]
     let rightArea = grid.areas[1]
