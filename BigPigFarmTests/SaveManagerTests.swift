@@ -97,6 +97,29 @@ func makeTempSaveManager() -> SaveManager {
     #expect(loadedPig2.name == "Waffles")
 }
 
+// MARK: - Bootstrap
+
+@Test @MainActor func launchWithExistingSaveRestoresStateInsteadOfNewGame() throws {
+    let manager = makeTempSaveManager()
+    let original = makeGameState()
+    original.money = 1_234
+    var pig = GuineaPig.create(name: "Crumpet", gender: .female)
+    pig.position = Position(x: 10.0, y: 5.0)
+    original.addGuineaPig(pig)
+    try manager.save(original)
+
+    // Simulate app bootstrap: hasSave() must be checked before load()
+    let loadedState = manager.load()
+    let isNewGame = loadedState == nil
+    let loaded = try #require(loadedState)
+
+    #expect(isNewGame == false)
+    #expect(loaded.money == 1_234)
+    #expect(loaded.pigCount == 1)
+    let restoredPig = try #require(loaded.getGuineaPig(pig.id))
+    #expect(restoredPig.name == "Crumpet")
+}
+
 // MARK: - Roundtrip: Facilities
 
 @Test @MainActor func roundtripWithFacilities() throws {
