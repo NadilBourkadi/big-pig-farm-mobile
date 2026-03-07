@@ -133,6 +133,35 @@ struct CameraInitialZoomTests {
                 "clampCameraPosition must not move a valid off-center position when over-zoomed")
     }
 
+    @Test("isZoomedInForPigTracking returns false at fit-zoom despite FP rounding")
+    func isZoomedInForPigTrackingFalseAtFitZoom() {
+        let state = GameState()
+        let scene = FarmScene(gameState: state)
+        // Use presentScene so scene.view is set — isZoomedInForPigTracking reads scene.view.
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        view.presentScene(scene)
+        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: starterContentRect(state))
+        // At fit-zoom the whole farm is visible — tracking should be suppressed
+        // regardless of any floating-point rounding in the geometry chain.
+        #expect(!scene.cameraController.isZoomedInForPigTracking,
+                "isZoomedInForPigTracking must be false at fit-zoom so pig selection cannot fight panning")
+    }
+
+    @Test("isZoomedInForPigTracking returns true when zoomed in past fit level")
+    func isZoomedInForPigTrackingTrueWhenZoomedIn() throws {
+        let state = GameState()
+        let scene = FarmScene(gameState: state)
+        // Use presentScene so scene.view is set — isZoomedInForPigTracking reads scene.view.
+        let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        view.presentScene(scene)
+        let fitScale = scene.cameraController.fitCameraScale(for: view)
+        // Zoom in to half the fit scale — farm is definitely clipped
+        let camera = try #require(scene.camera)
+        camera.setScale(fitScale * 0.5)
+        #expect(scene.cameraController.isZoomedInForPigTracking,
+                "isZoomedInForPigTracking must be true when camera is zoomed in past fit level")
+    }
+
     @Test("contentBounds returns area bounds, not full grid")
     func contentBoundsMatchesAreas() {
         let state = GameState()

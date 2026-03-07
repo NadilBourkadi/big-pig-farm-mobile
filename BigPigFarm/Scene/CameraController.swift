@@ -64,17 +64,20 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         farmHeight = height
     }
 
-    /// True when the viewport is small enough that a pig could be off-screen,
-    /// making camera tracking meaningful. At fit-zoom the entire farm is visible
-    /// so tracking is a no-op and would fight against manual panning.
+    /// True when the camera is zoomed in past the fit level, meaning a pig could
+    /// be off-screen and tracking is meaningful. At fit-zoom every pig is visible,
+    /// so tracking would fight against manual panning.
+    ///
+    /// Compared directly against `fitCameraScale` (with a small epsilon) rather than
+    /// deriving visible geometry: the multi-step FP chain `(viewW / ds) * scale` can
+    /// evaluate to sceneW − ε even when scale == fitScale, producing a false positive.
     var isZoomedInForPigTracking: Bool {
         guard let scene = scene, let view = scene.view else { return false }
-        let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
-        let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
-        let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
-        let visibleW = (view.frame.width / ds) * camera.xScale
-        let visibleH = (view.frame.height / ds) * camera.yScale
-        return visibleW < sceneW || visibleH < sceneH
+        // Larger camera scale = more zoomed out (more scene visible).
+        // Tracking is needed only when scale < fit (some of the farm is off-screen).
+        // The 0.01 epsilon absorbs floating-point rounding between camera.xScale and
+        // the freshly-computed fitCameraScale so that fit-zoom reads as "not zoomed in".
+        return camera.xScale < fitCameraScale(for: view) - 0.01
     }
 
     func clampCameraPosition() {
