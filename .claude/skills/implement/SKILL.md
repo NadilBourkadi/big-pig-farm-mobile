@@ -59,16 +59,19 @@ When the plan is approved, write the final version to `.tmp/plan-<bead-id>.md` u
 
 ## Phase 4 — Enter Worktree & Implement
 
-**Always create a fresh worktree** via `EnterWorktree`. Never reuse a worktree from a previous session — stale branches cause merge conflicts when commits have already been merged to main via a separate PR.
+**Detect whether you are already in a worktree** by checking if the working directory is inside `.claude/worktrees/`. A session can serve multiple sequential tasks, each on its own branch within the same worktree.
 
-**If already inside a worktree** (e.g. the session was continued with `/clear` rather than a fresh open): run `git fetch origin main` then `git log origin/main..HEAD`. If any commits appear, the current branch is stale — do NOT use `EnterWorktree` (it will fail). Instead, create a fresh branch off main directly:
+**If already inside a worktree** (the common case after `/clear` between tasks): create a fresh branch off `origin/main` directly. `EnterWorktree` cannot be called from within a worktree — it will fail.
 
 ```
 git fetch origin main
 git checkout -b feature/<bead-id>-<slug> origin/main
+xcodegen generate
 ```
 
-This resets the branch to a clean state within the existing worktree directory. The directory name is irrelevant — only the branch matters. Verify with `git log origin/main..HEAD` (must be empty) before proceeding.
+The `xcodegen generate` step is mandatory after switching branches — `project.yml` may have changed on main. The worktree directory name is irrelevant; only the branch matters. Verify with `git log origin/main..HEAD` (must be empty) before proceeding.
+
+**If NOT inside a worktree** (first task in a fresh session): use `EnterWorktree` to create a new worktree, then run `xcodegen generate` inside it.
 
 **From this point forward, your primary reference is the plan file at `.tmp/plan-<bead-id>.md`.** Read it and work through it systematically:
 
@@ -99,8 +102,8 @@ Write a brief implementation summary to `.tmp/summary-<bead-id>.md` capturing: w
 6. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
 7. **Present PR URL and summary to the user. STOP and wait for explicit approval.** Do NOT merge until the user says to proceed (e.g. "go ahead", "merge it", "lgtm", "approved"). The PR must stay open until the user has reviewed it.
 8. **Merge (after user approval)** — `gh pr merge <number> --rebase`. We do the merge ourselves after approval; the user should not need to run any git commands.
-9. **Return to main repo and pull** — `git -C /Users/nadilbourkadi/Dev/big-pig-farm-mobile pull origin main`. This syncs the main branch with the newly merged commits.
-10. **Done — start a new session for the next task.** Close this Claude Code session and open a fresh one. `/clear` does NOT exit a worktree, so a new session is required to return to the main repo root cleanly.
+9. **Sync main repo** — `git -C /Users/nadilbourkadi/Dev/big-pig-farm-mobile pull origin main`. This keeps the main repo's local main branch up to date.
+10. **Ready for next task.** Tell the user: "Task complete. Run `/clear` to reset context, then `/implement` for the next task." **Do NOT tell the user to close the session.** The worktree is reusable — `/clear` resets conversation context while keeping the worktree directory. The next `/implement` will detect it's in a worktree and create a fresh branch off `origin/main`.
 
 ### Git commands — CRITICAL
 
