@@ -75,6 +75,7 @@ Views (SwiftUI) + Scene (SpriteKit)
 - **Preserve logical commits.** Multiple atomic commits in a PR is expected and good. Do NOT squash logically distinct changes into one commit.
 - **Clean up WIP noise before pushing** — use interactive rebase to collapse fixup/WIP commits into their logical parent. Only squash when intermediate commits have no standalone meaning.
 - **Commit messages:** Write to `.tmp/commit-msg.txt` (via the Write tool), then `git commit -F .tmp/commit-msg.txt`. Never use heredocs, subshells, or `/tmp/`.
+- **PR bodies:** Write to `.tmp/pr-body.md` (via the Write tool), then `gh pr create --body-file .tmp/pr-body.md`. Never pass markdown with `#` headers inline — it triggers a built-in security heuristic about hidden arguments that cannot be overridden via settings.
 
 ## Pre-Push Workflow — CRITICAL
 
