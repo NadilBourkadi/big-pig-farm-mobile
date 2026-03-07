@@ -190,6 +190,76 @@ struct IndicatorPriorityTests {
     }
 }
 
+// MARK: - PigNode Size Tests
+
+@Suite("PigNode Size")
+@MainActor
+struct PigNodeSizeTests {
+
+    private let adultWidth = SpriteAssets.adultSpriteSize.width * SpriteAssets.pointsPerArtPixel
+    private let adultHeight = SpriteAssets.adultSpriteSize.height * SpriteAssets.pointsPerArtPixel
+    private let babyWidth = SpriteAssets.babySpriteSize.width * SpriteAssets.pointsPerArtPixel
+    private let babyHeight = SpriteAssets.babySpriteSize.height * SpriteAssets.pointsPerArtPixel
+
+    private func makeScene() -> FarmScene { FarmScene(gameState: GameState()) }
+
+    private func babyPig() -> GuineaPig {
+        var pig = GuineaPig.create(name: "Tiny", gender: .female)
+        pig.ageDays = 0
+        return pig
+    }
+
+    private func adultPig() -> GuineaPig {
+        var pig = GuineaPig.create(name: "Big", gender: .female)
+        pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+        return pig
+    }
+
+    @Test("Baby pig constant is smaller than adult pig constant")
+    func babyConstantSmallerThanAdult() {
+        #expect(SpriteAssets.babySpriteSize.width < SpriteAssets.adultSpriteSize.width)
+        #expect(SpriteAssets.babySpriteSize.height < SpriteAssets.adultSpriteSize.height)
+    }
+
+    @Test("Baby pig node initialises with baby dimensions")
+    func babyNodeHasBabySize() {
+        let node = PigNode(pig: babyPig(), scene: makeScene())
+        #expect(node.size.width == babyWidth)
+        #expect(node.size.height == babyHeight)
+    }
+
+    @Test("Adult pig node initialises with adult dimensions")
+    func adultNodeHasAdultSize() {
+        let node = PigNode(pig: adultPig(), scene: makeScene())
+        #expect(node.size.width == adultWidth)
+        #expect(node.size.height == adultHeight)
+    }
+
+    @Test("Baby-to-adult transition resizes node to adult dimensions")
+    func babyToAdultTransitionUpdatesSize() {
+        let scene = makeScene()
+        var pig = babyPig()
+        let node = PigNode(pig: pig, scene: scene)
+        #expect(node.size.width == babyWidth, "precondition: should start at baby size")
+
+        pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+        node.update(from: pig, in: scene)
+
+        #expect(node.size.width == adultWidth)
+        #expect(node.size.height == adultHeight)
+    }
+
+    @Test("Adult-to-adult update preserves adult dimensions")
+    func adultUpdatePreservesSize() {
+        let scene = makeScene()
+        let pig = adultPig()
+        let node = PigNode(pig: pig, scene: scene)
+        node.update(from: pig, in: scene)
+        #expect(node.size.width == adultWidth)
+        #expect(node.size.height == adultHeight)
+    }
+}
+
 // MARK: - Tile Mapping Y-Flip Tests
 
 /// Tests the Y-flip formula used in fillTiles(into:with:farm:) without needing a tile map.
