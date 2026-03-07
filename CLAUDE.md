@@ -98,6 +98,25 @@ The checklist is the project's single source of truth for progress. If it's not 
 
 Run `swiftlint lint` regularly. Fix warnings immediately — don't let them accumulate. Zero-warning policy.
 
+## Debugging — Visual Issues
+
+For camera, layout, and rendering bugs that are hard to diagnose from code alone, take a simulator screenshot and read it directly in the conversation. This gives immediate visual evidence of what the user is seeing.
+
+```bash
+# 1. Find the booted simulator UDID
+xcrun simctl list devices booted
+
+# 2. Capture a screenshot (use .tmp/ to stay in the repo sandbox)
+xcrun simctl io <UDID> screenshot /absolute/path/to/.tmp/sim-screenshot.png
+
+# 3. Read the file in the conversation — Claude Code can view PNG images
+# Use the Read tool on the .tmp/sim-screenshot.png path
+```
+
+- This technique is especially useful for camera/HUD positioning bugs, biome rendering issues, and any visual artifact that's easier to see than describe.
+- Always use `.tmp/` for the screenshot output path — `/tmp/` is outside the repo sandbox and triggers permission prompts.
+- `xcrun simctl list devices booted` shows the UDID of whichever simulator is currently running the app.
+
 ## Testing
 
 - Use Swift Testing framework (`@Test`, `#expect`, `#require`)
