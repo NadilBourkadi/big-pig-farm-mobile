@@ -64,7 +64,7 @@ final class GameEngine {
     /// Cycle through speed settings. Returns the new speed.
     /// When currently paused, cycling does nothing — use `resume()` first.
     func cycleSpeed(debug: Bool = false) -> GameSpeed {
-        guard state.speed != .paused else { return .paused }
+        guard !state.isPaused, state.speed != .paused else { return state.speed }
         var speeds: [GameSpeed] = [.normal, .fast, .faster, .fastest]
         if debug { speeds.append(contentsOf: [.debug, .debugFast]) }
         let currentIndex = speeds.firstIndex(of: state.speed) ?? 0

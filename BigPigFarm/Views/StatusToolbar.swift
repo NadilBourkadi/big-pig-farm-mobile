@@ -51,9 +51,11 @@ struct StatusToolbar: View {
             )
             toolbarButton(
                 systemImage: "forward.fill",
-                label: "Speed",
+                label: gameState.speed.displayLabel,
                 action: onSpeedTapped
             )
+            .disabled(gameState.isPaused)
+            .opacity(gameState.isPaused ? 0.4 : 1.0)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
