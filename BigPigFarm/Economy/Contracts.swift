@@ -226,7 +226,7 @@ enum ContractGenerator {
         farmTier: Int,
         gameDay: Int,
         availableBiomes: [BiomeType],
-        gameState: GameState
+        gameState: any ContractGeneratorContext
     ) -> [BreedingContract] {
         var maxContracts = GameConfig.Contracts.maxActiveContracts
         if gameState.hasUpgrade("contract_negotiator") { maxContracts += 1 }
@@ -237,7 +237,7 @@ enum ContractGenerator {
         if farmTier >= 2 { availableDifficulties.append(.medium) }
         if farmTier >= 3 { availableDifficulties.append(.hard) }
         if farmTier >= 4 { availableDifficulties.append(.expert) }
-        if farmTier >= 5 && gameState.hasUpgrade("vip_contracts") {
+        if farmTier >= 5, gameState.hasUpgrade("vip_contracts") {
             availableDifficulties.append(.legendary)
         }
 

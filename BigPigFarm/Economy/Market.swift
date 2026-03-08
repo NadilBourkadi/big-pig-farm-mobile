@@ -47,13 +47,13 @@ enum Market {
 
     /// Calculate the total sale value of a pig including all multipliers.
     @MainActor
-    static func calculatePigValue(pig: GuineaPig, state: GameState) -> Int {
+    static func calculatePigValue(pig: GuineaPig, state: any MarketContext) -> Int {
         calculatePigValueBreakdown(pig: pig, state: state).total
     }
 
     /// Full multiplier breakdown for a pig's sale value.
     @MainActor
-    static func calculatePigValueBreakdown(pig: GuineaPig, state: GameState) -> PigValueBreakdown {
+    static func calculatePigValueBreakdown(pig: GuineaPig, state: any MarketContext) -> PigValueBreakdown {
         let base = GameConfig.Economy.commonPigValue
 
         let rarityMult: Double = switch pig.phenotype.rarity {
@@ -89,7 +89,7 @@ enum Market {
     }
 
     @MainActor
-    private static func perkMultiplier(pig: GuineaPig, state: GameState) -> Double {
+    private static func perkMultiplier(pig: GuineaPig, state: any MarketContext) -> Double {
         var mult = 1.0
         if state.hasUpgrade("market_connections") { mult *= 1.10 }
         if state.hasUpgrade("premium_branding") && rareAndAbove.contains(pig.phenotype.rarity) {
@@ -104,7 +104,7 @@ enum Market {
     /// Sell a pig: remove from state, pay out value + contract bonus, and log events.
     @discardableResult
     @MainActor
-    static func sellPig(state: GameState, pig: GuineaPig) -> SaleResult {
+    static func sellPig(state: any MarketContext, pig: GuineaPig) -> SaleResult {
         let value = calculatePigValue(pig: pig, state: state)
 
         var contractBonus = 0
@@ -155,7 +155,7 @@ enum Market {
 
     /// Aggregate market data for the HUD and market screen.
     @MainActor
-    static func getMarketInfo(state: GameState) -> MarketInfo {
+    static func getMarketInfo(state: any MarketContext) -> MarketInfo {
         let pigs = state.getPigsList()
         let totalValue = pigs.reduce(0) { $0 + calculatePigValue(pig: $1, state: state) }
 

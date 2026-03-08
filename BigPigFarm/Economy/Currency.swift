@@ -24,7 +24,7 @@ enum Currency {
     /// Add money to the game state and update total earnings.
     @discardableResult
     @MainActor
-    static func addMoney(state: GameState, amount: Int) -> Int {
+    static func addMoney(state: any CurrencyContext, amount: Int) -> Int {
         state.addMoney(amount)
         return amount
     }
@@ -32,13 +32,13 @@ enum Currency {
     /// Spend money from the game state. Returns false if insufficient funds.
     @discardableResult
     @MainActor
-    static func spendMoney(state: GameState, amount: Int) -> Bool {
+    static func spendMoney(state: any CurrencyContext, amount: Int) -> Bool {
         state.spendMoney(amount)
     }
 
     /// Check if the game state can afford the given amount.
     @MainActor
-    static func canAfford(state: GameState, amount: Int) -> Bool {
+    static func canAfford(state: any CurrencyContext, amount: Int) -> Bool {
         state.money >= amount
     }
 }

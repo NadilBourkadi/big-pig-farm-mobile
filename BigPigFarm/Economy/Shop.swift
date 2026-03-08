@@ -137,7 +137,7 @@ enum Shop {
     @discardableResult
     @MainActor
     static func purchaseItem(
-        state: GameState,
+        state: any ShopContext,
         item: ShopItem,
         position: GridPosition?
     ) -> Bool {
@@ -164,7 +164,7 @@ enum Shop {
     /// Remove a facility from the farm and refund its original shop cost.
     @discardableResult
     @MainActor
-    static func sellFacility(state: GameState, facility: Facility) -> Int {
+    static func sellFacility(state: any ShopContext, facility: Facility) -> Int {
         let refund = getFacilityCost(facilityType: facility.facilityType)
         _ = state.removeFacility(facility.id)
         Currency.addMoney(state: state, amount: refund)
@@ -180,14 +180,14 @@ enum Shop {
 
     /// The next tier upgrade the farm can work toward, or nil if at max tier.
     @MainActor
-    static func getNextTierUpgrade(state: GameState) -> TierUpgrade? {
+    static func getNextTierUpgrade(state: any ShopContext) -> TierUpgrade? {
         tierUpgrades.first { $0.tier == state.farmTier + 1 }
     }
 
     /// Check which requirements for the given tier upgrade are currently satisfied.
     @MainActor
     static func checkTierRequirements(
-        state: GameState,
+        state: any ShopContext,
         upgrade: TierUpgrade
     ) -> [String: Bool] {
         [
@@ -201,7 +201,7 @@ enum Shop {
     /// Purchase a farm tier upgrade when all requirements are met.
     @discardableResult
     @MainActor
-    static func purchaseTierUpgrade(state: GameState) -> Bool {
+    static func purchaseTierUpgrade(state: any ShopContext) -> Bool {
         guard let upgrade = getNextTierUpgrade(state: state) else { return false }
         let reqs = checkTierRequirements(state: state, upgrade: upgrade)
         guard reqs.values.allSatisfy({ $0 }) else { return false }
@@ -214,7 +214,7 @@ enum Shop {
 
     /// Total cost to purchase a new room of the given biome (base room cost + biome cost).
     @MainActor
-    static func getRoomTotalCost(state: GameState, biome: BiomeType) -> Int {
+    static func getRoomTotalCost(state: any ShopContext, biome: BiomeType) -> Int {
         guard let nextRoom = state.farm.nextRoomCost else { return 0 }
         let biomeCost = biomes[biome]?.cost ?? 0
         return nextRoom.cost + biomeCost
@@ -228,7 +228,7 @@ enum Shop {
     @MainActor
     static func findPlacementPosition(
         for facilityType: FacilityType,
-        in state: GameState
+        in state: any ShopContext
     ) -> GridPosition? {
         let probe = Facility.create(type: facilityType, x: 0, y: 0)
         return AutoArrange.findGridPosition(for: probe, in: state.farm)
@@ -247,7 +247,7 @@ enum Shop {
     /// Returns true if the purchase succeeded. Delegates to Upgrades.purchasePerk.
     @discardableResult
     @MainActor
-    static func purchasePerk(perkID: String, state: GameState) -> Bool {
+    static func purchasePerk(perkID: String, state: any UpgradesContext) -> Bool {
         Upgrades.purchasePerk(state: state, upgradeId: perkID)
     }
 
@@ -256,7 +256,7 @@ enum Shop {
     /// `state.farmTier` is guaranteed to be in [1..5] by `purchaseTierUpgrade` — the
     /// fallback in `getTierUpgrade` (tier 1) will never silently apply in practice.
     @MainActor
-    static func getFarmUpgradeInfo(state: GameState) -> RoomUpgradeInfo? {
+    static func getFarmUpgradeInfo(state: any ShopContext) -> RoomUpgradeInfo? {
         let currentTier = getTierUpgrade(tier: state.farmTier)
         guard state.farm.areas.count < currentTier.maxRooms else { return nil }
         guard let nextRoom = state.farm.nextRoomCost else { return nil }
@@ -283,7 +283,7 @@ enum Shop {
     /// or grid expansion failed.
     @discardableResult
     @MainActor
-    static func purchaseNewRoom(state: GameState, biome: BiomeType) -> Bool {
+    static func purchaseNewRoom(state: any ShopContext, biome: BiomeType) -> Bool {
         guard getFarmUpgradeInfo(state: state) != nil else { return false }
         let totalCost = getRoomTotalCost(state: state, biome: biome)
         guard Currency.spendMoney(state: state, amount: totalCost) else { return false }
@@ -304,7 +304,7 @@ enum Shop {
     /// Shift all pig and facility positions after a grid expansion.
     /// Applies the global entity offset plus any per-area repositioning delta.
     @MainActor
-    private static func shiftEntities(state: GameState, result: AddRoomResult) {
+    private static func shiftEntities(state: any ShopContext, result: AddRoomResult) {
         var pigs = state.getPigsList()
         for i in pigs.indices {
             let delta = pigs[i].currentAreaId.flatMap { result.roomDeltas[$0] }

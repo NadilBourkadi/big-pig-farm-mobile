@@ -71,9 +71,91 @@ protocol CullingContext: AnyObject {
     func logEvent(_ message: String, eventType: String)
 }
 
+// MARK: - CurrencyContext
+
+/// Read/write access to money for currency operations.
+@MainActor
+protocol CurrencyContext: AnyObject {
+    var money: Int { get }
+    func addMoney(_ amount: Int)
+    @discardableResult func spendMoney(_ amount: Int) -> Bool
+}
+
+// MARK: - AdoptionContext
+
+/// Adoption eligibility and spawn position checks.
+@MainActor
+protocol AdoptionContext: AnyObject {
+    var farm: FarmGrid { get set }
+    var isAtCapacity: Bool { get }
+    func hasUpgrade(_ upgradeID: String) -> Bool
+}
+
+// MARK: - MarketContext
+
+/// Pig valuation, sale, and contract fulfillment.
+@MainActor
+protocol MarketContext: CurrencyContext {
+    var contractBoard: ContractBoard { get set }
+    var farm: FarmGrid { get }
+    var totalPigsSold: Int { get set }
+    func getFacilitiesByType(_ type: FacilityType) -> [Facility]
+    func getPigsList() -> [GuineaPig]
+    func hasUpgrade(_ upgradeID: String) -> Bool
+    func logEvent(_ message: String, eventType: String)
+    func removeGuineaPig(_ pigID: UUID) -> GuineaPig?
+}
+
+// MARK: - UpgradesContext
+
+/// Perk purchase and immediate-effect application.
+@MainActor
+protocol UpgradesContext: CurrencyContext {
+    var farmTier: Int { get }
+    var purchasedUpgrades: Set<String> { get set }
+    func getFacilitiesList() -> [Facility]
+    func hasUpgrade(_ upgradeID: String) -> Bool
+    func logEvent(_ message: String, eventType: String)
+    func updateFacility(_ facility: Facility)
+}
+
+// MARK: - ShopContext
+
+/// Facility purchase/sale, tier upgrades, and room expansion.
+@MainActor
+protocol ShopContext: CurrencyContext {
+    var contractBoard: ContractBoard { get }
+    var farm: FarmGrid { get set }
+    var farmTier: Int { get set }
+    var pigdex: Pigdex { get }
+    var totalPigsBorn: Int { get }
+    func addFacility(_ facility: Facility) -> Bool
+    func getFacilitiesList() -> [Facility]
+    func getPigsList() -> [GuineaPig]
+    func hasUpgrade(_ upgradeID: String) -> Bool
+    func logEvent(_ message: String, eventType: String)
+    @discardableResult func removeFacility(_ facilityID: UUID) -> Facility?
+    func updateFacility(_ facility: Facility)
+    func updateGuineaPig(_ pig: GuineaPig)
+}
+
+// MARK: - ContractGeneratorContext
+
+/// Upgrade queries for contract generation.
+@MainActor
+protocol ContractGeneratorContext: AnyObject {
+    func hasUpgrade(_ upgradeID: String) -> Bool
+}
+
 // MARK: - GameState Conformance
 
 extension GameState: NeedsContext {}
 extension GameState: BreedingContext {}
 extension GameState: BirthContext {}
 extension GameState: CullingContext {}
+extension GameState: CurrencyContext {}
+extension GameState: AdoptionContext {}
+extension GameState: MarketContext {}
+extension GameState: UpgradesContext {}
+extension GameState: ShopContext {}
+extension GameState: ContractGeneratorContext {}
