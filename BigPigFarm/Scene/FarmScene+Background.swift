@@ -35,7 +35,7 @@ extension FarmScene {
         let image = renderer.image { ctx in
             let cg = ctx.cgContext
             // Base golden-tan — derived from SceneConstants.outOfBoundsColor (single source of truth)
-            UIColor(cgColor: SceneConstants.outOfBoundsColor.cgColor).setFill()
+            SceneConstants.outOfBoundsColor.setFill()
             cg.fill(rect)
             // Dark and light straw strokes — horizontal runs scattered across the tile
             let dark = UIColor(red: 0.45, green: 0.35, blue: 0.15, alpha: 1.0)
