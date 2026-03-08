@@ -49,7 +49,7 @@ struct StatusToolbar: View {
             )
             toolbarButton(
                 systemImage: "forward.fill",
-                label: "Speed",
+                label: gameState.speed.displayLabel,
                 action: onSpeedTapped
             )
         }

@@ -189,6 +189,35 @@ struct StatusBarSpeedTests {
             #expect(!speed.displayLabel.isEmpty)
         }
     }
+
+    @Test func displayLabelMatchesExpectedValuesForAllSpeeds() {
+        #expect(GameSpeed.paused.displayLabel == "0x")
+        #expect(GameSpeed.normal.displayLabel == "1x")
+        #expect(GameSpeed.fast.displayLabel == "2x")
+        #expect(GameSpeed.faster.displayLabel == "5x")
+        #expect(GameSpeed.fastest.displayLabel == "20x")
+        #expect(GameSpeed.debug.displayLabel == "100x")
+        #expect(GameSpeed.debugFast.displayLabel == "300x")
+    }
+
+    @Test @MainActor func speedLabelReflectsCurrentGameStateSpeed() {
+        let state = makeGameState()
+        state.speed = .normal
+        #expect(state.speed.displayLabel == "1x")
+        state.speed = .fast
+        #expect(state.speed.displayLabel == "2x")
+        state.speed = .fastest
+        #expect(state.speed.displayLabel == "20x")
+    }
+
+    @Test @MainActor func speedLabelRemainsCorrectWhilePaused() {
+        let state = makeGameState()
+        // Pausing the game does NOT change the speed property —
+        // the speed button should still show the last active speed.
+        state.speed = .faster
+        state.isPaused = true
+        #expect(state.speed.displayLabel == "5x")
+    }
 }
 
 // MARK: - GameState Property Tests
