@@ -46,6 +46,7 @@
 
 - [x] Implement `GameState` observable container
 - [x] Implement context protocols (`NeedsContext`, `BreedingContext`, `BirthContext`, `CullingContext`)
+- [x] Introduce Economy context protocols (`CurrencyContext`, `AdoptionContext`, `MarketContext`, `UpgradesContext`, `ShopContext`, `ContractGeneratorContext`) — bead d43
 - [x] Implement `GameEngine` tick loop
 - [x] Implement `FarmGrid` with cell types
 - [x] Implement `Pathfinding` (GKGridGraph integration)
