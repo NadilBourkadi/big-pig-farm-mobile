@@ -153,6 +153,7 @@ struct ContentView: View {
                     onPigListTapped: { showPigList = true },
                     onBreedingTapped: { showBreeding = true },
                     onAlmanacTapped: { showAlmanac = true },
+                    onRefillTapped: { gameState.manualRefillAll() },
                     onEditTapped: { toggleEditMode() },
                     onPauseTapped: { togglePause() },
                     onSpeedTapped: { cycleSpeed() }
