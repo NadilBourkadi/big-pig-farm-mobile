@@ -202,6 +202,36 @@ struct FacilityBonusLabel: View {
     }
 }
 
+// MARK: - HUDButton
+
+/// Reusable icon-over-label button for HUD toolbars and action panels.
+///
+/// Unifies the formerly duplicated `toolbarButton` (StatusToolbar) and
+/// `panelButton` (EditModeActionPanel) into a single shared component.
+struct HUDButton: View {
+    let systemImage: String
+    let label: String
+    var isActive: Bool = false
+    var isDisabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 16))
+                Text(label)
+                    .font(.system(size: 9))
+            }
+            .foregroundStyle(isActive ? .yellow : .white)
+            .opacity(isDisabled ? 0.4 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .accessibilityLabel(label)
+    }
+}
+
 // MARK: - PigPortraitView
 
 /// Displays a pre-rendered Pigdex portrait image from the asset catalog.
