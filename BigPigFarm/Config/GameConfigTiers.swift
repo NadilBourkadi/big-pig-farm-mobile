@@ -16,6 +16,10 @@ enum GameSpeed: Int, Codable, CaseIterable, Sendable {
     case debugFast = 900
 
     /// Human-readable label for the speed control UI.
+    ///
+    /// Labels represent real-time speed relative to normal (3 tps = 1×),
+    /// not the raw tick-rate value. e.g. debugFast has raw value 900 tps
+    /// but displays "300x" because 900 / 3 = 300× real time.
     var displayLabel: String {
         switch self {
         case .paused: "0x"
