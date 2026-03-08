@@ -200,14 +200,16 @@ struct StatusBarSpeedTests {
         #expect(GameSpeed.debugFast.displayLabel == "300x")
     }
 
-    @Test @MainActor func speedLabelReflectsCurrentGameStateSpeed() {
+    @Test @MainActor func speedLabelReflectsCurrentGameStateSpeedForAllCases() {
+        let expected: [GameSpeed: String] = [
+            .paused: "0x", .normal: "1x", .fast: "2x",
+            .faster: "5x", .fastest: "20x", .debug: "100x", .debugFast: "300x"
+        ]
         let state = makeGameState()
-        state.speed = .normal
-        #expect(state.speed.displayLabel == "1x")
-        state.speed = .fast
-        #expect(state.speed.displayLabel == "2x")
-        state.speed = .fastest
-        #expect(state.speed.displayLabel == "20x")
+        for speed in GameSpeed.allCases {
+            state.speed = speed
+            #expect(state.speed.displayLabel == expected[speed])
+        }
     }
 
     @Test @MainActor func speedLabelRemainsCorrectWhilePaused() {
