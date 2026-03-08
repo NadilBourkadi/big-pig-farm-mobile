@@ -27,33 +27,32 @@ struct StatusToolbar: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            toolbarButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
-            toolbarButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
-            toolbarButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
-            toolbarButton(systemImage: "book.fill", label: "Almanac", action: onAlmanacTapped)
+            HUDButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
+            HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
+            HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
+            HUDButton(systemImage: "book.fill", label: "Almanac", action: onAlmanacTapped)
 
             refillButton
 
             Spacer()
 
-            toolbarButton(
+            HUDButton(
                 systemImage: isEditMode ? "pencil.slash" : "pencil",
                 label: "Edit",
-                action: onEditTapped,
-                isActive: isEditMode
+                isActive: isEditMode,
+                action: onEditTapped
             )
-            toolbarButton(
+            HUDButton(
                 systemImage: gameState.isPaused ? "play.fill" : "pause.fill",
                 label: gameState.isPaused ? "Play" : "Pause",
                 action: onPauseTapped
             )
-            toolbarButton(
+            HUDButton(
                 systemImage: "forward.fill",
                 label: gameState.speed.displayLabel,
+                isDisabled: gameState.isPaused,
                 action: onSpeedTapped
             )
-            .disabled(gameState.isPaused)
-            .opacity(gameState.isPaused ? 0.4 : 1.0)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -83,24 +82,6 @@ private extension StatusToolbar {
         .buttonStyle(.plain)
         .disabled(!gameState.isRefillEnabled)
         .opacity(gameState.isRefillEnabled ? 1.0 : 0.4)
-    }
-
-    func toolbarButton(
-        systemImage: String,
-        label: String,
-        action: @escaping () -> Void,
-        isActive: Bool = false
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 16))
-                Text(label)
-                    .font(.system(size: 9))
-            }
-            .foregroundStyle(isActive ? .yellow : .white)
-        }
-        .buttonStyle(.plain)
     }
 }
 
