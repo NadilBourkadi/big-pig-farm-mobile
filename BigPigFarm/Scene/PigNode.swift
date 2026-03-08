@@ -42,8 +42,9 @@ class PigNode: SKSpriteNode {
 
         super.init(texture: texture, color: .clear, size: nodeSize)
 
-        label.text = pig.name
-        label.position = CGPoint(x: 0, y: nodeSize.height / 2 + 4)
+        nameLabel.verticalAlignmentMode = .top
+        nameLabel.text = pig.name
+        nameLabel.position = CGPoint(x: 0, y: -(nodeSize.height / 2) - 2)
         addChild(nameLabel)
 
         position = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
@@ -71,7 +72,7 @@ class PigNode: SKSpriteNode {
                     width: artSize.width * SpriteAssets.pointsPerArtPixel,
                     height: artSize.height * SpriteAssets.pointsPerArtPixel
                 )
-                nameLabel.position = CGPoint(x: 0, y: size.height / 2 + 4)
+                nameLabel.position = CGPoint(x: 0, y: -(size.height / 2) - 2)
             } else {
                 isBaby = newIsBaby
             }
