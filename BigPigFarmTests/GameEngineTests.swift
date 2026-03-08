@@ -132,6 +132,20 @@ import Foundation
     #expect(state.speed == .fast)
 }
 
+@Test @MainActor func cycleSpeedResumesFromCorrectSpeed() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    state.speed = .fast
+    state.isPaused = true
+    _ = engine.cycleSpeed()
+    #expect(state.speed == .fast)
+
+    state.isPaused = false
+    let result = engine.cycleSpeed()
+    #expect(result == .faster)
+    #expect(state.speed == .faster)
+}
+
 // MARK: - Speed Raw Values
 
 @Test @MainActor func speedMultiplierValues() {
