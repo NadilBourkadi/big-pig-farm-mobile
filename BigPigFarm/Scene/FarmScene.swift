@@ -86,7 +86,7 @@ class FarmScene: SKScene {
     private var lastGridGeneration: Int = -1
     private var farmWidth: Int = 0
     private var farmHeight: Int = 0
-    var outOfBoundsTileMap: SKTileMapNode?
+    var outOfBoundsTileMap: SKTileMapNode? // internal: written by FarmScene+Background.swift (cross-file extension)
 
     // MARK: - Indicators
 

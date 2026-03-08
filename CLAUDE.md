@@ -15,7 +15,13 @@
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
-- Test: `xcodebuild -scheme BigPigFarmTests -destination 'platform=iOS Simulator,name=iPhone 16e' test` (uses a different sim so tests don't kill the app running via `/sim`)
+- Test: **always use a per-worktree simulator** — multiple agents run in parallel and share the machine. Never target a shared simulator name like `iPhone 16e` directly; another agent may be using it simultaneously. Instead:
+  1. `UDID=$(xcrun simctl create "BPF-Test-<slug>" "iPhone 16e" "com.apple.CoreSimulator.SimRuntime.iOS-26-2")`
+  2. `xcrun simctl boot "$UDID"`
+  3. `xcodebuild -scheme BigPigFarmTests -destination "platform=iOS Simulator,id=$UDID" test`
+  4. `xcrun simctl delete "$UDID"` (always, even on failure)
+  Replace `<slug>` with a short identifier from the worktree/bead (e.g. `44n`). Each worktree step is a separate Bash call (no chaining).
+- Never run `xcodebuild` with `run_in_background: true` — simulators require exclusive access; background + retry causes two builds to fight over the same device.
 - Lint: `swiftlint lint`
 
 ## Tech Stack
@@ -66,7 +72,8 @@ Views (SwiftUI) + Scene (SpriteKit)
 
 ## Git Workflow — CRITICAL
 
-- **NEVER commit on main.** Always create a feature branch.
+- **ALL implementation work happens in a worktree — no exceptions.** Task size is irrelevant. Running `/implement` directly in the main repo directory is forbidden; it strands the main repo on a feature branch. Use `EnterWorktree` if not already in a worktree; if already inside `.claude/worktrees/`, create a fresh branch off `origin/main` directly.
+- **NEVER commit on main.** Always create a feature branch. This applies to every change without exception — code, tests, docs, CLAUDE.md itself, config files. "It's just a one-liner" and "it's only a docs change" are not exceptions.
 - **Always push and open PR** when work is complete.
 - **Merge with rebase** (not squash, not merge commit).
 - **NO "Co-Authored-By" lines** in commits.
