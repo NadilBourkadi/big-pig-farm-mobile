@@ -141,7 +141,7 @@ enum Upgrades {
 
     /// All upgrade definitions available at or below the current farm tier.
     @MainActor
-    static func getAvailablePerks(state: GameState) -> [UpgradeDefinition] {
+    static func getAvailablePerks(state: any UpgradesContext) -> [UpgradeDefinition] {
         upgrades.values
             .filter { $0.requiredTier <= state.farmTier }
             .sorted { $0.requiredTier < $1.requiredTier }
@@ -150,7 +150,7 @@ enum Upgrades {
     /// Purchase a perk upgrade. Returns false if ineligible or insufficient funds.
     @discardableResult
     @MainActor
-    static func purchasePerk(state: GameState, upgradeId: String) -> Bool {
+    static func purchasePerk(state: any UpgradesContext, upgradeId: String) -> Bool {
         guard let def = upgrades[upgradeId] else { return false }
         guard def.requiredTier <= state.farmTier else { return false }
         guard !state.purchasedUpgrades.contains(upgradeId) else { return false }
@@ -164,14 +164,14 @@ enum Upgrades {
     // MARK: - Private Helpers
 
     @MainActor
-    private static func applyImmediateEffect(state: GameState, upgradeId: String) {
+    private static func applyImmediateEffect(state: any UpgradesContext, upgradeId: String) {
         if upgradeId == "bulk_feeders" {
             applyBulkFeeders(state: state)
         }
     }
 
     @MainActor
-    private static func applyBulkFeeders(state: GameState) {
+    private static func applyBulkFeeders(state: any UpgradesContext) {
         for facility in state.getFacilitiesList() where isFoodWaterType(facility.facilityType) {
             var updated = facility
             updated.maxAmount *= 2

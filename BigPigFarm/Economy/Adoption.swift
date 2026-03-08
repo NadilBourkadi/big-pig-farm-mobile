@@ -11,7 +11,7 @@ enum Adoption {
     ///
     /// Returns `nil` if eligible, or a human-readable reason string if not.
     @MainActor
-    static func isEligibleForAdoption(state: GameState) -> String? {
+    static func isEligibleForAdoption(state: any AdoptionContext) -> String? {
         if state.isAtCapacity {
             return "Farm is at capacity! Upgrade or sell pigs."
         }
@@ -26,7 +26,7 @@ enum Adoption {
     ///
     /// Maps from: `calculate_adoption_cost()` in Python adoption.py.
     @MainActor
-    static func calculateAdoptionCost(_ pig: GuineaPig, state: GameState) -> Int {
+    static func calculateAdoptionCost(_ pig: GuineaPig, state: any AdoptionContext) -> Int {
         var cost = Double(GameConfig.Economy.adoptionBaseCost)
         cost *= rarityMultiplier(pig.phenotype.rarity)
         if let originTag = pig.originTag {
@@ -104,7 +104,7 @@ enum Adoption {
     ///
     /// Maps from: `_find_spawn_position()` in Python shop.py.
     @MainActor
-    static func findSpawnPosition(in state: GameState) -> GridPosition? {
+    static func findSpawnPosition(in state: any AdoptionContext) -> GridPosition? {
         state.farm.findRandomWalkable()
     }
 
