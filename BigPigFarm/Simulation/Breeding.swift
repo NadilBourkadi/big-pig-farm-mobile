@@ -10,7 +10,7 @@ enum Breeding {
 
     /// Last game day a "no eligible pigs" warning was logged for auto-pair.
     /// Prevents log spam when the farm has no eligible breeders.
-    nonisolated(unsafe) private static var lastBreedingWarningDay: Int = -1
+    @MainActor private static var lastBreedingWarningDay: Int = -1
 
     // MARK: - Public API
 
