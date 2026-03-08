@@ -113,4 +113,5 @@
 - [x] Implement auto-save (every 300 ticks)
 - [x] Add app icon
 - [ ] Polish animations and transitions
+- [x] Add manual Refill All HUD button for food/water facilities (bead 4r8)
 - [x] TestFlight build and testing (code-complete: PrivacyInfo, metadata, 1.0.0, 1187 tests passing, clean build; upload gated on paid Apple Developer account)
