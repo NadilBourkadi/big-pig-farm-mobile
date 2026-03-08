@@ -13,7 +13,7 @@ enum SceneConstants {
     static let maxCameraScale: CGFloat = 3.0
     static let defaultCameraScale: CGFloat = 1.0
     /// Golden hay base tone — matched to the programmatic hay tile texture's background pixel.
-    static let outOfBoundsColor = SKColor(red: 0.68, green: 0.57, blue: 0.30, alpha: 1.0)
+    static let outOfBoundsColor = SKColor(red: 0.42, green: 0.34, blue: 0.16, alpha: 1.0)
     /// Side length in tiles of the out-of-bounds hay tile map.
     /// 200 × 32 pt = 6400 pt — covers the 96×56 max farm plus worst-case viewport margin at minCameraScale (0.5).
     static let outOfBoundsTileMapDimension = 200
