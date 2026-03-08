@@ -67,7 +67,7 @@
       "Bash(xcrun simctl list:*)",
       "Bash(open -a Simulator:*)",
       "Bash(xcrun:*)",
-      "Bash(bash:scripts/run-tests.sh)"
+      "Bash(bash scripts/run-tests.sh)"
     ]
   },
   "outputStyle": "Explanatory",
