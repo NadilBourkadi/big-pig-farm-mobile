@@ -329,6 +329,18 @@ extension GameState {
             .reduce(0) { $0 + $1.info.refillCost }
     }
 
+    /// True when at least one refillable facility is below capacity.
+    var hasFacilitiesToRefill: Bool {
+        refillableCount > 0
+    }
+
+    /// True when the player can afford the total refill cost.
+    /// Returns false when there are no facilities to refill.
+    var canAffordRefill: Bool {
+        let cost = totalRefillCost
+        return cost > 0 && money >= cost
+    }
+
     /// True when there is at least one partially-drained refillable facility
     /// and the player can afford the total cost. Evaluates in a single O(n) pass;
     /// use this for UI disabled-state checks instead of combining refillableCount
