@@ -20,6 +20,7 @@ struct StatusToolbar: View {
     var onPigListTapped: () -> Void
     var onBreedingTapped: () -> Void
     var onAlmanacTapped: () -> Void
+    var onRefillTapped: () -> Void
     var onEditTapped: () -> Void
     var onPauseTapped: () -> Void
     var onSpeedTapped: () -> Void
@@ -30,6 +31,10 @@ struct StatusToolbar: View {
             toolbarButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
             toolbarButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
             toolbarButton(systemImage: "book.fill", label: "Almanac", action: onAlmanacTapped)
+
+            toolbarButton(systemImage: "drop.fill", label: "Refill", action: onRefillTapped)
+                .disabled(!gameState.isRefillEnabled)
+                .opacity(gameState.isRefillEnabled ? 1.0 : 0.4)
 
             Spacer()
 
@@ -96,6 +101,7 @@ private struct StatusToolbarPreview: View {
             onPigListTapped: {},
             onBreedingTapped: {},
             onAlmanacTapped: {},
+            onRefillTapped: {},
             onEditTapped: { editMode.toggle() },
             onPauseTapped: {},
             onSpeedTapped: {}

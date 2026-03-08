@@ -310,3 +310,67 @@ extension GameState {
         purchasedUpgrades.contains(upgradeID)
     }
 }
+
+// MARK: - Manual Refill
+
+extension GameState {
+    /// Count of facilities that are below max capacity and have a non-zero refill cost.
+    var refillableCount: Int {
+        facilities.values
+            .filter { $0.info.refillCost > 0 && $0.currentAmount < $0.maxAmount }
+            .count
+    }
+
+    /// Total Squeaks cost to top up all refillable facilities.
+    /// Returns 0 when all such facilities are already full or none exist.
+    var totalRefillCost: Int {
+        facilities.values
+            .filter { $0.info.refillCost > 0 && $0.currentAmount < $0.maxAmount }
+            .reduce(0) { $0 + $1.info.refillCost }
+    }
+
+    /// True when there is at least one partially-drained refillable facility
+    /// and the player can afford the total cost. Evaluates in a single O(n) pass;
+    /// use this for UI disabled-state checks instead of combining refillableCount
+    /// and totalRefillCost separately.
+    var isRefillEnabled: Bool {
+        var cost = 0
+        var hasEligible = false
+        for facility in facilities.values {
+            guard facility.info.refillCost > 0, facility.currentAmount < facility.maxAmount else { continue }
+            hasEligible = true
+            cost += facility.info.refillCost
+        }
+        return hasEligible && money >= cost
+    }
+
+    /// Refill all eligible food and water facilities in one action.
+    ///
+    /// Deducts the total Squeaks cost from the player's balance atomically.
+    /// Returns true on success, false when there is nothing to refill or
+    /// the player cannot afford the total cost.
+    @discardableResult
+    func manualRefillAll() -> Bool {
+        let eligible = facilities.values.filter {
+            $0.info.refillCost > 0 && $0.currentAmount < $0.maxAmount
+        }
+        guard !eligible.isEmpty else { return false }
+        let totalCost = eligible.reduce(0) { $0 + $1.info.refillCost }
+        guard spendMoney(totalCost) else {
+            logEvent("Not enough Squeaks to refill (need \(Currency.formatCurrency(totalCost)))",
+                     eventType: "info")
+            return false
+        }
+        for facility in eligible {
+            var mutableFacility = facility
+            mutableFacility.refill()
+            updateFacility(mutableFacility)
+        }
+        let noun = eligible.count == 1 ? "facility" : "facilities"
+        logEvent(
+            "Refilled \(eligible.count) \(noun) (-\(Currency.formatCurrency(totalCost)))",
+            eventType: "purchase"
+        )
+        return true
+    }
+}
