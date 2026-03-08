@@ -173,6 +173,80 @@ private func addPartialWaterBottle(to state: GameState, x: Int, y: Int, amount: 
     #expect(state.refillableCount == 0)
 }
 
+// MARK: - hasFacilitiesToRefill
+
+@Test @MainActor func hasFacilitiesToRefillIsFalseWithNoFacilities() {
+    let state = GameState()
+    #expect(!state.hasFacilitiesToRefill)
+}
+
+@Test @MainActor func hasFacilitiesToRefillIsFalseWhenAllFull() {
+    let state = GameState()
+    _ = state.addFacility(Facility.create(type: .foodBowl, x: 5, y: 5))
+    #expect(!state.hasFacilitiesToRefill)
+}
+
+@Test @MainActor func hasFacilitiesToRefillIsTrueWhenPartiallyDrained() {
+    let state = GameState()
+    addPartialFoodBowl(to: state, x: 5, y: 5)
+    #expect(state.hasFacilitiesToRefill)
+}
+
+// MARK: - canAffordRefill
+
+@Test @MainActor func canAffordRefillIsFalseWithNoFacilities() {
+    let state = GameState()
+    state.money = 1000
+    #expect(!state.canAffordRefill)
+}
+
+@Test @MainActor func canAffordRefillIsFalseWhenInsufficientFunds() {
+    let state = GameState()
+    state.money = 1  // food bowl costs 5
+    addPartialFoodBowl(to: state, x: 5, y: 5)
+    #expect(state.hasFacilitiesToRefill)
+    #expect(!state.canAffordRefill)
+}
+
+@Test @MainActor func canAffordRefillIsTrueWhenExactFunds() {
+    let state = GameState()
+    addPartialFoodBowl(to: state, x: 5, y: 5)
+    state.money = state.totalRefillCost  // exactly enough
+    #expect(state.canAffordRefill)
+}
+
+@Test @MainActor func canAffordRefillIsTrueWhenSufficientFunds() {
+    let state = GameState()
+    state.money = 100
+    addPartialFoodBowl(to: state, x: 5, y: 5)
+    #expect(state.hasFacilitiesToRefill)
+    #expect(state.canAffordRefill)
+}
+
+// MARK: - Three-state distinction
+
+@Test @MainActor func threeStateDistinction() {
+    let state = GameState()
+
+    // State 1: No facilities to refill
+    #expect(!state.hasFacilitiesToRefill)
+    #expect(!state.canAffordRefill)
+    #expect(!state.isRefillEnabled)
+
+    // State 2: Facilities need refilling but can't afford
+    addPartialFoodBowl(to: state, x: 5, y: 5)
+    state.money = 1  // food bowl costs 5
+    #expect(state.hasFacilitiesToRefill)
+    #expect(!state.canAffordRefill)
+    #expect(!state.isRefillEnabled)
+
+    // State 3: Facilities need refilling and can afford
+    state.money = 100
+    #expect(state.hasFacilitiesToRefill)
+    #expect(state.canAffordRefill)
+    #expect(state.isRefillEnabled)
+}
+
 @Test @MainActor func manualRefillAllRefillsMultipleFacilities() {
     let state = GameState()
     state.money = 100

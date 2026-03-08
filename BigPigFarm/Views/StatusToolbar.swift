@@ -32,9 +32,7 @@ struct StatusToolbar: View {
             toolbarButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
             toolbarButton(systemImage: "book.fill", label: "Almanac", action: onAlmanacTapped)
 
-            toolbarButton(systemImage: "drop.fill", label: "Refill", action: onRefillTapped)
-                .disabled(!gameState.isRefillEnabled)
-                .opacity(gameState.isRefillEnabled ? 1.0 : 0.4)
+            refillButton
 
             Spacer()
 
@@ -64,6 +62,27 @@ struct StatusToolbar: View {
 // MARK: - Sub-views
 
 private extension StatusToolbar {
+    var refillButton: some View {
+        Button(action: onRefillTapped) {
+            VStack(spacing: 2) {
+                Image(systemName: "drop.fill")
+                    .font(.system(size: 16))
+                if gameState.hasFacilitiesToRefill {
+                    Text(Currency.formatCurrency(gameState.totalRefillCost))
+                        .font(.system(size: 9))
+                        .foregroundStyle(gameState.canAffordRefill ? .green : .red)
+                } else {
+                    Text("Refill")
+                        .font(.system(size: 9))
+                }
+            }
+            .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
+        .disabled(!gameState.isRefillEnabled)
+        .opacity(gameState.isRefillEnabled ? 1.0 : 0.4)
+    }
+
     func toolbarButton(
         systemImage: String,
         label: String,
