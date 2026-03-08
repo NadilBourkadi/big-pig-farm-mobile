@@ -122,6 +122,16 @@ import Foundation
     #expect(state.speed == .paused)
 }
 
+@Test @MainActor func cycleSpeedNoOpWhilePaused() {
+    let state = GameState()
+    let engine = GameEngine(state: state)
+    state.speed = .fast
+    state.isPaused = true
+    let result = engine.cycleSpeed()
+    #expect(result == .fast)
+    #expect(state.speed == .fast)
+}
+
 // MARK: - Speed Raw Values
 
 @Test @MainActor func speedMultiplierValues() {
