@@ -119,3 +119,4 @@
 - [x] TestFlight build and testing (code-complete: PrivacyInfo, metadata, 1.0.0, 1187 tests passing, clean build; upload gated on paid Apple Developer account)
 - [x] Extract shared `HUDButton` component from duplicated toolbar/panel buttons (bead 42b)
 - [x] Extract shared `InfoRow` component (duplicated in PigDetailView/AlmanacView with inconsistent fonts) (bead 1h1)
+- [x] Extract shared `StatusBadge` component from duplicated pill badges (bead 9r3)
