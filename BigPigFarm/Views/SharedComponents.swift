@@ -43,7 +43,7 @@ func formatFacilityBonuses(_ facilityType: FacilityType) -> String {
 /// Map a BaseColor to the nearest SwiftUI Color for display.
 func pigColorSwiftUI(_ baseColor: BaseColor) -> Color {
     switch baseColor {
-    case .black: return .black
+    case .black: return Color(white: 0.15)
     case .chocolate: return .brown
     case .golden: return .yellow
     case .cream: return Color(red: 1.0, green: 0.95, blue: 0.8)
