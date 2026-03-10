@@ -71,16 +71,16 @@ private extension PigDetailView {
         let breakdown = Market.calculatePigValueBreakdown(pig: pig, state: gameState)
         return VStack(alignment: .leading, spacing: 6) {
             sectionHeader("Basic Info")
-            infoRow("Age", ageDescription)
-            infoRow("Phenotype", pig.phenotype.displayName)
-            infoRow("Area", areaName)
-            infoRow("Birth Area", birthAreaName)
+            InfoRow(label: "Age", value: ageDescription)
+            InfoRow(label: "Phenotype", value: pig.phenotype.displayName)
+            InfoRow(label: "Area", value: areaName)
+            InfoRow(label: "Birth Area", value: birthAreaName)
             if let biome = pig.preferredBiome {
-                infoRow("Preferred Biome", biome.capitalized)
+                InfoRow(label: "Preferred Biome", value: biome.capitalized)
             }
-            infoRow("Sale Value", "\(Currency.formatCurrency(breakdown.total))")
+            InfoRow(label: "Sale Value", value: "\(Currency.formatCurrency(breakdown.total))")
             if let origin = pig.originTag {
-                infoRow("Origin", origin)
+                InfoRow(label: "Origin", value: origin)
             }
         }
     }
@@ -144,10 +144,10 @@ private extension PigDetailView {
     var breedingSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("Breeding")
-            infoRow("Status", formatBreedingStatus(pig, verbose: true))
-            infoRow("Lock", pig.breedingLocked ? "Locked" : "Unlocked")
+            InfoRow(label: "Status", value: formatBreedingStatus(pig, verbose: true))
+            InfoRow(label: "Lock", value: pig.breedingLocked ? "Locked" : "Unlocked")
             if pig.isBaby {
-                infoRow("Auto-sell at adulthood", pig.markedForSale ? "Yes" : "No")
+                InfoRow(label: "Auto-sell at adulthood", value: pig.markedForSale ? "Yes" : "No")
             }
         }
     }
@@ -159,8 +159,8 @@ private extension PigDetailView {
     var familySection: some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("Family")
-            infoRow("Mother", parentName(id: pig.motherId))
-            infoRow("Father", parentName(id: pig.fatherId))
+            InfoRow(label: "Mother", value: parentName(id: pig.motherId))
+            InfoRow(label: "Father", value: parentName(id: pig.fatherId))
         }
     }
 
@@ -186,7 +186,7 @@ private extension PigDetailView {
             locusRow("Dilution (D)", genotype.dLocus)
             Divider()
             let summary = carrierSummary(pig.genotype)
-            infoRow("Carriers", summary.isEmpty ? "None" : summary)
+            InfoRow(label: "Carriers", value: summary.isEmpty ? "None" : summary)
         }
     }
 
@@ -208,12 +208,12 @@ private extension PigDetailView {
     var aiStateSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("Current Activity")
-            infoRow("State", pig.behaviorState.rawValue.capitalized)
+            InfoRow(label: "State", value: pig.behaviorState.rawValue.capitalized)
             if let target = pig.targetPosition {
-                infoRow("Target", "(\(target.x), \(target.y))")
+                InfoRow(label: "Target", value: "(\(target.x), \(target.y))")
             }
             if !pig.path.isEmpty {
-                infoRow("Path steps", "\(pig.path.count)")
+                InfoRow(label: "Path steps", value: "\(pig.path.count)")
             }
         }
     }
@@ -228,16 +228,6 @@ private extension PigDetailView {
             .padding(.top, 4)
     }
 
-    func infoRow(_ label: String, _ value: String) -> some View {
-        HStack(alignment: .top) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: 120, alignment: .leading)
-            Text(value)
-                .font(.caption)
-        }
-    }
 }
 
 // MARK: - Preview
