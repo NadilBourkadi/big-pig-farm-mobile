@@ -130,7 +130,7 @@ struct NeedBar: View {
 ///
 /// Replaces ad-hoc pill constructions in ShopView, AlmanacView,
 /// BreedingPairTab, and AdoptionView.
-struct StatusBadge: View {
+struct StatusBadge: View, Sendable {
     let label: String
     let color: Color
     var style: Style = .opaque
