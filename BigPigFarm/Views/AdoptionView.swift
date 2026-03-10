@@ -43,10 +43,19 @@ struct AdoptionView: View {
                     )
                 }
             }
-
-            if let pig = selectedPig {
+        }
+        .sheet(item: $selectedPig) { pig in
+            NavigationStack {
                 adoptionDetail(pig: pig)
+                    .navigationTitle(pig.name)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { selectedPig = nil }
+                        }
+                    }
             }
+            .presentationDetents([.medium])
         }
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
@@ -161,7 +170,6 @@ extension AdoptionView {
                 .disabled(!canAfford || gameState.isAtCapacity)
         }
         .padding()
-        .background(.regularMaterial)
     }
 
     /// Adopt the selected pig.
