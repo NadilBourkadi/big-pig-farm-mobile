@@ -99,11 +99,15 @@ Write a brief implementation summary to `.tmp/summary-<bead-id>.md` capturing: w
    - Preserve logically distinct atomic commits — do NOT collapse everything into one
    - Only squash WIP/fixup commits into their logical parent
    - Write messages with the **Write** tool to `.tmp/commit-msg.txt`, then `git commit -F .tmp/commit-msg.txt`
-6. **Push and open PR** — `git push -u origin <branch>` then `gh pr create`
-7. **Present PR URL and summary to the user. STOP and wait for explicit approval.** Do NOT merge until the user says to proceed (e.g. "go ahead", "merge it", "lgtm", "approved"). The PR must stay open until the user has reviewed it.
-8. **Merge (after user approval)** — `gh pr merge <number> --rebase`. We do the merge ourselves after approval; the user should not need to run any git commands.
-9. **Sync main repo** — `git -C /Users/nadilbourkadi/Dev/big-pig-farm-mobile pull origin main`. This keeps the main repo's local main branch up to date.
-10. **Ready for next task.** Tell the user: "Task complete. Run `/clear` to reset context, then `/implement` for the next task." **Do NOT tell the user to close the session.** The worktree is reusable — `/clear` resets conversation context while keeping the worktree directory. The next `/implement` will detect it's in a worktree and create a fresh branch off `origin/main`.
+6. **Sync with main before pushing** — always do this, even if the branch was just created:
+   - `git fetch origin main`
+   - `git log HEAD..origin/main --oneline` — if any commits appear, rebase: `git rebase origin/main`
+   - Resolve any conflicts, then confirm `git log origin/main..HEAD` shows only your commits
+7. **Push and open PR** — `git push -u origin <branch>` (use `--force-with-lease` if rebased) then `gh pr create`
+8. **Present PR URL and summary to the user. STOP and wait for explicit approval.** Do NOT merge until the user says to proceed (e.g. "go ahead", "merge it", "lgtm", "approved"). The PR must stay open until the user has reviewed it.
+9. **Merge (after user approval)** — `gh pr merge <number> --rebase`. We do the merge ourselves after approval; the user should not need to run any git commands.
+10. **Sync main repo** — `git -C /Users/nadilbourkadi/Dev/big-pig-farm-mobile pull origin main`. This keeps the main repo's local main branch up to date.
+11. **Ready for next task.** Tell the user: "Task complete. Run `/clear` to reset context, then `/implement` for the next task." **Do NOT tell the user to close the session.** The worktree is reusable — `/clear` resets conversation context while keeping the worktree directory. The next `/implement` will detect it's in a worktree and create a fresh branch off `origin/main`.
 
 ### Git commands — CRITICAL
 

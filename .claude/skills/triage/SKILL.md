@@ -114,6 +114,8 @@ bd update <id> --description "<BEAD_DESCRIPTION>"
 
 Then invoke `Skill("implement")` with the new bead ID as the argument.
 
+**CRITICAL — NO ASKING PERMISSION:** Do NOT present the findings to the user and ask "Want me to implement this?" or "Should I proceed?". SIMPLE verdicts proceed directly and autonomously to `Skill("implement")`. The user has already consented by running `/triage`. Pausing to ask is a process violation.
+
 **If VERDICT: COMPLEX:**
 
 ```
