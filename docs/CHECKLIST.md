@@ -120,3 +120,4 @@
 - [x] Extract shared `HUDButton` component from duplicated toolbar/panel buttons (bead 42b)
 - [x] Extract shared `InfoRow` component (duplicated in PigDetailView/AlmanacView with inconsistent fonts) (bead 1h1)
 - [x] Extract shared `StatusBadge` component from duplicated pill badges (bead 9r3)
+- [x] Fix gender display inconsistency: AdoptionView uses ♂/♀ in blue/pink matching PigListView (bead dfe)
