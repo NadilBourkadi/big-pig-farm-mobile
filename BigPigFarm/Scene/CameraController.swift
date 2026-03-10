@@ -91,31 +91,26 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         let visibleW = (view.frame.width / ds) * camera.xScale
         let visibleH = (view.frame.height / ds) * camera.yScale
 
-        // A 1-pt epsilon absorbs FP rounding at the branch boundary: at fit-zoom,
-        // visibleW/H is algebraically == sceneW/H but the two-step FP division chain
-        // evaluates to sceneW - ε, incorrectly triggering the under-zoomed branch and
-        // locking the camera to a single point.
-        //
-        // max(visible, scene) keeps hw >= scene/2, ensuring a valid [lo, hi] range
-        // even when the FP error lands just below the threshold.
-        //
-        // viewportPadding gives a small scroll margin beyond the farm edge at fit-zoom
-        // so the camera never feels fully locked when the farm exactly fills the viewport.
-        let pad = SceneConstants.viewportPadding
-        if visibleW >= sceneW - 1.0 {
-            let hw = max(visibleW, sceneW) / 2
-            camera.position.x = max(sceneW - hw - pad, min(hw + pad, camera.position.x))
+        // Clamp against farm content bounds, not full grid, to prevent scrolling
+        // into void cells outside the playable area. A 2-cell margin lets the user
+        // see wall tiles at the edge rather than hard-cutting at the content boundary.
+        let content = scene.contentBounds()
+        let margin = SceneConstants.cellSize * 2
+
+        let minCamX = content.minX - margin + visibleW / 2
+        let maxCamX = content.maxX + margin - visibleW / 2
+        if minCamX > maxCamX {
+            camera.position.x = content.midX
         } else {
-            let hw = visibleW / 2
-            camera.position.x = max(hw, min(sceneW - hw, camera.position.x))
+            camera.position.x = max(minCamX, min(maxCamX, camera.position.x))
         }
 
-        if visibleH >= sceneH - 1.0 {
-            let hh = max(visibleH, sceneH) / 2
-            camera.position.y = max(sceneH - hh - pad, min(hh + pad, camera.position.y))
+        let minCamY = content.minY - margin + visibleH / 2
+        let maxCamY = content.maxY + margin - visibleH / 2
+        if minCamY > maxCamY {
+            camera.position.y = content.midY
         } else {
-            let hh = visibleH / 2
-            camera.position.y = max(hh, min(sceneH - hh, camera.position.y))
+            camera.position.y = max(minCamY, min(maxCamY, camera.position.y))
         }
     }
 

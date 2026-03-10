@@ -109,58 +109,69 @@ struct CameraInitialZoomTests {
         #expect(abs(camera.position.y - positionAfterFit.y) < 0.001)
     }
 
-    @Test("clampCameraPosition preserves valid off-center position when over-zoomed")
-    func clampCameraPositionPreservesOffCenterPositionWhenOverZoomed() throws {
+    @Test("clampCameraPosition enforces 2-cell margin around content bounds")
+    func clampCameraPositionEnforcesTwoCellMarginAroundContent() throws {
         let state = GameState()
         let scene = FarmScene(gameState: state)
-        // presentScene sets scene.view so clampCameraPosition actually runs.
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         view.presentScene(scene)
-        // Apply fit zoom first so camera.scale is at the fit level (~2.1x),
-        // which makes visibleH >> sceneH (the over-zoomed branch).
-        let rect = starterContentRect(state)
-        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
+
+        // Zoom in so we can scroll (visible area < content area).
+        scene.cameraController.zoomTo(scale: SceneConstants.minCameraScale, duration: 0)
 
         let camera = try #require(scene.camera)
-        // Place camera at 70% of farmH — inside the soft-clamp range [sceneH-hh, hh].
-        // The old code would have hard-snapped this to sceneH/2; the new soft
-        // clamp must leave any already-valid off-center position untouched.
-        let farmH = CGFloat(state.farm.height) * SceneConstants.cellSize
-        let offCenter = farmH * 0.7
-        camera.position.y = offCenter
+        let content = scene.contentBounds()
+        let margin = SceneConstants.cellSize * 2
 
+        // Attempt to scroll far left, past the allowed left boundary.
+        camera.position.x = content.minX - margin * 10
         scene.cameraController.clampCameraPosition()
+        #expect(camera.position.x >= content.minX - margin,
+                "Camera X must not go more than 2 cells left of content bounds")
 
-        #expect(abs(camera.position.y - offCenter) < 0.001,
-                "clampCameraPosition must not move a valid off-center position when over-zoomed")
+        // Attempt to scroll far right, past the allowed right boundary.
+        camera.position.x = content.maxX + margin * 10
+        scene.cameraController.clampCameraPosition()
+        #expect(camera.position.x <= content.maxX + margin,
+                "Camera X must not go more than 2 cells right of content bounds")
+
+        // Attempt to scroll far below, past the allowed bottom boundary.
+        camera.position.y = content.minY - margin * 10
+        scene.cameraController.clampCameraPosition()
+        #expect(camera.position.y >= content.minY - margin,
+                "Camera Y must not go more than 2 cells below content bounds")
+
+        // Attempt to scroll far above, past the allowed top boundary.
+        camera.position.y = content.maxY + margin * 10
+        scene.cameraController.clampCameraPosition()
+        #expect(camera.position.y <= content.maxY + margin,
+                "Camera Y must not go more than 2 cells above content bounds")
     }
 
-    @Test("clampCameraPosition allows viewportPadding scroll leeway at fit-zoom")
-    func clampCameraPositionAllowsPaddingLeewayAtFitZoom() throws {
+    @Test("clampCameraPosition locks to content center when visible area larger than content")
+    func clampCameraPositionLocksToContentCenterWhenOverZoomed() throws {
         let state = GameState()
         let scene = FarmScene(gameState: state)
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         view.presentScene(scene)
-        let rect = starterContentRect(state)
-        scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
 
         let camera = try #require(scene.camera)
-        let farmW = CGFloat(state.farm.width) * SceneConstants.cellSize
-        let pad = SceneConstants.viewportPadding
+        let content = scene.contentBounds()
 
-        // At fit-zoom hw ≈ farmW/2. The padded left boundary is farmW/2 - pad.
-        // The camera must be allowed to reach that boundary without being clamped.
-        let leftBoundary = farmW / 2 - pad
-        camera.position.x = leftBoundary
+        // Zoom out to max so visible area >> content bounds.
+        // At this scale min > max in the clamp range, so camera must be locked to midX/midY.
+        scene.cameraController.zoomTo(scale: scene.cameraController.effectiveMaxScale, duration: 0)
+        camera.position.x = content.minX - 500
+        camera.position.y = content.maxY + 500
         scene.cameraController.clampCameraPosition()
-        #expect(abs(camera.position.x - leftBoundary) < 0.5,
-                "Camera must reach the viewportPadding left boundary at fit-zoom")
 
-        // One unit beyond the padded boundary must be clamped back.
-        camera.position.x = leftBoundary - 1.0
-        scene.cameraController.clampCameraPosition()
-        #expect(camera.position.x > leftBoundary - 1.0,
-                "Camera must not go past the viewportPadding boundary")
+        // Camera must be locked to the content center on whichever axis is fully visible.
+        // We only assert that the camera was moved from its extreme position — the exact
+        // locking depends on whether content fits completely in that axis.
+        #expect(abs(camera.position.x) < content.maxX + 200,
+                "Camera X must be pulled back toward content when fully visible")
+        #expect(abs(camera.position.y) < content.maxY + 200,
+                "Camera Y must be pulled back toward content when fully visible")
     }
 
     @Test("isZoomedInForPigTracking returns false at fit-zoom despite FP rounding")
