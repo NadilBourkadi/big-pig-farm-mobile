@@ -202,6 +202,28 @@ struct FacilityBonusLabel: View {
     }
 }
 
+// MARK: - InfoRow
+
+/// A two-column label/value row for dense info panels.
+///
+/// The label column is fixed at 120pt (secondary colour, .caption font);
+/// the value column wraps freely. Used in PigDetailView and AlmanacView.
+struct InfoRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(alignment: .top) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 120, alignment: .leading)
+            Text(value)
+                .font(.caption)
+        }
+    }
+}
+
 // MARK: - HUDButton
 
 /// Reusable icon-over-label button for HUD toolbars and action panels.

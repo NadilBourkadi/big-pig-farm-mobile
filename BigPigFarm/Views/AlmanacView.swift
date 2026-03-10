@@ -171,21 +171,13 @@ private struct ContractsTab: View {
                 }
             }
             Section("Statistics") {
-                infoRow("Completed", "\(gameState.contractBoard.completedContracts)")
-                infoRow("Total Earned", Currency.formatCurrency(gameState.contractBoard.totalContractEarnings))
-                infoRow("Current Day", "Day \(gameState.gameTime.day)")
+                InfoRow(label: "Completed", value: "\(gameState.contractBoard.completedContracts)")
+                let earned = Currency.formatCurrency(gameState.contractBoard.totalContractEarnings)
+                InfoRow(label: "Total Earned", value: earned)
+                InfoRow(label: "Current Day", value: "Day \(gameState.gameTime.day)")
             }
         }
         .listStyle(.insetGrouped)
-    }
-
-    private func infoRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label).foregroundStyle(.secondary)
-            Spacer()
-            Text(value)
-        }
-        .font(.subheadline)
     }
 }
 
