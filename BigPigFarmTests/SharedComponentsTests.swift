@@ -2,6 +2,7 @@
 /// SwiftUI view rendering is deferred to the polish phase per spec.
 import Testing
 import Foundation
+import SwiftUI
 @testable import BigPigFarm
 
 // MARK: - formatBreedingStatus
@@ -114,8 +115,11 @@ struct FormatFacilityBonusesTests {
 
 struct PigColorSwiftUITests {
 
-    @Test func blackMapsToBlack() {
-        #expect(pigColorSwiftUI(.black) == .black)
+    @Test func blackMapsToNearBlack() {
+        // .black (RGB 0,0,0) is invisible on dark material backgrounds.
+        // Use Color(white:0.15) — dark enough to read as "black phenotype",
+        // visible against SwiftUI .ultraThinMaterial / .regularMaterial.
+        #expect(pigColorSwiftUI(.black) == Color(white: 0.15))
     }
 
     @Test func smokeMapsToGray() {
