@@ -195,13 +195,7 @@ private struct ContractRow: View {
                 Text(contract.description)
                     .font(.subheadline)
                 Spacer()
-                Text(contract.difficulty.rawValue.capitalized)
-                    .font(.caption2.bold())
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .foregroundStyle(.white)
-                    .background(difficultyColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                StatusBadge(label: contract.difficulty.rawValue.capitalized, color: difficultyColor)
             }
             HStack {
                 Text("+\(Currency.formatCurrency(contract.reward))")

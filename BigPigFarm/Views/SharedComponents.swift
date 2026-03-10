@@ -120,6 +120,37 @@ struct NeedBar: View {
     }
 }
 
+// MARK: - StatusBadge
+
+/// A colored pill badge with configurable label and style.
+///
+/// Two built-in styles:
+/// - `.opaque`: solid-color background with white bold text (rarity, tier, difficulty).
+/// - `.tinted`: semi-transparent background with colored text (status, tags).
+///
+/// Replaces ad-hoc pill constructions in ShopView, AlmanacView,
+/// BreedingPairTab, and AdoptionView.
+struct StatusBadge: View {
+    let label: String
+    let color: Color
+    var style: Style = .opaque
+
+    enum Style: Sendable {
+        case opaque
+        case tinted
+    }
+
+    var body: some View {
+        Text(label)
+            .font(style == .opaque ? .caption2.bold() : .caption2)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .foregroundStyle(style == .opaque ? AnyShapeStyle(.white) : AnyShapeStyle(color))
+            .background(style == .opaque ? color : color.opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+    }
+}
+
 // MARK: - RarityBadge
 
 /// Displays a colored pill badge for a pig's rarity tier.
@@ -129,13 +160,7 @@ struct RarityBadge: View {
     let rarity: Rarity
 
     var body: some View {
-        Text(rarityDisplayName)
-            .font(.caption2.bold())
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .foregroundStyle(.white)
-            .background(rarityColor)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+        StatusBadge(label: rarityDisplayName, color: rarityColor)
     }
 
     /// Human-readable name; handles "very_rare" → "Very Rare".

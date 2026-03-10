@@ -188,9 +188,9 @@ struct BreedingPigRow: View {
     @ViewBuilder
     private var statusBadge: some View {
         if isAutoPaired {
-            pill("AUTO", color: .blue)
+            StatusBadge(label: "AUTO", color: .blue, style: .tinted)
         } else if isPaired {
-            pill("PAIRED", color: .blue)
+            StatusBadge(label: "PAIRED", color: .blue, style: .tinted)
         } else if pig.breedingLocked {
             Text("LOCKED").font(.caption2).foregroundStyle(.red)
         } else if pig.isPregnant {
@@ -200,15 +200,6 @@ struct BreedingPigRow: View {
         }
     }
 
-    private func pill(_ label: String, color: Color) -> some View {
-        Text(label)
-            .font(.caption2)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.2))
-            .foregroundStyle(color)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-    }
 }
 
 // MARK: - PredictionRow
@@ -240,13 +231,7 @@ struct PredictionRow: View {
                 .font(.caption)
                 .lineLimit(1)
             if isNew {
-                Text("NEW")
-                    .font(.caption2)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1)
-                    .background(.green.opacity(0.2))
-                    .foregroundStyle(.green)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                StatusBadge(label: "NEW", color: .green, style: .tinted)
             }
             Spacer(minLength: 0)
         }
