@@ -43,6 +43,9 @@ func formatFacilityBonuses(_ facilityType: FacilityType) -> String {
 /// Map a BaseColor to the nearest SwiftUI Color for display.
 func pigColorSwiftUI(_ baseColor: BaseColor) -> Color {
     switch baseColor {
+    // RGB 0,0,0 is invisible on dark material backgrounds (.ultraThinMaterial, .regularMaterial).
+    // 0.15 brightness reads as "black" phenotypically while having enough contrast against
+    // the ~30% brightness dark-grey materials used in list rows and detail panels.
     case .black: return Color(white: 0.15)
     case .chocolate: return .brown
     case .golden: return .yellow
