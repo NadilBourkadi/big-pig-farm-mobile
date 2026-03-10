@@ -109,8 +109,8 @@ struct CameraInitialZoomTests {
         #expect(abs(camera.position.y - positionAfterFit.y) < 0.001)
     }
 
-    @Test("clampCameraPosition enforces 2-cell margin around content bounds")
-    func clampCameraPositionEnforcesTwoCellMarginAroundContent() throws {
+    @Test("clampCameraPosition enforces farm-dimension scroll margin around content")
+    func clampCameraPositionEnforcesFarmDimensionMarginAroundContent() throws {
         let state = GameState()
         let scene = FarmScene(gameState: state)
         let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
@@ -121,31 +121,32 @@ struct CameraInitialZoomTests {
 
         let camera = try #require(scene.camera)
         let content = scene.contentBounds()
-        let margin = SceneConstants.cellSize * 2
+        let marginX = content.width   // one full farm width
+        let marginY = content.height  // one full farm height
 
         // Attempt to scroll far left, past the allowed left boundary.
-        camera.position.x = content.minX - margin * 10
+        camera.position.x = content.minX - marginX * 10
         scene.cameraController.clampCameraPosition()
-        #expect(camera.position.x >= content.minX - margin,
-                "Camera X must not go more than 2 cells left of content bounds")
+        #expect(camera.position.x >= content.minX - marginX,
+                "Camera X must not go more than one farm width left of content bounds")
 
         // Attempt to scroll far right, past the allowed right boundary.
-        camera.position.x = content.maxX + margin * 10
+        camera.position.x = content.maxX + marginX * 10
         scene.cameraController.clampCameraPosition()
-        #expect(camera.position.x <= content.maxX + margin,
-                "Camera X must not go more than 2 cells right of content bounds")
+        #expect(camera.position.x <= content.maxX + marginX,
+                "Camera X must not go more than one farm width right of content bounds")
 
         // Attempt to scroll far below, past the allowed bottom boundary.
-        camera.position.y = content.minY - margin * 10
+        camera.position.y = content.minY - marginY * 10
         scene.cameraController.clampCameraPosition()
-        #expect(camera.position.y >= content.minY - margin,
-                "Camera Y must not go more than 2 cells below content bounds")
+        #expect(camera.position.y >= content.minY - marginY,
+                "Camera Y must not go more than one farm height below content bounds")
 
         // Attempt to scroll far above, past the allowed top boundary.
-        camera.position.y = content.maxY + margin * 10
+        camera.position.y = content.maxY + marginY * 10
         scene.cameraController.clampCameraPosition()
-        #expect(camera.position.y <= content.maxY + margin,
-                "Camera Y must not go more than 2 cells above content bounds")
+        #expect(camera.position.y <= content.maxY + marginY,
+                "Camera Y must not go more than one farm height above content bounds")
     }
 
     @Test("clampCameraPosition locks to content center when visible area larger than content")

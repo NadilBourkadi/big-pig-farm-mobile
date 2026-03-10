@@ -85,30 +85,40 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
         let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
 
-        // SpriteKit's aspectFill applies a display scale so the scene fills the view.
-        // Divide view dimensions by this scale to get the visible area in scene units.
         let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
         let visibleW = (view.frame.width / ds) * camera.xScale
-        let visibleH = (view.frame.height / ds) * camera.yScale
 
-        // Clamp against farm content bounds, not full grid, to prevent scrolling
-        // into void cells outside the playable area. A 2-cell margin lets the user
-        // see wall tiles at the edge rather than hard-cutting at the content boundary.
+        // Clamp against farm content bounds (not full grid) with a margin equal to
+        // one full farm dimension, so the user can scroll an entire farm-width/-height
+        // past the content edge before hitting the limit.
         let content = scene.contentBounds()
-        let margin = SceneConstants.cellSize * 2
+        let marginX = content.width
+        let marginY = content.height
 
-        let minCamX = content.minX - margin + visibleW / 2
-        let maxCamX = content.maxX + margin - visibleW / 2
+        // X: no HUD on the sides — use full visible width.
+        let minCamX = content.minX - marginX + visibleW / 2
+        let maxCamX = content.maxX + marginX - visibleW / 2
         if minCamX > maxCamX {
             camera.position.x = content.midX
         } else {
             camera.position.x = max(minCamX, min(maxCamX, camera.position.x))
         }
 
-        let minCamY = content.minY - margin + visibleH / 2
-        let maxCamY = content.maxY + margin - visibleH / 2
+        // Y: HUD bars at top and bottom reduce the unobstructed viewport height.
+        // Compute scene-unit distances from the view centre to each unobstructed edge
+        // so the farm content scrolls flush with the HUD bars, not the screen edges.
+        let safeTop = view.safeAreaInsets.top + SceneConstants.hudTopHeight
+        let safeBottom = view.safeAreaInsets.bottom + SceneConstants.hudBottomHeight
+        let halfHeightTop = max(0, view.frame.height / 2 - safeTop) / ds * camera.yScale
+        let halfHeightBottom = max(0, view.frame.height / 2 - safeBottom) / ds * camera.yScale
+
+        let minCamY = content.minY - marginY + halfHeightBottom
+        let maxCamY = content.maxY + marginY - halfHeightTop
         if minCamY > maxCamY {
-            camera.position.y = content.midY
+            // Content fits in unobstructed viewport: bias camera so content centres
+            // between the two HUD bars, not between the screen edges.
+            let centerBias = (safeTop - safeBottom) / 2 / ds * camera.yScale
+            camera.position.y = content.midY + centerBias
         } else {
             camera.position.y = max(minCamY, min(maxCamY, camera.position.y))
         }
@@ -155,7 +165,13 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         let clamped = max(SceneConstants.minCameraScale,
                           min(SceneConstants.maxCameraScale, contentFitScale))
         camera.setScale(clamped)
-        camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY)
+
+        // Apply the same HUD bias as clampCameraPosition so the initial position
+        // is clamp-stable: content appears centred between the two HUD bars.
+        let safeTop = view.safeAreaInsets.top + SceneConstants.hudTopHeight
+        let safeBottom = view.safeAreaInsets.bottom + SceneConstants.hudBottomHeight
+        let centerBias = (safeTop - safeBottom) / 2 / ds * clamped
+        camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY + centerBias)
     }
 
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
