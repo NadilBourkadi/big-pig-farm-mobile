@@ -100,12 +100,7 @@ private struct AdoptionPigRow: View {
                         .foregroundStyle(.secondary)
                     RarityBadge(rarity: pig.phenotype.rarity)
                     if let tag = pig.originTag {
-                        Text(tag)
-                            .font(.caption2)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(.purple.opacity(0.2))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        StatusBadge(label: tag, color: .purple, style: .tinted)
                     }
                 }
             }

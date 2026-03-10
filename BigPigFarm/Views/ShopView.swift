@@ -101,13 +101,7 @@ private struct FacilityRow: View {
                         .font(.body.bold())
                         .foregroundStyle(isLocked ? .secondary : .primary)
                     if isLocked {
-                        Text("Tier \(item.requiredTier)")
-                            .font(.caption2.bold())
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .foregroundStyle(.white)
-                            .background(.orange)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        StatusBadge(label: "Tier \(item.requiredTier)", color: .orange)
                     }
                 }
                 Text(item.description)
