@@ -17,6 +17,10 @@ enum SceneConstants {
     /// Side length in tiles of the out-of-bounds hay tile map.
     /// 200 × 32 pt = 6400 pt — covers the 96×56 max farm plus worst-case viewport margin at minCameraScale (0.5).
     static let outOfBoundsTileMapDimension = 200
+    /// Intrinsic height of the StatusInfoRow HUD bar, excluding safe area inset.
+    static let hudTopHeight: CGFloat = 22.0
+    /// Intrinsic height of the StatusToolbar HUD bar, excluding safe area inset.
+    static let hudBottomHeight: CGFloat = 37.0
 }
 
 // MARK: - FarmSceneDelegate
