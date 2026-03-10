@@ -90,9 +90,9 @@ private struct AdoptionPigRow: View {
                 HStack {
                     Text(pig.name)
                         .font(.body)
-                    Text(pig.gender == .male ? "M" : "F")
+                    Text(pig.gender == .male ? "♂" : "♀")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(pig.gender == .male ? .blue : .pink)
                 }
                 HStack {
                     Text(pig.phenotype.displayName)
@@ -131,8 +131,9 @@ extension AdoptionView {
             }
 
             HStack {
-                Text("Gender: \(pig.gender == .male ? "Male" : "Female")")
+                Text(pig.gender == .male ? "♂ Male" : "♀ Female")
                     .font(.caption)
+                    .foregroundStyle(pig.gender == .male ? .blue : .pink)
                 Text("Color: \(pig.phenotype.displayName)")
                     .font(.caption)
             }
