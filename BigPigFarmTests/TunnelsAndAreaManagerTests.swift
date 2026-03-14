@@ -248,8 +248,6 @@ import Foundation
     }
 }
 
-// MARK: - Tunnels: Pathfinding Integration
-
 // MARK: - Tunnels: Mouth Area IDs
 
 @Test @MainActor func horizontalTunnelMouthWallsHaveAreaId() {
@@ -334,7 +332,7 @@ import Foundation
     }
 }
 
-@Test func tunnelMouthAreaIdDecodesAsNilWhenAbsent() throws {
+@Test @MainActor func tunnelMouthAreaIdDecodesAsNilWhenAbsent() throws {
     // Simulate old save data: a tunnel Cell JSON without the tunnel_mouth_area_id key.
     // The synthesized decoder must treat the missing key as nil.
     let json = """
