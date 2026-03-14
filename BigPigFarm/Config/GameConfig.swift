@@ -6,7 +6,7 @@ import Foundation
 /// Uses caseless enums as namespaces (Swift convention for pure constants).
 enum GameConfig {
     enum Time {
-        static let realSecondsPerGameMinute: Double = 0.1
+        static let realSecondsPerGameMinute: Double = 1.0
         static let gameMinutesPerHour: Int = 60
         static let gameHoursPerDay: Int = 24
         static let dayStartHour: Int = 6

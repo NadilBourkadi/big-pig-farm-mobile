@@ -6,12 +6,44 @@ import Observation
 // MARK: - Data Types (Doc 02 scope)
 
 /// Tracks in-game time progression.
+///
+/// Day/hour/minute are derived from `totalGameMinutes` plus a base offset,
+/// avoiding floating-point accumulation drift in the integer clock fields.
 struct GameTime: Codable, Sendable {
-    var day: Int = 1
-    var hour: Int = 8
-    var minute: Int = 0
     var lastUpdate = Date()
     var totalGameMinutes: Double = 0.0
+
+    /// Absolute offset in minutes from the epoch (day 1, 00:00 = 0).
+    /// Default 480 = day 1, 08:00. Recalculated when day/hour/minute are set directly.
+    private var clockBaseMinutes: Double = 8 * 60
+
+    init(day: Int = 1, hour: Int = 8, minute: Int = 0) {
+        self.clockBaseMinutes = Double((day - 1) * 1440 + hour * 60 + minute)
+    }
+
+    // MARK: - Derived clock fields
+
+    /// Total elapsed minutes (base + accumulated) as an integer.
+    private var absoluteWholeMinutes: Int {
+        // Tiny epsilon prevents near-miss truncation from float imprecision
+        // (e.g. 59.99999998 → 59 instead of 60).
+        Int(clockBaseMinutes + totalGameMinutes + 1e-9)
+    }
+
+    var day: Int {
+        get { 1 + absoluteWholeMinutes / 1440 }
+        set { setClockBase(day: newValue, hour: hour, minute: minute) }
+    }
+
+    var hour: Int {
+        get { (absoluteWholeMinutes / 60) % 24 }
+        set { setClockBase(day: day, hour: newValue, minute: minute) }
+    }
+
+    var minute: Int {
+        get { absoluteWholeMinutes % 60 }
+        set { setClockBase(day: day, hour: hour, minute: newValue) }
+    }
 
     var isDaytime: Bool { 6 <= hour && hour < 20 }
 
@@ -30,26 +62,41 @@ struct GameTime: Codable, Sendable {
     /// Advance game time by the given number of minutes.
     mutating func advance(minutes: Double) {
         totalGameMinutes += minutes
-        var totalMinutes = Double(minute) + minutes
-        var totalHours = Double(hour)
-        var totalDays = day
-
-        totalHours += (totalMinutes / 60).rounded(.down)
-        totalMinutes = totalMinutes.truncatingRemainder(dividingBy: 60)
-
-        totalDays += Int(totalHours / 24)
-        totalHours = totalHours.truncatingRemainder(dividingBy: 24)
-
-        day = totalDays
-        hour = Int(totalHours)
-        minute = Int(totalMinutes)
         lastUpdate = Date()
     }
+
+    /// Recalculate the base offset so the given day/hour/minute are reflected
+    /// at the current totalGameMinutes.
+    private mutating func setClockBase(day: Int, hour: Int, minute: Int) {
+        let target = Double((day - 1) * 1440 + hour * 60 + minute)
+        clockBaseMinutes = target - totalGameMinutes
+    }
+
+    // MARK: - Codable
 
     enum CodingKeys: String, CodingKey {
         case day, hour, minute
         case lastUpdate = "last_update"
         case totalGameMinutes = "total_game_minutes"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let d = try container.decode(Int.self, forKey: .day)
+        let h = try container.decode(Int.self, forKey: .hour)
+        let m = try container.decode(Int.self, forKey: .minute)
+        totalGameMinutes = try container.decode(Double.self, forKey: .totalGameMinutes)
+        lastUpdate = try container.decode(Date.self, forKey: .lastUpdate)
+        clockBaseMinutes = Double((d - 1) * 1440 + h * 60 + m) - totalGameMinutes
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(day, forKey: .day)
+        try container.encode(hour, forKey: .hour)
+        try container.encode(minute, forKey: .minute)
+        try container.encode(totalGameMinutes, forKey: .totalGameMinutes)
+        try container.encode(lastUpdate, forKey: .lastUpdate)
     }
 }
 

@@ -292,3 +292,15 @@ import Foundation
     time.advance(minutes: 50)
     #expect(time.totalGameMinutes == 150)
 }
+
+@Test @MainActor func gameTimeSmallIncrementsAccumulate() {
+    // 200 ticks of 0.3 game-minutes = 60 minutes = 1 hour
+    var time = GameTime()
+    time.hour = 0
+    time.minute = 0
+    for _ in 0..<200 {
+        time.advance(minutes: 0.3)
+    }
+    #expect(time.totalGameMinutes > 59.9)
+    #expect(time.hour >= 1)
+}

@@ -180,6 +180,12 @@ import Testing
     }
 }
 
+@Test func timeRealSecondsPerGameMinuteMatchesPython() {
+    // Python source: REAL_SECONDS_PER_GAME_MINUTE = 1.0
+    // At 1x speed, 1 real second = 1 game minute.
+    #expect(GameConfig.Time.realSecondsPerGameMinute == 1.0)
+}
+
 @Test func simulationTimingDefaults() {
     #expect(GameConfig.Simulation.ticksPerSecond == 10)
     #expect(GameConfig.Simulation.baseMoveSpeed == 1.0)
