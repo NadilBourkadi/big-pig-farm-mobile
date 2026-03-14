@@ -15,7 +15,7 @@ struct StatusInfoRow: View {
         HStack(spacing: 10) {
             Text("Day \(gameState.gameTime.day)")
                 .font(.caption.bold())
-            Text("T\(gameState.farmTier)")
+            Text("Tier \(gameState.farmTier)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             CurrencyLabel(amount: gameState.money)
