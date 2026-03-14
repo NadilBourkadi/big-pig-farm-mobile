@@ -73,7 +73,7 @@ extension FarmScene {
         return nil
     }
 
-    func updateIndicator(for node: PigNode, pig: GuineaPig) {
+    fileprivate func updateIndicator(for node: PigNode, pig: GuineaPig) {
         guard let indicatorName = indicatorType(for: pig) else {
             node.hideIndicator()
             return
