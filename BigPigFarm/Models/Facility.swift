@@ -77,7 +77,7 @@ let facilityInfo: [FacilityType: FacilityInfo] = [
     .hayRack: FacilityInfo(
         name: "Hay Rack", size: FacilitySize(width: 2, height: 1),
         baseCost: 80, description: "Fiber source, +5% health bonus",
-        capacity: 200, refillCost: 0,
+        capacity: 200, refillCost: 5,
         healthBonus: 0.05, happinessBonus: 0.0, socialBonus: 0.0,
         breedingBonus: 0.0, growthBonus: 0.0, saleBonus: 0.0, foodProduction: 0),
     .hideout: FacilityInfo(
@@ -139,7 +139,7 @@ let facilityInfo: [FacilityType: FacilityInfo] = [
         name: "Feast Table", size: FacilitySize(width: 5, height: 5),
         baseCost: 350,
         description: "Communal eating -- co-diners get social recovery",
-        capacity: 300, refillCost: 0,
+        capacity: 300, refillCost: 8,
         healthBonus: 0.0, happinessBonus: 0.05, socialBonus: 0.0,
         breedingBonus: 0.0, growthBonus: 0.0, saleBonus: 0.0, foodProduction: 0),
     .campfire: FacilityInfo(
