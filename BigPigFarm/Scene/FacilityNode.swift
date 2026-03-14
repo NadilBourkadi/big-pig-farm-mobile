@@ -24,8 +24,27 @@ class FacilityNode: SKSpriteNode {
         self.nameLabel = label
 
         let texture = SpriteAssets.facilityTexture(facilityType: facility.facilityType.rawValue)
-        let nodeWidth = CGFloat(facility.width) * SceneConstants.cellSize
-        let nodeHeight = CGFloat(facility.height) * SceneConstants.cellSize
+        let footprintWidth = CGFloat(facility.width) * SceneConstants.cellSize
+        let footprintHeight = CGFloat(facility.height) * SceneConstants.cellSize
+
+        // Scale texture to fit within the grid footprint while preserving aspect ratio.
+        // Without this, textures are force-stretched to fill the footprint, causing
+        // horizontal distortion (the original art was designed for terminal half-block
+        // rendering where character cells are taller than wide).
+        // The resulting node may be smaller than the footprint on the non-constraining
+        // axis. Use facility.width/height (not self.size) when you need the grid footprint.
+        let textureSize = texture.size()
+        let nodeWidth: CGFloat
+        let nodeHeight: CGFloat
+        if textureSize.width > 0, textureSize.height > 0 {
+            let fitScale = min(footprintWidth / textureSize.width,
+                               footprintHeight / textureSize.height)
+            nodeWidth = textureSize.width * fitScale
+            nodeHeight = textureSize.height * fitScale
+        } else {
+            nodeWidth = footprintWidth
+            nodeHeight = footprintHeight
+        }
 
         super.init(texture: texture, color: .clear, size: CGSize(width: nodeWidth, height: nodeHeight))
 
