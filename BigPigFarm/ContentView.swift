@@ -88,10 +88,8 @@ struct ContentView: View {
     @State private var showPigList = false
     @State private var showBreeding = false
     @State private var showAlmanac = false
-    @State private var showPigDetail = false
-
-    /// The pig currently selected for detail view.
-    @State private var selectedPigID: UUID?
+    /// The pig currently selected for detail view. Non-nil while the detail sheet is presented.
+    @State private var selectedPig: GuineaPig?
 
     /// Whether edit mode is currently active.
     @State private var isEditMode = false
@@ -172,29 +170,29 @@ struct ContentView: View {
         .sheet(isPresented: $showAlmanac) {
             AlmanacView(gameState: gameState)
         }
-        .sheet(isPresented: $showPigDetail) {
-            if let pigID = selectedPigID, let pig = gameState.getGuineaPig(pigID) {
-                NavigationStack {
-                    PigDetailView(gameState: gameState, pig: pig)
-                        .navigationTitle(pig.name)
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button("Done") { showPigDetail = false }
-                            }
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Follow") {
-                                    farmScene.centerOnPig(pigID)
-                                }
+        .sheet(item: $selectedPig) { pig in
+            NavigationStack {
+                PigDetailView(gameState: gameState, pig: pig)
+                    .navigationTitle(pig.name)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { selectedPig = nil }
+                        }
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Follow") {
+                                farmScene.centerOnPig(pig.id)
                             }
                         }
-                }
-                .presentationDetents([.fraction(0.35), .large])
-                .presentationDragIndicator(.visible)
-                .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.35)))
-                .presentationContentInteraction(.scrolls)
-                .presentationBackground(.ultraThinMaterial)
+                    }
             }
+            .background(.clear)
+            .presentationDetents([.fraction(0.45), .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.45)))
+            .presentationContentInteraction(.scrolls)
+            .presentationBackground(.ultraThinMaterial)
         }
         .confirmationDialog(
             "Remove Facility",
@@ -209,13 +207,11 @@ struct ContentView: View {
         .onAppear {
             farmScene.sceneDelegate = coordinator
             coordinator.onPigSelected = { pigID in
-                selectedPigID = pigID
-                showPigDetail = true
-                farmScene.centerOnPig(pigID) // Node guaranteed to exist — called from handleTap
+                selectedPig = gameState.getGuineaPig(pigID)
+                farmScene.centerOnPig(pigID)
             }
             coordinator.onPigDeselected = {
-                selectedPigID = nil
-                showPigDetail = false
+                selectedPig = nil
             }
             coordinator.onFacilitySelected = { facilityID in
                 editModeSelectedFacilityID = facilityID
@@ -295,9 +291,8 @@ extension ContentView {
     ///
     /// Maps from: main_game.py _follow_pig(), pig_list.py action_follow_pig()
     private func handleFollowPig(_ pigID: UUID) {
-        selectedPigID = pigID
+        selectedPig = nil
         showPigList = false
-        showPigDetail = false
         farmScene.centerOnPig(pigID)
     }
 }
