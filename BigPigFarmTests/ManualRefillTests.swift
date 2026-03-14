@@ -78,14 +78,49 @@ private func addPartialWaterBottle(to state: GameState, x: Int, y: Int, amount: 
     #expect(state.refillableCount == 3)
 }
 
-@Test @MainActor func totalRefillCostExcludesHayRack() {
+@Test @MainActor func refillableCountIncludesPartialHayRack() {
     let state = GameState()
     var rack = Facility.create(type: .hayRack, x: 5, y: 5)
     rack.currentAmount = 0
     _ = state.addFacility(rack)
-    // hayRack has refillCost == 0, so even when empty it doesn't contribute
-    #expect(state.totalRefillCost == 0)
-    #expect(state.refillableCount == 0)
+    // hayRack now has refillCost == 5, so it participates in refill
+    #expect(state.refillableCount == 1)
+    #expect(state.totalRefillCost == 5)
+}
+
+@Test @MainActor func refillableCountIncludesPartialFeastTable() {
+    let state = GameState()
+    var table = Facility.create(type: .feastTable, x: 5, y: 5)
+    table.currentAmount = 0
+    _ = state.addFacility(table)
+    // feastTable now has refillCost == 8, so it participates in refill
+    #expect(state.refillableCount == 1)
+    #expect(state.totalRefillCost == 8)
+}
+
+@Test @MainActor func manualRefillAllRefillsHayRackAndFeastTable() {
+    let state = GameState()
+    state.money = 100
+    var rack = Facility.create(type: .hayRack, x: 5, y: 5)
+    rack.currentAmount = 0
+    _ = state.addFacility(rack)
+    var table = Facility.create(type: .feastTable, x: 10, y: 5)
+    table.currentAmount = 0
+    _ = state.addFacility(table)
+    let result = state.manualRefillAll()
+    #expect(result)
+    #expect(state.money == 87)  // 100 - 5 (rack) - 8 (table)
+    let refilledRack = state.getFacilitiesByType(.hayRack).first
+    let refilledTable = state.getFacilitiesByType(.feastTable).first
+    #expect(refilledRack?.currentAmount == refilledRack?.maxAmount)
+    #expect(refilledTable?.currentAmount == refilledTable?.maxAmount)
+}
+
+@Test @MainActor func foodFacilityRefillCostsAreNonZero() {
+    // Data integrity: all food-dispensing facilities must participate in player refill
+    #expect(facilityInfo[.foodBowl]?.refillCost ?? 0 > 0)
+    #expect(facilityInfo[.hayRack]?.refillCost ?? 0 > 0)
+    #expect(facilityInfo[.feastTable]?.refillCost ?? 0 > 0)
 }
 
 // MARK: - manualRefillAll

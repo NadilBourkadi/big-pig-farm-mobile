@@ -139,7 +139,7 @@ let facilityInfo: [FacilityType: FacilityInfo] = [
         name: "Feast Table", size: FacilitySize(width: 5, height: 5),
         baseCost: 350,
         description: "Communal eating -- co-diners get social recovery",
-        capacity: 300, refillCost: 8,
+        capacity: 300, refillCost: 8, // slight per-unit premium over bowl/rack for communal bonus
         healthBonus: 0.0, happinessBonus: 0.05, socialBonus: 0.0,
         breedingBonus: 0.0, growthBonus: 0.0, saleBonus: 0.0, foodProduction: 0),
     .campfire: FacilityInfo(
