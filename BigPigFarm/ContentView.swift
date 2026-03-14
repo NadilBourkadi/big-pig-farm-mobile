@@ -192,6 +192,8 @@ struct ContentView: View {
                 .presentationDetents([.fraction(0.35), .large])
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.35)))
+                .presentationContentInteraction(.scrolls)
+                .presentationBackground(.ultraThinMaterial)
             }
         }
         .confirmationDialog(
