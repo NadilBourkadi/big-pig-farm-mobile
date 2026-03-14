@@ -89,27 +89,53 @@ private struct PigdexTab: View {
                     milestoneLabel(threshold: threshold, pct: pct)
                 }
             }
+            if let next = nextUnclaimedMilestone {
+                let reward = getMilestoneReward(next)
+                Text("Next reward: +\(Currency.formatCurrency(reward)) at \(next)%")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
+    private var nextUnclaimedMilestone: Int? {
+        milestoneThresholds.first { !gameState.pigdex.milestoneRewardsClaimed.contains($0) }
+    }
+
+    @ViewBuilder
     private func milestoneLabel(threshold: Int, pct: Double) -> some View {
         let claimed = gameState.pigdex.milestoneRewardsClaimed.contains(threshold)
         let ready = pct >= Double(threshold)
-        let label: String
-        let color: Color
         if claimed {
-            label = "✓ \(threshold)%"
-            color = .green
+            Text("✓ \(threshold)%")
+                .font(.caption2)
+                .foregroundStyle(.green)
         } else if ready {
-            label = "READY! \(threshold)%"
-            color = .yellow
+            Button {
+                claimMilestone(threshold)
+            } label: {
+                Text("READY! \(threshold)%")
+                    .font(.caption2.bold())
+                    .foregroundStyle(.yellow)
+            }
+            .buttonStyle(.plain)
         } else {
-            label = "\(Int(pct))/\(threshold)%"
-            color = .secondary
+            Text("\(threshold)%")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
-        return Text(label)
-            .font(.caption2)
-            .foregroundStyle(color)
+    }
+
+    private func claimMilestone(_ threshold: Int) {
+        guard !gameState.pigdex.milestoneRewardsClaimed.contains(threshold) else { return }
+        let reward = getMilestoneReward(threshold)
+        gameState.pigdex.claimMilestone(threshold)
+        gameState.addMoney(reward)
+        gameState.logEvent(
+            "Pigdex Milestone: \(threshold)% complete! +\(reward) Squeaks",
+            eventType: "pigdex"
+        )
+        HapticManager.pigdexDiscovery()
     }
 }
 
