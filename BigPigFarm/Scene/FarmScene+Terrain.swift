@@ -2,7 +2,7 @@
 import SpriteKit
 
 /// Per-biome tile group triplet used when filling the tile map.
-struct BiomeTileGroups {
+private struct BiomeTileGroups {
     let floor: SKTileGroup
     let wall: SKTileGroup
     let post: SKTileGroup
@@ -51,7 +51,7 @@ extension FarmScene {
         lastGridGeneration = farm.gridGeneration
     }
 
-    func fillTiles(
+    fileprivate func fillTiles(
         into tileMap: SKTileMapNode,
         with biomeGroups: [String: BiomeTileGroups],
         farm: FarmGrid
@@ -79,7 +79,7 @@ extension FarmScene {
         }
     }
 
-    func makeTileGroup(biome: String, tileType: String, size: CGSize) -> SKTileGroup {
+    fileprivate func makeTileGroup(biome: String, tileType: String, size: CGSize) -> SKTileGroup {
         let texture = SpriteAssets.terrainTexture(biome: biome, tileType: tileType)
         let definition = SKTileDefinition(texture: texture, size: size)
         return SKTileGroup(tileDefinition: definition)

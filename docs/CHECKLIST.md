@@ -123,3 +123,4 @@
 - [x] Fix gender display inconsistency: AdoptionView uses ♂/♀ in blue/pink matching PigListView (bead dfe)
 - [x] Replace AdoptionView inline detail panel with sheet presentation (bead 5fj)
 - [x] Fix inert Pigdex milestone "READY" label — make tappable with reward claim (bead a8c)
+- [x] Split oversized files using +Extension pattern: Breeding, BreedingProgram, Birth, FarmScene (bead wqr)
