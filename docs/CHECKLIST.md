@@ -126,3 +126,4 @@
 - [x] Split oversized files using +Extension pattern: Breeding, BreedingProgram, Birth, FarmScene (bead wqr)
 - [x] Fix cryptic "TN" tier label — display "Tier N" in status HUD (bead 88v)
 - [x] Remove redundant speed indicator from StatusInfoRow — consolidated into StatusToolbar (bead b3s)
+- [x] Fix horizontally-stretched facility sprites — aspectFit sizing in FacilityNode (bead e8l)
