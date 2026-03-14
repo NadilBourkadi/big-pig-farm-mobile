@@ -63,7 +63,7 @@ enum SaveMigration {
         movePigsBy(deltas, in: state)
         let moved = computeMovedFacilities(facilityList, areaDeltas: deltas, farm: state.farm)
         applyOrigins(origins, to: &state.farm)
-        rebuildAndReplace(&state.farm, movedFacilities: moved, state: state)
+        rebuildAndReplace(movedFacilities: moved, state: state)
         clampOrphanedPigs(state)
         return true
     }
@@ -194,11 +194,10 @@ private extension SaveMigration {
 
     @MainActor
     static func rebuildAndReplace(
-        _ farm: inout FarmGrid,
         movedFacilities: [Facility],
         state: GameState
     ) {
-        farm.rebuildGridFromAreas()
+        state.farm.rebuildGridFromAreas()
         for facility in movedFacilities {
             state.updateFacility(facility)
             _ = state.farm.placeFacility(facility)
