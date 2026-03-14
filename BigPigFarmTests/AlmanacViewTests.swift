@@ -81,6 +81,62 @@ import Foundation
     #expect(milestoneThresholds == [25, 50, 75, 100])
 }
 
+@Test func milestoneCheckReturnsNewlyReachedThresholds() {
+    var pigdex = Pigdex()
+    let keys = getAllPhenotypeKeys()
+    for key in keys.prefix(36) {
+        _ = pigdex.registerPhenotype(key: key, gameDay: 1)
+    }
+    let reached = pigdex.checkMilestones()
+    #expect(reached == [25])
+}
+
+@Test func milestoneClaimIsIdempotent() {
+    var pigdex = Pigdex()
+    pigdex.claimMilestone(25)
+    pigdex.claimMilestone(25)
+    #expect(pigdex.milestoneRewardsClaimed.filter { $0 == 25 }.count == 1)
+}
+
+@Test func milestoneRewardAmountsMatchConfig() {
+    #expect(getMilestoneReward(25) == 250)
+    #expect(getMilestoneReward(50) == 750)
+    #expect(getMilestoneReward(75) == 2000)
+    #expect(getMilestoneReward(100) == 10000)
+    #expect(getMilestoneReward(99) == 0)
+}
+
+@Test @MainActor func milestoneManualClaimAwardsSqueaks() {
+    let state = makeGameState()
+    let initialMoney = state.money
+    let keys = getAllPhenotypeKeys()
+    for key in keys.prefix(36) {
+        _ = state.pigdex.registerPhenotype(key: key, gameDay: 1)
+    }
+    state.pigdex.claimMilestone(25)
+    state.addMoney(getMilestoneReward(25))
+    state.logEvent("Pigdex Milestone: 25% complete! +250 Squeaks", eventType: "pigdex")
+    #expect(state.money == initialMoney + 250)
+    #expect(state.pigdex.milestoneRewardsClaimed.contains(25))
+    #expect(state.events.contains { $0.eventType == "pigdex" && $0.message.contains("Milestone") })
+}
+
+@Test @MainActor func milestoneBirthPathAutoClaimsReward() {
+    let state = makeGameState()
+    let keys = getAllPhenotypeKeys()
+    for key in keys.prefix(36) {
+        _ = state.pigdex.registerPhenotype(key: key, gameDay: 1)
+    }
+    let milestones = state.pigdex.checkMilestones()
+    for threshold in milestones {
+        state.pigdex.claimMilestone(threshold)
+        state.addMoney(getMilestoneReward(threshold))
+    }
+    // After auto-claim, checkMilestones returns empty (no unclaimed milestones remain at 25%)
+    #expect(state.pigdex.checkMilestones().isEmpty)
+    #expect(state.pigdex.milestoneRewardsClaimed.contains(25))
+}
+
 // MARK: - Contracts Tab
 
 @Test func contractDaysLeftCalculation() {
