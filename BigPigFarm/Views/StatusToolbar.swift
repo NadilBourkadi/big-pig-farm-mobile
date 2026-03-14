@@ -30,7 +30,7 @@ struct StatusToolbar: View {
             HUDButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
             HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
             HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
-            HUDButton(systemImage: "book.fill", label: "Almanac", action: onAlmanacTapped)
+            HUDButton(systemImage: "books.vertical.fill", label: "Almanac", action: onAlmanacTapped)
 
             refillButton
 
