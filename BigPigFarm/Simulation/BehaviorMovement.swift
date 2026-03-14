@@ -80,9 +80,10 @@ enum BehaviorMovement {
             }
             if path.count >= minSteps {
                 pig.path = path
-                // Safe: path.count >= minSteps guarantees non-empty
-                // swiftlint:disable:next force_unwrapping
-                pig.targetPosition = Position(x: Double(path.last!.x), y: Double(path.last!.y))
+                guard let lastWaypoint = path.last else {
+                    preconditionFailure("Path must not be empty when count >= minSteps")
+                }
+                pig.targetPosition = Position(x: Double(lastWaypoint.x), y: Double(lastWaypoint.y))
                 pig.targetDescription = nil
                 pig.behaviorState = .wandering
                 return

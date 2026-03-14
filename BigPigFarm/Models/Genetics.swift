@@ -139,36 +139,44 @@ struct Genotype: Codable, Sendable {
 
     /// Generate a guaranteed common genotype (solid, full color, no roan, no dilution).
     static func randomCommon() -> Self {
-        // swiftlint:disable force_unwrapping
-        Self(
-            eLocus: [AllelePair(first: "E", second: "E"),
-                     AllelePair(first: "E", second: "e")].randomElement()!,
-            bLocus: [AllelePair(first: "B", second: "B"),
-                     AllelePair(first: "B", second: "b")].randomElement()!,
+        let eOptions = [AllelePair(first: "E", second: "E"),
+                        AllelePair(first: "E", second: "e")]
+        let bOptions = [AllelePair(first: "B", second: "B"),
+                        AllelePair(first: "B", second: "b")]
+        guard let eLocus = eOptions.randomElement(),
+              let bLocus = bOptions.randomElement() else {
+            preconditionFailure("Allele option arrays must not be empty")
+        }
+        return Self(
+            eLocus: eLocus,
+            bLocus: bLocus,
             sLocus: AllelePair(first: "S", second: "S"),
             cLocus: AllelePair(first: "C", second: "C"),
             rLocus: AllelePair(first: "r", second: "r"),
             dLocus: AllelePair(first: "D", second: "D")
         )
-        // swiftlint:enable force_unwrapping
     }
 
     /// Generate a random genotype with more variation.
     static func random() -> Self {
-        // swiftlint:disable force_unwrapping
-        Self(
-            eLocus: [AllelePair(first: "E", second: "E"),
-                     AllelePair(first: "E", second: "e"),
-                     AllelePair(first: "e", second: "e")].randomElement()!,
-            bLocus: [AllelePair(first: "B", second: "B"),
-                     AllelePair(first: "B", second: "b"),
-                     AllelePair(first: "b", second: "b")].randomElement()!,
+        let eOptions = [AllelePair(first: "E", second: "E"),
+                        AllelePair(first: "E", second: "e"),
+                        AllelePair(first: "e", second: "e")]
+        let bOptions = [AllelePair(first: "B", second: "B"),
+                        AllelePair(first: "B", second: "b"),
+                        AllelePair(first: "b", second: "b")]
+        guard let eLocus = eOptions.randomElement(),
+              let bLocus = bOptions.randomElement() else {
+            preconditionFailure("Allele option arrays must not be empty")
+        }
+        return Self(
+            eLocus: eLocus,
+            bLocus: bLocus,
             sLocus: AllelePair(first: "S", second: "S"),
             cLocus: AllelePair(first: "C", second: "C"),
             rLocus: AllelePair(first: "r", second: "r"),
             dLocus: AllelePair(first: "D", second: "D")
         )
-        // swiftlint:enable force_unwrapping
     }
 
     enum CodingKeys: String, CodingKey {
