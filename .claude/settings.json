@@ -71,5 +71,6 @@
     ]
   },
   "outputStyle": "Explanatory",
-  "model": "opusplan"
+  "model": "opus",
+  "effortLevel": "high"
 }
