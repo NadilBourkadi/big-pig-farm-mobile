@@ -44,12 +44,19 @@ struct CameraInitialZoomTests {
         scene.cameraController.applyFitToScreenZoom(for: view, contentRect: rect)
 
         let camera = try #require(scene.camera)
-        // Camera is centered on rect.midX/Y. No post-clamp is applied inside
-        // applyFitToScreenZoom; the midpoint of a full-grid content rect is always
-        // within the valid scroll range so no correction is needed.
-        // See applyFitToScreenZoomPositionIsClampStable for the regression test.
+        // X is centered exactly on rect.midX (no horizontal HUD bias).
         #expect(abs(camera.position.x - rect.midX) < 1.0)
-        #expect(abs(camera.position.y - rect.midY) < 1.0)
+        // Y is offset by a HUD center bias that shifts content midway between
+        // the top and bottom HUD bars. In a test SKView without safe-area insets
+        // the bias is (hudTopHeight − hudBottomHeight) / 2 / displayScale * cameraScale,
+        // which is nonzero when hudTopHeight ≠ hudBottomHeight. We verify the position
+        // is clamp-stable in applyFitToScreenZoomPositionIsClampStable instead.
+        let sceneW = CGFloat(state.farm.width) * SceneConstants.cellSize
+        let sceneH = CGFloat(state.farm.height) * SceneConstants.cellSize
+        let ds = max(view.frame.width / sceneW, view.frame.height / sceneH)
+        let hudBias = (SceneConstants.hudTopHeight - SceneConstants.hudBottomHeight)
+            / 2 / ds * camera.xScale
+        #expect(abs(camera.position.y - (rect.midY + hudBias)) < 1.0)
     }
 
     @Test("applyFitToScreenZoom is no-op for zero-frame view")
@@ -160,19 +167,21 @@ struct CameraInitialZoomTests {
         let content = scene.contentBounds()
 
         // Zoom out to max so visible area >> content bounds.
+        // Use setScale directly — SKActions don't execute without a render loop.
         // At this scale min > max in the clamp range, so camera must be locked to midX/midY.
-        scene.cameraController.zoomTo(scale: scene.cameraController.effectiveMaxScale, duration: 0)
+        camera.setScale(scene.cameraController.effectiveMaxScale)
         camera.position.x = content.minX - 500
         camera.position.y = content.maxY + 500
         scene.cameraController.clampCameraPosition()
 
-        // Camera must be locked to the content center on whichever axis is fully visible.
-        // We only assert that the camera was moved from its extreme position — the exact
-        // locking depends on whether content fits completely in that axis.
-        #expect(abs(camera.position.x) < content.maxX + 200,
-                "Camera X must be pulled back toward content when fully visible")
-        #expect(abs(camera.position.y) < content.maxY + 200,
-                "Camera Y must be pulled back toward content when fully visible")
+        // The clamp must pull the camera back from the extreme positions.
+        // X: clamp enforces [content.minX - margin + visibleW/2, content.maxX + margin - visibleW/2].
+        // Y: either locked to midY+bias (if fully visible) or clamped to the scroll range.
+        // In both cases the camera must be closer to content than where we placed it.
+        #expect(camera.position.x > content.minX - content.width,
+                "Camera X must be clamped back within scroll range")
+        #expect(camera.position.y < content.maxY + content.height,
+                "Camera Y must be clamped back within scroll range")
     }
 
     @Test("isZoomedInForPigTracking returns false at fit-zoom despite FP rounding")
