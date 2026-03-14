@@ -66,7 +66,9 @@ struct GameTime: Codable, Sendable {
     }
 
     /// Recalculate the base offset so the given day/hour/minute are reflected
-    /// at the current totalGameMinutes.
+    /// at the current totalGameMinutes. Each property setter calls this independently,
+    /// reading the other two computed properties. Chaining sets (e.g. `time.day = 2;
+    /// time.hour = 0`) works correctly because each setter commits before the next reads.
     private mutating func setClockBase(day: Int, hour: Int, minute: Int) {
         let target = Double((day - 1) * 1440 + hour * 60 + minute)
         clockBaseMinutes = target - totalGameMinutes

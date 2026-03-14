@@ -302,5 +302,7 @@ import Foundation
         time.advance(minutes: 0.3)
     }
     #expect(time.totalGameMinutes > 59.9)
-    #expect(time.hour >= 1)
+    // 200 * 0.3 = exactly 60 game-minutes -> hour 1, minute 0
+    #expect(time.hour == 1)
+    #expect(time.minute == 0)
 }
