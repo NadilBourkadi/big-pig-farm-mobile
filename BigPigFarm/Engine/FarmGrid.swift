@@ -21,6 +21,7 @@ struct Cell: Codable, Sendable {
     var isWalkable: Bool = true
     var areaId: UUID?
     var isTunnel: Bool = false
+    var tunnelMouthAreaId: UUID?
     var isCorner: Bool = false
     var isHorizontalWall: Bool = false
 
@@ -30,6 +31,7 @@ struct Cell: Codable, Sendable {
         case isWalkable = "is_walkable"
         case areaId = "area_id"
         case isTunnel = "is_tunnel"
+        case tunnelMouthAreaId = "tunnel_mouth_area_id"
         case isCorner = "is_corner"
         case isHorizontalWall = "is_horizontal_wall"
     }

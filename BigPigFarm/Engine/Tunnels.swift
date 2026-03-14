@@ -98,7 +98,9 @@ private extension Tunnels {
                 farm.cells[y][x].isTunnel = true
                 tunnelCells.append(GridPosition(x: x, y: y))
             }
-            // Barrier walls above and below the corridor
+            // Barrier walls above and below the corridor.
+            // Mouth columns (x == x1 or x == x2) carry the adjacent area's ID so the
+            // renderer can draw the area's wall texture instead of the tunnel texture.
             for barrierDY in [-(hw + 1), hw + 1] {
                 let y = centerY + barrierDY
                 guard farm.isValidPosition(x, y) else { continue }
@@ -106,6 +108,11 @@ private extension Tunnels {
                 farm.cells[y][x].isWalkable = false
                 farm.cells[y][x].isTunnel = true
                 farm.cells[y][x].isHorizontalWall = true
+                if x == x1 {
+                    farm.cells[y][x].tunnelMouthAreaId = areaAID
+                } else if x == x2 {
+                    farm.cells[y][x].tunnelMouthAreaId = areaBID
+                }
                 tunnelCells.append(GridPosition(x: x, y: y))
             }
         }
@@ -187,9 +194,11 @@ private extension Tunnels {
                 farm.cells[y][x].isTunnel = true
                 tunnelCells.append(GridPosition(x: x, y: y))
             }
-            // Barrier walls left and right of the corridor
+            // Barrier walls left and right of the corridor.
             // Explicitly clear isHorizontalWall — the cell may have been an area border wall
             // before tunnel carving, and inherited isHorizontalWall = true from that state.
+            // Mouth rows (y == y1 or y == y2) carry the adjacent area's ID so the
+            // renderer can draw the area's wall texture instead of the tunnel texture.
             for barrierDX in [-(hw + 1), hw + 1] {
                 let x = centerX + barrierDX
                 guard farm.isValidPosition(x, y) else { continue }
@@ -197,6 +206,11 @@ private extension Tunnels {
                 farm.cells[y][x].isWalkable = false
                 farm.cells[y][x].isTunnel = true
                 farm.cells[y][x].isHorizontalWall = false
+                if y == y1 {
+                    farm.cells[y][x].tunnelMouthAreaId = areaAID
+                } else if y == y2 {
+                    farm.cells[y][x].tunnelMouthAreaId = areaBID
+                }
                 tunnelCells.append(GridPosition(x: x, y: y))
             }
         }
