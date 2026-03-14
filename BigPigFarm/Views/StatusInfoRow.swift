@@ -48,6 +48,7 @@ private extension StatusInfoRow {
     var foodLevel: Int {
         let facilities = gameState.getFacilitiesByType(.foodBowl)
             + gameState.getFacilitiesByType(.hayRack)
+            + gameState.getFacilitiesByType(.feastTable)
         guard !facilities.isEmpty else { return 0 }
         let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
             / Double(facilities.count)
