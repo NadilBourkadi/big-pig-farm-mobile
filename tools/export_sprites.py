@@ -316,6 +316,49 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
         write_imageset(post_img, terrain_dir, f"terrain_{biome_name}_post")
         count += 1
 
+    # Tunnel terrain — neutral grey stone, not tied to any biome.
+    # Colors from Python terrain_renderer.py: bgcolor="#3a3a3a", variation greys.
+    tunnel_floor_bg = "#3a3a3a"
+    tunnel_floor_colors = ["#808080", "#707070", "#909090", "#757575"]
+    floor_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
+    rng = random.Random("terrain_tunnel_floor")
+    for y in range(tile_size):
+        for x in range(tile_size):
+            if rng.random() < 0.15:
+                floor_img.putpixel((x, y), hex_to_rgba(rng.choice(tunnel_floor_colors)))
+            else:
+                floor_img.putpixel((x, y), hex_to_rgba(tunnel_floor_bg))
+    scaled_floor = floor_img.resize(
+        (tile_size * scale, tile_size * scale), resample=Image.NEAREST
+    )
+    write_imageset(scaled_floor, terrain_dir, "terrain_tunnel_floor")
+    count += 1
+
+    tunnel_wall_planks = ["#505050", "#585858", "#484848", "#555555", "#4a4a4a"]
+    tunnel_wall_grains = ["#303030", "#282828", "#383838"]
+    wall_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
+    rng = random.Random("terrain_tunnel_wall")
+    for y in range(tile_size):
+        plank_color = hex_to_rgba(rng.choice(tunnel_wall_planks))
+        for x in range(tile_size):
+            if rng.random() < 0.1:
+                wall_img.putpixel((x, y), hex_to_rgba(rng.choice(tunnel_wall_grains)))
+            else:
+                wall_img.putpixel((x, y), plank_color)
+    scaled_wall = wall_img.resize(
+        (tile_size * scale, tile_size * scale), resample=Image.NEAREST
+    )
+    write_imageset(scaled_wall, terrain_dir, "terrain_tunnel_wall")
+    count += 1
+
+    tunnel_post_color = hex_to_rgba("#2a2a2a")
+    post_img = Image.new("RGBA", (tile_size, tile_size), tunnel_post_color)
+    scaled_post = post_img.resize(
+        (tile_size * scale, tile_size * scale), resample=Image.NEAREST
+    )
+    write_imageset(scaled_post, terrain_dir, "terrain_tunnel_post")
+    count += 1
+
     return count
 
 
@@ -425,7 +468,7 @@ EXPECTED_COUNTS = {
     "facilities": 25,  # 17 base + 8 state variants
     "indicators": 12,  # 6 types x 2 brightness levels
     "portraits": 144,  # 8 colors x 3 patterns x 3 intensities x 2 roan
-    "terrain": 24,     # 8 biomes x 3 tile types
+    "terrain": 27,     # 8 biomes x 3 tile types (24) + tunnel x 3 tile types (3)
     "patterns": 6,     # 3 patterns x 2 ages
 }
 
