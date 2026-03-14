@@ -88,6 +88,14 @@ import Foundation
     #expect(result.contains(where: { $0.id == "bulk_feeders" }))
 }
 
+@Test @MainActor func getAvailablePerksFilteredByImplementedExcludesUnimplemented() {
+    let all = Shop.getAvailablePerks(farmTier: 5)
+    let implemented = all.filter(\.implemented)
+    // At least one perk is unimplemented, so filtering should reduce the count
+    #expect(implemented.count < all.count)
+    #expect(implemented.allSatisfy(\.implemented))
+}
+
 // MARK: - purchasePerk
 
 @Test @MainActor func shopPurchasePerkDeductsCostAndAddsToUpgrades() throws {
