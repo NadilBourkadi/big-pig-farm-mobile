@@ -63,7 +63,15 @@ extension FarmScene {
 
                 let biomeName: String
                 if cell.isTunnel {
-                    biomeName = "tunnel"
+                    // Mouth wall cells use the adjacent area's biome texture so the area's
+                    // wooden wall visually extends up to the tunnel entrance.
+                    if cell.cellType == .wall,
+                       let mouthAreaId = cell.tunnelMouthAreaId,
+                       let mouthArea = farm.areaLookup[mouthAreaId] {
+                        biomeName = mouthArea.biome.rawValue
+                    } else {
+                        biomeName = "tunnel"
+                    }
                 } else if let areaId = cell.areaId, let area = farm.areaLookup[areaId] {
                     biomeName = area.biome.rawValue
                 } else {

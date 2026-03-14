@@ -250,6 +250,102 @@ import Foundation
 
 // MARK: - Tunnels: Pathfinding Integration
 
+// MARK: - Tunnels: Mouth Area IDs
+
+@Test @MainActor func horizontalTunnelMouthWallsHaveAreaId() {
+    var grid = makeTwoAreaGrid()
+    let leftArea = grid.areas[0]   // meadow, x2 = 19
+    let rightArea = grid.areas[1]  // burrow, x1 = 27
+    let tunnels = Tunnels.connectAreas(&grid, areaA: leftArea, areaB: rightArea)
+
+    for tunnel in tunnels where tunnel.orientation == "horizontal" {
+        let leftMouthWalls = tunnel.cells.filter { $0.x == leftArea.x2 && grid.cells[$0.y][$0.x].cellType == .wall }
+        #expect(!leftMouthWalls.isEmpty)
+        leftMouthWalls.forEach { #expect(grid.cells[$0.y][$0.x].tunnelMouthAreaId == leftArea.id) }
+
+        let rightMouthWalls = tunnel.cells.filter { $0.x == rightArea.x1 && grid.cells[$0.y][$0.x].cellType == .wall }
+        #expect(!rightMouthWalls.isEmpty)
+        rightMouthWalls.forEach { #expect(grid.cells[$0.y][$0.x].tunnelMouthAreaId == rightArea.id) }
+    }
+}
+
+@Test @MainActor func horizontalTunnelPassagewayWallsHaveNoMouthAreaId() {
+    var grid = makeTwoAreaGrid()
+    let leftArea = grid.areas[0]
+    let rightArea = grid.areas[1]
+    let tunnels = Tunnels.connectAreas(&grid, areaA: leftArea, areaB: rightArea)
+
+    for tunnel in tunnels where tunnel.orientation == "horizontal" {
+        let innerWalls = tunnel.cells.filter { pos in
+            pos.x != leftArea.x2 && pos.x != rightArea.x1
+                && grid.cells[pos.y][pos.x].cellType == .wall
+        }
+        for pos in innerWalls {
+            #expect(grid.cells[pos.y][pos.x].tunnelMouthAreaId == nil)
+        }
+    }
+}
+
+@Test @MainActor func horizontalTunnelFloorCellsHaveNoMouthAreaId() {
+    var grid = makeTwoAreaGrid()
+    let tunnels = Tunnels.connectAreas(&grid, areaA: grid.areas[0], areaB: grid.areas[1])
+
+    for tunnel in tunnels where tunnel.orientation == "horizontal" {
+        let floorCells = tunnel.cells.filter { pos in
+            grid.cells[pos.y][pos.x].cellType == .floor
+        }
+        for pos in floorCells {
+            #expect(grid.cells[pos.y][pos.x].tunnelMouthAreaId == nil)
+        }
+    }
+}
+
+@Test @MainActor func verticalTunnelMouthWallsHaveAreaId() {
+    var grid = makeTwoAreaGridVertical()
+    let topArea = grid.areas[0]      // meadow, y2 = 11
+    let bottomArea = grid.areas[1]   // burrow, y1 = 19
+    let tunnels = Tunnels.connectAreas(&grid, areaA: topArea, areaB: bottomArea)
+
+    for tunnel in tunnels where tunnel.orientation == "vertical" {
+        let topMouthWalls = tunnel.cells.filter { $0.y == topArea.y2 && grid.cells[$0.y][$0.x].cellType == .wall }
+        #expect(!topMouthWalls.isEmpty)
+        topMouthWalls.forEach { #expect(grid.cells[$0.y][$0.x].tunnelMouthAreaId == topArea.id) }
+
+        let bottomMouthWalls = tunnel.cells.filter { $0.y == bottomArea.y1 && grid.cells[$0.y][$0.x].cellType == .wall }
+        #expect(!bottomMouthWalls.isEmpty)
+        bottomMouthWalls.forEach { #expect(grid.cells[$0.y][$0.x].tunnelMouthAreaId == bottomArea.id) }
+    }
+}
+
+@Test @MainActor func verticalTunnelPassagewayWallsHaveNoMouthAreaId() {
+    var grid = makeTwoAreaGridVertical()
+    let topArea = grid.areas[0]
+    let bottomArea = grid.areas[1]
+    let tunnels = Tunnels.connectAreas(&grid, areaA: topArea, areaB: bottomArea)
+
+    for tunnel in tunnels where tunnel.orientation == "vertical" {
+        let innerWalls = tunnel.cells.filter { pos in
+            pos.y != topArea.y2 && pos.y != bottomArea.y1
+                && grid.cells[pos.y][pos.x].cellType == .wall
+        }
+        for pos in innerWalls {
+            #expect(grid.cells[pos.y][pos.x].tunnelMouthAreaId == nil)
+        }
+    }
+}
+
+@Test func tunnelMouthAreaIdDecodesAsNilWhenAbsent() throws {
+    // Simulate old save data: a tunnel Cell JSON without the tunnel_mouth_area_id key.
+    // The synthesized decoder must treat the missing key as nil.
+    let json = """
+    {"cell_type":"wall","is_walkable":false,"is_tunnel":true,"is_corner":false,"is_horizontal_wall":true}
+    """
+    let data = try #require(json.data(using: .utf8))
+    let cell = try JSONDecoder().decode(Cell.self, from: data)
+    #expect(cell.tunnelMouthAreaId == nil)
+    #expect(cell.isTunnel == true)
+}
+
 @Test @MainActor func pathfindingCanRouteThroughTunnel() {
     var grid = makeTwoAreaGrid()
     let leftArea = grid.areas[0]
