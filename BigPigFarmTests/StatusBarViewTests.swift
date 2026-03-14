@@ -36,7 +36,9 @@ struct StatusBarFoodLevelTests {
         _ = state.addFacility(bowl)
         let rack = Facility.create(type: .hayRack, x: 10, y: 5)   // 100%
         _ = state.addFacility(rack)
-        var table = Facility.create(type: .feastTable, x: 15, y: 5)
+        // feastTable is 5×5; place at (5,10) so columns 5–9, rows 10–14 fit within the
+        // 18×18 starter farm and don't overlap the bowl (5,5) or rack (10,5).
+        var table = Facility.create(type: .feastTable, x: 5, y: 10)
         table.currentAmount = 0                                     // 0%
         _ = state.addFacility(table)
 
