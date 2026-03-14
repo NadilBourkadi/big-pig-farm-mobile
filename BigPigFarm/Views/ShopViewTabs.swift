@@ -12,6 +12,7 @@ struct PerksTab: View {
 
     private var perksByCategory: [(String, [UpgradeDefinition])] {
         let available = Shop.getAvailablePerks(farmTier: gameState.farmTier)
+            .filter(\.implemented)
         let grouped = Dictionary(grouping: available, by: \.category)
         return grouped.sorted { $0.key < $1.key }
     }
@@ -68,7 +69,6 @@ private struct PerkRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(perk.name)
                     .font(.body.bold())
-                    .foregroundStyle(perk.implemented ? .primary : .secondary)
                 Text(perk.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -80,10 +80,6 @@ private struct PerkRow: View {
                     Text("Owned")
                         .font(.caption.bold())
                         .foregroundStyle(.green)
-                } else if !perk.implemented {
-                    Text("Soon")
-                        .font(.caption.bold())
-                        .foregroundStyle(.secondary)
                 } else {
                     CurrencyLabel(amount: perk.cost)
                         .foregroundStyle(canAfford ? .yellow : .secondary)
