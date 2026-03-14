@@ -182,11 +182,16 @@ struct ContentView: View {
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button("Done") { showPigDetail = false }
                             }
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button("Follow") {
+                                    farmScene.centerOnPig(pigID)
+                                }
+                            }
                         }
                 }
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.fraction(0.35), .large])
                 .presentationDragIndicator(.visible)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.35)))
             }
         }
         .confirmationDialog(
