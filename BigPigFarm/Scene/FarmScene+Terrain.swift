@@ -20,7 +20,7 @@ extension FarmScene {
         for area in farm.areas {
             usedBiomes.insert(area.biome.rawValue)
         }
-        if !farm.tunnels.isEmpty { usedBiomes.insert(BiomeType.meadow.rawValue) }
+        if !farm.tunnels.isEmpty { usedBiomes.insert("tunnel") }
         if usedBiomes.isEmpty { usedBiomes.insert(BiomeType.meadow.rawValue) }
 
         // Build one tile group triplet per biome.
@@ -63,7 +63,7 @@ extension FarmScene {
 
                 let biomeName: String
                 if cell.isTunnel {
-                    biomeName = BiomeType.meadow.rawValue
+                    biomeName = "tunnel"
                 } else if let areaId = cell.areaId, let area = farm.areaLookup[areaId] {
                     biomeName = area.biome.rawValue
                 } else {
