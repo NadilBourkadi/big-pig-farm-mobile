@@ -13,10 +13,52 @@ struct StatusBarFoodLevelTests {
         let state = makeGameState()
         let facilities = state.getFacilitiesByType(.foodBowl)
             + state.getFacilitiesByType(.hayRack)
+            + state.getFacilitiesByType(.feastTable)
         #expect(facilities.isEmpty)
         // foodLevel would be 0 when no facilities exist
         let level = computeFoodLevel(state: state)
         #expect(level == 0)
+    }
+
+    @Test func foodLevelIncludesFeastTable() {
+        let state = makeGameState()
+        var table = Facility.create(type: .feastTable, x: 5, y: 5)
+        table.currentAmount = table.maxAmount * 0.5   // 50%
+        _ = state.addFacility(table)
+
+        let level = computeFoodLevel(state: state)
+        #expect(level == 50)
+    }
+
+    @Test func foodLevelAveragesAllThreeFoodFacilityTypes() {
+        let state = makeGameState()
+        let bowl = Facility.create(type: .foodBowl, x: 5, y: 5)   // 100%
+        _ = state.addFacility(bowl)
+        let rack = Facility.create(type: .hayRack, x: 10, y: 5)   // 100%
+        _ = state.addFacility(rack)
+        var table = Facility.create(type: .feastTable, x: 15, y: 5)
+        table.currentAmount = 0                                     // 0%
+        _ = state.addFacility(table)
+
+        let level = computeFoodLevel(state: state)
+        // Average of 100, 100, 0 = 66.67 → rounds to 67
+        #expect(level == 67)
+    }
+
+    @Test func foodLevelCapsBelowHundredWhenFeastTableDrained() {
+        // Regression: before the fix, feastTable was excluded from the average
+        // so a drained table had no effect on the HUD. Now it does.
+        let state = makeGameState()
+        let bowl = Facility.create(type: .foodBowl, x: 5, y: 5)   // 100%
+        _ = state.addFacility(bowl)
+        var table = Facility.create(type: .feastTable, x: 10, y: 5)
+        table.currentAmount = table.maxAmount * 0.74               // 74%
+        _ = state.addFacility(table)
+
+        let level = computeFoodLevel(state: state)
+        // Average of 100% and 74% = 87% — the exact symptom the user reported
+        #expect(level == 87)
+        #expect(level < 100)
     }
 
     @Test func foodLevelAveragesSingleFoodBowl() {
@@ -266,6 +308,7 @@ struct StatusBarGameStateTests {
 private func computeFoodLevel(state: GameState) -> Int {
     let facilities = state.getFacilitiesByType(.foodBowl)
         + state.getFacilitiesByType(.hayRack)
+        + state.getFacilitiesByType(.feastTable)
     guard !facilities.isEmpty else { return 0 }
     let average = facilities.reduce(0.0) { $0 + $1.fillPercentage }
         / Double(facilities.count)
