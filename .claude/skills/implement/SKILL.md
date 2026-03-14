@@ -17,7 +17,7 @@ If an argument was provided (`$ARGUMENTS`):
 - If it's a phase label (e.g. `p0`, `p1`, `phase-0`), filter for tasks with that phase label
 - If it's a priority (e.g. `P0`, `P1`), filter by priority level
 
-Otherwise, pick the highest-priority (lowest P-number) unblocked implementation task. Skip tasks labeled "spec" or "investigation".
+Otherwise, pick the highest-priority (lowest P-number) unblocked implementation task. **Only select tasks with `○ open` status.** Any task showing `◐ in_progress` belongs to another active agent — do not touch it, do not assume it is abandoned. Skip tasks labeled "spec" or "investigation".
 
 Claim the task: `bd update <id> --status in_progress`
 
