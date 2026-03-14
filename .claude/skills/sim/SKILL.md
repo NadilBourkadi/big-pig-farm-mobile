@@ -1,6 +1,6 @@
 ---
 name: sim
-description: Build BigPigFarm for the iOS Simulator and launch it
+description: Build the current worktree and launch it in the iOS Simulator. Use when asked to "run in simulator", "run the app", "launch in sim", "build and run", "test on device", "open in simulator", or any variation of running/launching the app.
 argument-hint: "[optional: simulator name, e.g. 'iPhone 16 Pro'. Defaults to iPhone 17]"
 ---
 
