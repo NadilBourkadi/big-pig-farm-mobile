@@ -147,7 +147,7 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 
 ### Rules
 - Always check `bd ready` before starting a new task
-- **`in_progress` means another agent owns the task.** Never pick a task that is already `in_progress` — it belongs to another running agent session. `bd ready` shows all unblocked tasks regardless of status; filter to `○ open` only when selecting work.
+- **`in_progress` is an absolute blocker — no exceptions, no judgment calls.** If a task shows `◐ in_progress` or `IN_PROGRESS`, another agent is actively working on it right now. Do NOT pick it up, do NOT rationalize it as "probably orphaned" or "likely abandoned". The only person who can reassign an in-progress task is the user via explicit instruction (e.g. "take over xtr"). `bd ready` shows all unblocked tasks regardless of status; **always filter to `○ open` only** when selecting work.
 - Never work on a task that has open blockers — use `bd show <id>` to check
 - Create discovered issues as you find them (bugs, tech debt, follow-ups)
 - Keep tasks granular — anything over ~2 files should be its own bead
