@@ -182,14 +182,11 @@ struct ContentView: View {
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button("Done") { showPigDetail = false }
                             }
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Follow") {
-                                    handleFollowPig(pigID)
-                                    showPigDetail = false
-                                }
-                            }
                         }
                 }
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
             }
         }
         .confirmationDialog(
@@ -207,6 +204,7 @@ struct ContentView: View {
             coordinator.onPigSelected = { pigID in
                 selectedPigID = pigID
                 showPigDetail = true
+                farmScene.centerOnPig(pigID) // Node guaranteed to exist — called from handleTap
             }
             coordinator.onPigDeselected = {
                 selectedPigID = nil
