@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - StatusInfoRow
 
 /// Top-of-screen HUD strip displaying day, tier, currency, population,
-/// resource levels, and current speed.
+/// and resource levels.
 ///
 /// Read-only — no action callbacks. All values are observed from GameState.
 struct StatusInfoRow: View {
@@ -32,7 +32,6 @@ struct StatusInfoRow: View {
 
             resourceIndicator(systemImage: "fork.knife", level: foodLevel)
             resourceIndicator(systemImage: "drop.fill", level: waterLevel)
-            speedIndicator
         }
         .padding(.horizontal, 8)
         .padding(.top, 4)
@@ -75,19 +74,6 @@ private extension StatusInfoRow {
 // MARK: - Sub-views
 
 private extension StatusInfoRow {
-    @ViewBuilder
-    var speedIndicator: some View {
-        if gameState.isPaused {
-            Image(systemName: "pause.fill")
-                .font(.caption)
-                .foregroundStyle(.yellow)
-        } else {
-            Text(gameState.speed.displayLabel)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
-
     func resourceIndicator(systemImage: String, level: Int) -> some View {
         HStack(spacing: 2) {
             Image(systemName: systemImage)
@@ -106,7 +92,6 @@ private extension StatusInfoRow {
         let previewState = GameState()
         previewState.farm = FarmGrid.createStarter()
         previewState.money = 1_250
-        previewState.speed = .fast
         return previewState
     }()
     StatusInfoRow(gameState: state)

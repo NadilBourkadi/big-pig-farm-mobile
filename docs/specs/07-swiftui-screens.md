@@ -247,8 +247,6 @@ extension StatusBarView {
                 warningThreshold: 30
             )
 
-            // Speed indicator
-            speedIndicator
         }
         .font(.caption)
     }
@@ -286,24 +284,7 @@ extension StatusBarView {
 
 ### Speed Indicator
 
-```swift
-extension StatusBarView {
-    /// Displays pause/play/fast-forward state.
-    ///
-    /// Maps from: status_bar.py render() speed_str logic.
-    @ViewBuilder
-    private var speedIndicator: some View {
-        if gameState.isPaused {
-            Image(systemName: "pause.fill")
-                .foregroundStyle(.yellow)
-        } else {
-            let speedLabel = GameConfig.Speed.displayName(for: gameState.speed)
-            Text(speedLabel)
-                .font(.caption2)
-        }
-    }
-}
-```
+> **Removed (bead b3s).** Speed display was consolidated into the `StatusToolbar` Speed button, which already shows the current speed label. The `speedIndicator` was removed from `StatusInfoRow` to eliminate redundancy.
 
 ### Button Row
 
