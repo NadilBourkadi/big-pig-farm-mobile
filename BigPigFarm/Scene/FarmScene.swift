@@ -56,14 +56,14 @@ class FarmScene: SKScene {
 
     // MARK: - Node Layers
 
-    private let terrainLayer = SKNode()
-    private let facilityLayer = SKNode()
-    private let pigLayer = SKNode()
+    let terrainLayer = SKNode()
+    let facilityLayer = SKNode()
+    let pigLayer = SKNode()
 
     // MARK: - Node Tracking
 
-    private(set) var pigNodes: [UUID: PigNode] = [:]
-    private var facilityNodes: [UUID: FacilityNode] = [:]
+    var pigNodes: [UUID: PigNode] = [:]
+    var facilityNodes: [UUID: FacilityNode] = [:]
 
     // MARK: - Camera
 
@@ -87,15 +87,15 @@ class FarmScene: SKScene {
 
     // MARK: - Terrain State
 
-    private var lastGridGeneration: Int = -1
-    private var farmWidth: Int = 0
-    private var farmHeight: Int = 0
-    var outOfBoundsTileMap: SKTileMapNode? // internal: written by FarmScene+Background.swift (cross-file extension)
+    var lastGridGeneration: Int = -1
+    var farmWidth: Int = 0
+    var farmHeight: Int = 0
+    var outOfBoundsTileMap: SKTileMapNode?
 
     // MARK: - Indicators
 
     var indicatorTimers: [UUID: IndicatorTimer] = [:]
-    private var frameCount: Int = 0
+    var frameCount: Int = 0
 
     // MARK: - Init
 
@@ -237,178 +237,5 @@ extension FarmScene {
             x: point.x / SceneConstants.cellSize,
             y: CGFloat(farmHeight) - (point.y / SceneConstants.cellSize)
         )
-    }
-}
-
-// MARK: - Terrain
-
-/// Per-biome tile group triplet used when filling the tile map.
-private struct BiomeTileGroups {
-    let floor: SKTileGroup
-    let wall: SKTileGroup
-    let post: SKTileGroup
-}
-
-extension FarmScene {
-
-    func rebuildTerrain() {
-        terrainLayer.removeAllChildren()
-        let farm = gameState.farm
-        let tileSize = CGSize(width: SceneConstants.cellSize, height: SceneConstants.cellSize)
-
-        // Collect biomes that appear in the grid.
-        var usedBiomes: Set<String> = []
-        for area in farm.areas {
-            usedBiomes.insert(area.biome.rawValue)
-        }
-        if !farm.tunnels.isEmpty { usedBiomes.insert(BiomeType.meadow.rawValue) }
-        if usedBiomes.isEmpty { usedBiomes.insert(BiomeType.meadow.rawValue) }
-
-        // Build one tile group triplet per biome.
-        var allTileGroups: [SKTileGroup] = []
-        var biomeGroups: [String: BiomeTileGroups] = [:]
-
-        for biome in usedBiomes {
-            let floorGroup = makeTileGroup(biome: biome, tileType: "floor", size: tileSize)
-            let wallGroup = makeTileGroup(biome: biome, tileType: "wall", size: tileSize)
-            let postGroup = makeTileGroup(biome: biome, tileType: "post", size: tileSize)
-            biomeGroups[biome] = BiomeTileGroups(floor: floorGroup, wall: wallGroup, post: postGroup)
-            allTileGroups.append(contentsOf: [floorGroup, wallGroup, postGroup])
-        }
-
-        let tileSet = SKTileSet(tileGroups: allTileGroups)
-        let tileMap = SKTileMapNode(
-            tileSet: tileSet,
-            columns: farm.width,
-            rows: farm.height,
-            tileSize: tileSize
-        )
-        tileMap.anchorPoint = CGPoint(x: 0, y: 0)
-        tileMap.position = .zero
-        tileMap.zPosition = 0
-
-        fillTiles(into: tileMap, with: biomeGroups, farm: farm)
-        terrainLayer.addChild(tileMap)
-        lastGridGeneration = farm.gridGeneration
-    }
-
-    private func fillTiles(
-        into tileMap: SKTileMapNode,
-        with biomeGroups: [String: BiomeTileGroups],
-        farm: FarmGrid
-    ) {
-        for gridY in 0..<farm.height {
-            for gridX in 0..<farm.width {
-                let cell = farm.cells[gridY][gridX]
-                let tileRow = farm.height - 1 - gridY  // Flip: tile row 0 is at scene bottom.
-
-                let biomeName: String
-                if cell.isTunnel {
-                    biomeName = BiomeType.meadow.rawValue
-                } else if let areaId = cell.areaId, let area = farm.areaLookup[areaId] {
-                    biomeName = area.biome.rawValue
-                } else {
-                    continue  // void cell — leave empty
-                }
-
-                guard let groups = biomeGroups[biomeName] else { continue }
-                let group: SKTileGroup = cell.cellType == .wall
-                    ? (cell.isCorner ? groups.post : groups.wall)
-                    : groups.floor
-                tileMap.setTileGroup(group, forColumn: gridX, row: tileRow)
-            }
-        }
-    }
-
-    private func makeTileGroup(biome: String, tileType: String, size: CGSize) -> SKTileGroup {
-        let texture = SpriteAssets.terrainTexture(biome: biome, tileType: tileType)
-        let definition = SKTileDefinition(texture: texture, size: size)
-        return SKTileGroup(tileDefinition: definition)
-    }
-}
-
-// MARK: - Node Sync
-
-extension FarmScene {
-
-    func syncPigs() {
-        let currentIDs = Set(gameState.guineaPigs.keys)
-        let existingIDs = Set(pigNodes.keys)
-
-        for removedID in existingIDs.subtracting(currentIDs) {
-            pigNodes[removedID]?.removeFromParent()
-            pigNodes.removeValue(forKey: removedID)
-            indicatorTimers.removeValue(forKey: removedID)
-        }
-
-        for (id, pig) in gameState.guineaPigs {
-            if let node = pigNodes[id] {
-                node.update(from: pig, in: self)
-            } else {
-                let node = PigNode(pig: pig, scene: self)
-                node.zPosition = 10
-                pigLayer.addChild(node)
-                pigNodes[id] = node
-            }
-            if let node = pigNodes[id] {
-                node.isSelected = (id == selectedPigID)
-                updateIndicator(for: node, pig: pig)
-            }
-        }
-    }
-
-    func syncFacilities() {
-        let currentIDs = Set(gameState.facilities.keys)
-        let existingIDs = Set(facilityNodes.keys)
-
-        for removedID in existingIDs.subtracting(currentIDs) {
-            facilityNodes[removedID]?.removeFromParent()
-            facilityNodes.removeValue(forKey: removedID)
-        }
-
-        for (id, facility) in gameState.facilities {
-            if let node = facilityNodes[id] {
-                node.update(from: facility, in: self)
-            } else {
-                let node = FacilityNode(facility: facility, scene: self)
-                node.zPosition = 5
-                facilityLayer.addChild(node)
-                facilityNodes[id] = node
-            }
-            if let node = facilityNodes[id] {
-                node.isSelectedInEditMode = (id == selectedFacilityID && isEditMode)
-                node.isBeingMoved = (id == selectedFacilityID && isMovingFacility)
-            }
-        }
-    }
-}
-
-// MARK: - Indicators
-
-extension FarmScene {
-
-    /// Returns the highest-priority status indicator type for a pig, or nil if none.
-    /// Marked internal so tests can call it directly.
-    internal func indicatorType(for pig: GuineaPig) -> String? {
-        let low = Double(GameConfig.Needs.lowThreshold)
-        if pig.needs.health < low { return IndicatorType.health.rawValue }
-        if pig.needs.hunger < low { return IndicatorType.hunger.rawValue }
-        if pig.needs.thirst < low { return IndicatorType.thirst.rawValue }
-        if pig.needs.energy < low { return IndicatorType.energy.rawValue }
-        if pig.behaviorState == .courting { return IndicatorType.courting.rawValue }
-        if pig.isPregnant { return IndicatorType.pregnant.rawValue }
-        return nil
-    }
-
-    private func updateIndicator(for node: PigNode, pig: GuineaPig) {
-        guard let indicatorName = indicatorType(for: pig) else {
-            node.hideIndicator()
-            return
-        }
-        // Pulse: bright for 2 s, dim for 1 s, at 10 TPS.
-        let cycleFrames = GameConfig.Simulation.ticksPerSecond * 3
-        let brightFrames = GameConfig.Simulation.ticksPerSecond * 2
-        let isBright = (frameCount % cycleFrames) < brightFrames
-        node.showIndicator(type: indicatorName, bright: isBright)
     }
 }
