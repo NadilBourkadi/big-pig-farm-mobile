@@ -90,10 +90,10 @@ import Foundation
 
 @Test @MainActor func getAvailablePerksFilteredByImplementedExcludesUnimplemented() {
     let all = Shop.getAvailablePerks(farmTier: 5)
-    let implemented = all.filter(\.implemented)
+    let implemented = all.filter { $0.implemented }
     // At least one perk is unimplemented, so filtering should reduce the count
     #expect(implemented.count < all.count)
-    #expect(implemented.allSatisfy(\.implemented))
+    #expect(implemented.allSatisfy { $0.implemented })
 }
 
 // MARK: - purchasePerk
