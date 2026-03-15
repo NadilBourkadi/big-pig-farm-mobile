@@ -184,6 +184,17 @@ enum GameConfig {
         static let defaultHideoutCapacity: Int = 2
     }
 
+    enum Offline {
+        /// Minimum wall-clock seconds away before catch-up triggers.
+        static let minThresholdSeconds: Double = 60
+        /// Maximum wall-clock seconds of offline time to simulate.
+        static let maxDurationSeconds: Double = 86_400  // 24 real hours
+        /// Game-time multiplier for offline progress (matches GameSpeed.normal.rawValue).
+        static let speedMultiplier: Int = 3
+        /// Game-hours per checkpoint in the fast-forward loop.
+        static let checkpointGameHours: Double = 1.0
+    }
+
     enum AutoArrange {
         static let horizontalGap: Int = 2
         static let verticalGap: Int = 3
