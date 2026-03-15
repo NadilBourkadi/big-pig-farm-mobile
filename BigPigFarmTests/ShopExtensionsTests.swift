@@ -93,7 +93,8 @@ import Foundation
     let implemented = all.filter(\.implemented)
     // At least one perk is unimplemented, so filtering should reduce the count
     #expect(implemented.count < all.count)
-    #expect(implemented.allSatisfy(\.implemented))
+    let allImplemented = implemented.allSatisfy(\.implemented)
+    #expect(allImplemented)
 }
 
 // MARK: - purchasePerk
