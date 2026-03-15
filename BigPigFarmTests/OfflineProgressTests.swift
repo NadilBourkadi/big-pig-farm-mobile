@@ -351,15 +351,13 @@ struct OfflineEdgeCaseTests {
 struct OfflineGameTimeTests {
     @Test @MainActor func gameTimeAdvancesCorrectly() {
         let state = makeOfflineState(pigCount: 1)
-        let dayBefore = state.gameTime.day
-        let hourBefore = state.gameTime.hour
+        let minutesBefore = state.gameTime.totalGameMinutes
 
-        // 24 checkpoints = 24 game-hours = 1 game-day
+        // 24 checkpoints = 24 game-hours = 1440 game-minutes
         _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
 
-        let totalHoursAdvanced = (state.gameTime.day - dayBefore) * 24
-            + (state.gameTime.hour - hourBefore)
-        #expect(totalHoursAdvanced == 24)
+        let minutesAdvanced = state.gameTime.totalGameMinutes - minutesBefore
+        #expect(minutesAdvanced == 1440.0)
     }
 }
 
