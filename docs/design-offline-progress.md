@@ -34,26 +34,24 @@ tick(gameDelta):
 
 ### Offline speed
 
-**Fixed at 1x (base rate).** At `realSecondsPerGameMinute = 1.0` with no speed multiplier:
+**Matches "1x" UI speed (rawValue 3).** The game progresses at the same rate offline as when the player watches at normal speed:
 
-- **1 real hour = 1 game hour**
-- 8 hours overnight = 8 game-hours = 1/3 game-day
-- 24 hours = 24 game-hours = 1 game-day
+- **1 real second = 3 game-minutes**
+- 1 real hour = 180 game-hours = **7.5 game-days**
+- 8 hours overnight = **60 game-days**
+- 24 hours = 4,320 game-hours = **180 game-days**
 
 Rationale:
-- Speed settings are a UI convenience for active play — irrelevant offline
-- 1:1 mapping (real hours → game hours) is intuitive and predictable
-- Conservative rate prevents devastating overnight outcomes — even a full day offline only advances 1 game-day
-- Clean numbers make the summary easy to reason about
+- Consistent with what the player sees at "1x" — offline feels like leaving the game running
+- Player's speed setting at time of backgrounding is irrelevant — offline always uses the base "1x" rate
 
 ### Maximum offline duration
 
-**Capped at 24 real hours (= 24 game-hours = 1 game-day at 1x).** This prevents:
-- All pigs dying of old age from week-long absences
-- Runaway breeding or economic effects
-- Excessive catch-up computation (though at 24 checkpoints it's trivially fast)
+**Capped at 24 real hours (= 180 game-days).** Beyond 24 hours, no additional progression occurs. This prevents:
+- Unbounded progression from week/month-long absences
+- Excessive catch-up computation (though even 4,320 checkpoints is fast — see §4)
 
-1 game-day is enough for pregnancies to progress, needs to cycle, and breeding to occur — without catastrophic population changes.
+Note: 180 game-days is ~4× the max pig lifespan (45 days). Long absences will see full generational turnover — pigs born, grown, bred, and died. The summary popup (§5) must handle large event counts gracefully.
 
 ---
 
@@ -120,19 +118,28 @@ after all checkpoints:
 
 ### Performance budget
 
-For maximum offline (24 real hours at 1x = 24 game-hours = **24 checkpoints**):
+For maximum offline (24 real hours at 3x = 4,320 game-hours = **4,320 checkpoints**):
 
-| Operation | Per checkpoint | Total (24) |
-|-----------|---------------|------------|
-| Needs decay + equilibrate | 50 pigs × 6 needs = 300 | 7,200 |
-| Pregnancy advance | O(pregnant) ≈ 5 | 120 |
-| Aging + death rolls | 50 pigs | 1,200 |
-| Breeding scan | O(males × females) ≈ 625 | 15,000 |
-| Culling | O(n log n) ≈ 300 | 7,200 |
+| Operation | Per checkpoint | Total (4,320) |
+|-----------|---------------|---------------|
+| Needs decay + equilibrate | 50 pigs × 6 needs = 300 | 1,296,000 |
+| Pregnancy advance | O(pregnant) ≈ 5 | 21,600 |
+| Aging + death rolls | 50 pigs | 216,000 |
+| Breeding scan | O(males × females) ≈ 625 | 2,700,000 |
+| Culling | O(n log n) ≈ 300 | 1,296,000 |
 | Pig repositioning (final) | 50 pigs × 1 walkable lookup | 50 |
-| **Total** | **~1,280** | **~30,770** |
+| **Total** | **~1,280** | **~5,530,000** |
 
-**~31K simple arithmetic operations.** On an A14 chip, this completes in microseconds. The checkpoint count can never exceed 24 (the max cap), so performance is bounded and trivial.
+**~5.5M simple arithmetic operations** (additions, comparisons, random rolls). On an A14 chip at ~3 GFLOPS single-thread, this completes in **well under 100ms**. No pathfinding, no spatial grid, no GKGridGraph — just math.
+
+Common cases are much faster:
+
+| Scenario | Real time | Checkpoints | Est. wall time |
+|----------|-----------|-------------|----------------|
+| Quick break (5 min) | 5 min | 15 | <1ms |
+| Lunch (1 hour) | 1 hr | 180 | <5ms |
+| Overnight (8 hours) | 8 hr | 1,440 | <30ms |
+| Max cap (24 hours) | 24 hr | 4,320 | <100ms |
 
 ### 4.1 Needs equilibration (offline behavior substitute)
 
@@ -328,7 +335,7 @@ The fast-forward engine. This is the hard part — all the simulation logic.
 **Deliverables:**
 - `OfflineProgressRunner` with checkpoint-based simulation
 - `OfflineProgressSummary` struct
-- `GameConfig.Offline` constants (min threshold 60s, max duration 24h, 1x speed)
+- `GameConfig.Offline` constants (min threshold 60s, max duration 24h, speed rawValue 3)
 - Post-catchup pig repositioning (randomize within area) and behavior state reset
 - No facility depletion — facilities frozen at pre-offline levels
 - Unit tests: verify needs equilibrate, pregnancies advance, births fire, deaths occur, breeding rolls happen, pig positions change, summary collects events
@@ -368,6 +375,7 @@ Wire everything together.
 |------|--------|------------|
 | Needs equilibration too generous (pigs never struggle) | Reduces tension | Acceptable trade-off — offline should feel rewarding, not punishing. Facilities don't deplete, so needs equilibrate freely. |
 | Breeding too generous (no proximity check) | Population explosion | Cap 1 pregnancy per checkpoint + existing capacity check |
+| Generational turnover on long absences | Overwhelming summary | 180 game-days = ~4 full lifespans. Summary must aggregate gracefully (e.g. "12 pigs born, 8 died") rather than listing every event individually. |
 | Pig repositioning onto occupied cells | Visual overlap | Use walkable-cell check; separate overlapping pigs on first real-time tick |
 | Summary popup annoying for short absences | UX friction | Only show for ≥60 second absences; skip if no meaningful events |
 | State corruption during catch-up | Data loss | Save backup before catch-up starts; restore on error |
