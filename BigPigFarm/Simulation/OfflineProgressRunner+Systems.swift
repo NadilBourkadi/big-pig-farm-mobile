@@ -21,6 +21,8 @@ extension OfflineProgressRunner {
         }
     }
 
+    /// Personality trait modifiers (greedy, lazy, playful) are intentionally
+    /// omitted offline. All pigs decay at the average rate for simplicity.
     private static func decayPrimaryNeeds(pig: inout GuineaPig, hours: Double) {
         pig.needs.hunger -= GameConfig.Needs.hungerDecay * hours
         pig.needs.thirst -= GameConfig.Needs.thirstDecay * hours
@@ -76,6 +78,9 @@ extension OfflineProgressRunner {
         }
     }
 
+    /// Simplified behavior substitute: if a need is low and a matching facility
+    /// type exists, apply recovery. Facility stock is NOT consumed — this is an
+    /// intentional design decision (offline should reward, not punish absence).
     @MainActor
     private static func equilibrateNeeds(
         pig: inout GuineaPig, state: GameState, hours: Double
@@ -155,7 +160,7 @@ extension OfflineProgressRunner {
 
         for female in eligibleFemales {
             for male in eligibleMales.shuffled() {
-                guard !areCloselyRelated(male, female) else { continue }
+                guard !Breeding.areCloselyRelated(male, female) else { continue }
                 if rollBreedingChance(male: male, female: female, state: state) {
                     guard var freshMale = state.getGuineaPig(male.id),
                           var freshFemale = state.getGuineaPig(female.id) else { continue }
@@ -194,14 +199,4 @@ extension OfflineProgressRunner {
         return Double.random(in: 0.0..<1.0) < chance
     }
 
-    /// Duplicated from Breeding.areCloselyRelated (private).
-    private static func areCloselyRelated(_ pig1: GuineaPig, _ pig2: GuineaPig) -> Bool {
-        if let m1 = pig1.motherId, m1 == pig2.id { return true }
-        if let f1 = pig1.fatherId, f1 == pig2.id { return true }
-        if let m2 = pig2.motherId, m2 == pig1.id { return true }
-        if let f2 = pig2.fatherId, f2 == pig1.id { return true }
-        if let m1 = pig1.motherId, let m2 = pig2.motherId, m1 == m2 { return true }
-        if let f1 = pig1.fatherId, let f2 = pig2.fatherId, f1 == f2 { return true }
-        return false
-    }
 }

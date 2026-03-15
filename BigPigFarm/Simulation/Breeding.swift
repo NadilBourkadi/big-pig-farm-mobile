@@ -162,7 +162,8 @@ enum Breeding {
     }
 
     /// True if two pigs are parent/child or share a mother or father.
-    private static func areCloselyRelated(_ pig1: GuineaPig, _ pig2: GuineaPig) -> Bool {
+    /// Internal (not private) so OfflineProgressRunner can reuse this predicate.
+    static func areCloselyRelated(_ pig1: GuineaPig, _ pig2: GuineaPig) -> Bool {
         // Parent-child
         if let m1 = pig1.motherId, m1 == pig2.id { return true }
         if let f1 = pig1.fatherId, f1 == pig2.id { return true }

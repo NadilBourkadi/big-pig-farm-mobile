@@ -167,8 +167,9 @@ enum OfflineProgressRunner {
                 phenotype: pig.phenotype.displayName
             ))
         }
-        if state.pigdex.discoveredCount > previousPigdexCount {
-            let recentEvents = state.events.suffix(newIds.count * 2)
+        let newDiscoveries = state.pigdex.discoveredCount - previousPigdexCount
+        if newDiscoveries > 0 {
+            let recentEvents = state.events.suffix(newDiscoveries * 4)
             for event in recentEvents where event.eventType == "pigdex" {
                 summary.pigdexDiscoveries.append(event.message)
             }
