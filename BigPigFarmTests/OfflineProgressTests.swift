@@ -88,8 +88,60 @@ struct OfflineNeedsTests {
         _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
 
         let updated = try #require(state.getGuineaPig(pig.id))
-        // Thirst should have recovered: 20 + waterRecovery(50) - thirstDecay(0.8) ≈ 69.2
+        // Thirst should have recovered (consumes from water bottle)
         #expect(updated.needs.thirst > 20.0)
+    }
+
+    @Test @MainActor func facilitiesDepleteDuringRecovery() throws {
+        let state = makeOfflineState(pigCount: 10)
+        // Set all pigs to low hunger so they all need food
+        for var pig in state.getPigsList() {
+            pig.needs.hunger = 10.0
+            state.updateGuineaPig(pig)
+        }
+        let foodBowl = state.getFacilitiesByType(.foodBowl).first
+        let stockBefore = foodBowl?.currentAmount ?? 0
+
+        // 1 checkpoint — 10 pigs all consuming at 25% rate
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+
+        let updatedBowl = foodBowl.flatMap { state.getFacility($0.id) }
+        let stockAfter = updatedBowl?.currentAmount ?? 0
+        #expect(stockAfter < stockBefore)
+    }
+
+    @Test @MainActor func recoveryStopsWhenFacilitiesEmpty() throws {
+        let state = makeOfflineState(pigCount: 1)
+        // Drain the water bottle completely
+        for facility in state.getFacilitiesByType(.waterBottle) {
+            var mutable = facility
+            _ = mutable.consume(mutable.currentAmount)
+            state.updateFacility(mutable)
+        }
+        var pig = state.getPigsList()[0]
+        pig.needs.thirst = 20.0
+        state.updateGuineaPig(pig)
+
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+
+        let updated = try #require(state.getGuineaPig(pig.id))
+        // Thirst should only decay — empty water bottle provides no recovery
+        #expect(updated.needs.thirst < 20.0)
+    }
+
+    @Test @MainActor func healthMercyFloorPreventsDeathSpiral() throws {
+        let state = makeOfflineState(pigCount: 1, withFacilities: false)
+        var pig = state.getPigsList()[0]
+        pig.needs.hunger = 5.0   // Critical — will drain health
+        pig.needs.thirst = 5.0   // Critical — will drain health
+        pig.needs.health = 30.0
+        state.updateGuineaPig(pig)
+
+        // Long offline — health would drain well past 0 without mercy floor
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 2000)
+
+        let updated = try #require(state.getGuineaPig(pig.id))
+        #expect(updated.needs.health >= GameConfig.Offline.healthMercyFloor)
     }
 
     @Test @MainActor func needsDoNotRecoverWithoutFacilities() throws {
@@ -259,6 +311,26 @@ struct OfflineEconomyTests {
         // Surplus pigs should have been marked and sold
         #expect(!summary.pigsSold.isEmpty || state.pigCount <= 4)
         #expect(state.money >= moneyBefore)
+    }
+
+    @Test @MainActor func facilitiesEmptiedTrackedInSummary() {
+        let state = makeOfflineState(pigCount: 10)
+        // Set all pigs to critical hunger so they consume heavily
+        for var pig in state.getPigsList() {
+            pig.needs.hunger = 5.0
+            state.updateGuineaPig(pig)
+        }
+        // Drain food bowl to near-empty so it empties quickly
+        for facility in state.getFacilitiesByType(.foodBowl) {
+            var mutable = facility
+            _ = mutable.consume(mutable.currentAmount - 5)  // Leave just 5 units
+            state.updateFacility(mutable)
+        }
+
+        // Several checkpoints — should drain the remaining 5 units
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+
+        #expect(summary.facilitiesEmptied > 0)
     }
 }
 

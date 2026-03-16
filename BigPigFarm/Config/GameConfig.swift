@@ -193,6 +193,11 @@ enum GameConfig {
         static let speedMultiplier: Int = 3
         /// Game-hours per checkpoint in the fast-forward loop.
         static let checkpointGameHours: Double = 1.0
+        /// Fraction of real-time consumption applied to facilities offline.
+        /// 0.25 = pigs consume at 25% of normal rate (they eat sometimes, not constantly).
+        static let consumptionRateMultiplier: Double = 0.25
+        /// Health floor when facilities are empty. Pigs suffer but survive.
+        static let healthMercyFloor: Double = 10.0
     }
 
     enum AutoArrange {
