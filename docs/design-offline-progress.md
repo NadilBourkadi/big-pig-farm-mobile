@@ -174,11 +174,13 @@ func equilibrateNeeds(pig: inout GuineaPig, state: GameState, hours: Double) {
 
 **Fidelity trade-off:** This assumes pigs always find a facility instantly (no walking time). In practice, real-time pigs spend some time walking, so offline needs will be slightly higher than real-time. This is acceptable — slightly higher needs is better than pigs starving because we didn't simulate eating at all.
 
-**No facility depletion offline.** Facility `currentAmount` stays frozen at whatever level it was when the player left. Rationale:
-- Draining facilities while the player is away punishes them for not being present — counter to idle game design
-- Without behavior AI, we can't accurately model *which* facilities get consumed
-- Simplifies the model: needs equilibrate freely as long as the facility *type* exists
-- AutoResources (drip/auto-feed/veggie) are also skipped offline — they're a perk for active play
+**Facility depletion at 25% rate.** Food and water facilities are consumed during offline recovery at `consumptionRateMultiplier = 0.25` of the real-time recovery rate. This models pigs eating "sometimes" rather than continuously. When all facilities of a type are empty, recovery stops — needs decay freely from that point.
+
+- Energy/happiness facilities (hideouts, play areas) don't deplete — they have no consumable resource in real-time either
+- AutoResources (drip/auto-feed/veggie) are skipped offline — they're a perk for active play
+- **Health mercy floor:** Health never drops below 10% (`healthMercyFloor`), even when facilities are empty. Pigs suffer but survive.
+
+**Balance curve:** Short absences (1-8 hours) barely affect facilities. Overnight (8h) may partially drain them. Max absence (24h = 180 game-days) will empty most facilities, leaving pigs in poor shape but alive. The summary popup reports how many facilities ran dry.
 
 ### 4.2 Breeding (offline courtship substitute)
 
@@ -373,7 +375,7 @@ Wire everything together.
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Needs equilibration too generous (pigs never struggle) | Reduces tension | Acceptable trade-off — offline should feel rewarding, not punishing. Facilities don't deplete, so needs equilibrate freely. |
+| 25% depletion too fast/slow | Balance off | Tunable via `consumptionRateMultiplier`. Short absences are harmless; 24h empties most facilities. Mercy floor prevents death spiral. |
 | Breeding too generous (no proximity check) | Population explosion | Cap 1 pregnancy per checkpoint + existing capacity check |
 | Generational turnover on long absences | Overwhelming summary | 180 game-days = ~4 full lifespans. Summary must aggregate gracefully (e.g. "12 pigs born, 8 died") rather than listing every event individually. |
 | Pig repositioning onto occupied cells | Visual overlap | Use walkable-cell check; separate overlapping pigs on first real-time tick |
@@ -388,6 +390,6 @@ These are explicitly out of scope for v1 but worth noting:
 
 1. **Configurable offline speed:** A settings toggle (Slow/Normal/Fast) for players who want more or less offline progression.
 
-2. **Push notifications:** "Your pigs had 3 babies while you were away!" — local notifications triggered by offline catch-up producing interesting events.
+2. **Push notifications:** "Your pigs had 3 babies while you were away!" — local notifications triggered by offline catch-up producing interesting events. Could also predict when facilities will run dry and send a chaser notification to encourage the player to return.
 
-3. **Offline facility consumption:** A more realistic model where facilities deplete during offline time. Would require the mercy-rule floor on health to prevent mass starvation.
+3. **Depletion rate tuning:** The 25% consumption rate and 10% health mercy floor are initial values. May need adjustment based on playtesting — too fast punishes casual players, too slow removes tension.
