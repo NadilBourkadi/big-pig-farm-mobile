@@ -7,43 +7,46 @@ import SwiftUI
 
 // MARK: - Time Formatting
 
-/// Formats a wall-clock TimeInterval into a human-readable duration string.
-///
-/// Examples: "2 hours 15 minutes", "1 day 3 hours", "Less than a minute"
-func formatOfflineDuration(_ seconds: TimeInterval) -> String {
-    let totalSeconds = Int(seconds)
-    if totalSeconds < 60 { return "Less than a minute" }
+/// Formats wall-clock durations into human-readable strings.
+enum OfflineDurationFormatter {
+    /// Format seconds into e.g. "2 hours 15 minutes", "1 day 3 hours", "Less than a minute".
+    static func format(_ seconds: TimeInterval) -> String {
+        let totalSeconds = Int(seconds)
+        if totalSeconds < 60 { return "Less than a minute" }
 
-    let minutes = (totalSeconds / 60) % 60
-    let hours = (totalSeconds / 3600) % 24
-    let days = totalSeconds / 86400
+        let minutes = (totalSeconds / 60) % 60
+        let hours = (totalSeconds / 3600) % 24
+        let days = totalSeconds / 86400
 
-    if days > 0 {
+        // When displaying days, sub-hour remainder is intentionally dropped —
+        // "1 day 3 hours" is precise enough; "1 day 3 hours 22 minutes" is noise.
+        if days > 0 {
+            if hours > 0 {
+                let dayUnit = days == 1 ? "day" : "days"
+                let hourUnit = hours == 1 ? "hour" : "hours"
+                return "\(days) \(dayUnit) \(hours) \(hourUnit)"
+            }
+            return days == 1 ? "1 day" : "\(days) days"
+        }
+
         if hours > 0 {
-            let dayUnit = days == 1 ? "day" : "days"
-            let hourUnit = hours == 1 ? "hour" : "hours"
-            return "\(days) \(dayUnit) \(hours) \(hourUnit)"
+            if minutes > 0 {
+                let hourUnit = hours == 1 ? "hour" : "hours"
+                let minUnit = minutes == 1 ? "minute" : "minutes"
+                return "\(hours) \(hourUnit) \(minutes) \(minUnit)"
+            }
+            return hours == 1 ? "1 hour" : "\(hours) hours"
         }
-        return days == 1 ? "1 day" : "\(days) days"
-    }
 
-    if hours > 0 {
-        if minutes > 0 {
-            let hourUnit = hours == 1 ? "hour" : "hours"
-            let minUnit = minutes == 1 ? "minute" : "minutes"
-            return "\(hours) \(hourUnit) \(minutes) \(minUnit)"
-        }
-        return hours == 1 ? "1 hour" : "\(hours) hours"
+        return minutes == 1 ? "1 minute" : "\(minutes) minutes"
     }
-
-    return minutes == 1 ? "1 minute" : "\(minutes) minutes"
 }
 
 // MARK: - OfflineProgressView
 
 struct OfflineProgressView: View {
-    let summary: OfflineProgressSummary
-    let onContinue: () -> Void
+    var summary: OfflineProgressSummary
+    var onContinue: () -> Void
 
     /// Threshold for inline list vs collapsible disclosure group.
     private let inlineThreshold = 5
@@ -76,7 +79,7 @@ struct OfflineProgressView: View {
                 .accessibilityHidden(true)
             Text("While You Were Away...")
                 .font(.title2.bold())
-            Text(formatOfflineDuration(summary.wallClockElapsed))
+            Text(OfflineDurationFormatter.format(summary.wallClockElapsed))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -163,7 +166,7 @@ struct OfflineProgressView: View {
         let title = count == 1
             ? "1 pig sold (\(Currency.formatCurrency(total)))"
             : "\(count) pigs sold (\(Currency.formatCurrency(total)))"
-        return sectionCard(icon: "dollarsign.circle.fill", title: title, color: .yellow) {
+        return sectionCard(icon: "tag.fill", title: title, color: .yellow) {
             if count <= inlineThreshold {
                 salesList
             } else {
