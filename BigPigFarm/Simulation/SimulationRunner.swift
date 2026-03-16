@@ -79,6 +79,9 @@ final class SimulationRunner {
 
         // Phases 3/3b: Behaviors + courtship → pregnancies
         updateBehaviorsPhase(gameMinutes: gameMinutes)
+        // Safety net: rebuild so separation sees all post-behavior positions,
+        // catching any pigs that crossed bucket boundaries during the behavior phase.
+        behaviorController.collision.rebuildSpatialGrid()
         behaviorController.separateOverlappingPigs()
         behaviorController.rescueNonWalkablePigs(state.getPigsList())
 
