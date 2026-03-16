@@ -76,6 +76,9 @@ struct ContentView: View {
     /// The game engine managing the tick loop.
     @State var engine: GameEngine
 
+    /// Non-nil while the offline progress summary popup is presented.
+    @Binding var offlineSummary: OfflineProgressSummary?
+
     /// The farm scene displayed in SpriteView.
     @State private var farmScene: FarmScene
 
@@ -107,10 +110,15 @@ struct ContentView: View {
 
     // MARK: - Init
 
-    init(gameState: GameState, engine: GameEngine) {
+    init(
+        gameState: GameState,
+        engine: GameEngine,
+        offlineSummary: Binding<OfflineProgressSummary?>
+    ) {
         let gs = gameState
         _gameState = State(initialValue: gs)
         _engine = State(initialValue: engine)
+        _offlineSummary = offlineSummary
         _farmScene = State(initialValue: FarmScene(gameState: gs))
         _coordinator = State(initialValue: FarmSceneCoordinator(gameState: gs))
     }
@@ -193,6 +201,12 @@ struct ContentView: View {
             .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.45)))
             .presentationContentInteraction(.scrolls)
             .presentationBackground(.ultraThinMaterial)
+        }
+        .fullScreenCover(item: $offlineSummary) { summary in
+            OfflineProgressView(summary: summary, onContinue: {
+                offlineSummary = nil
+                engine.resume()
+            })
         }
         .confirmationDialog(
             "Remove Facility",
