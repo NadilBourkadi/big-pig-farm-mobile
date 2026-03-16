@@ -38,7 +38,7 @@ struct OfflineProgressSummary: Sendable {
 
     var hasMeaningfulEvents: Bool {
         !pigsBorn.isEmpty || !pigsDied.isEmpty || !pigsSold.isEmpty
-        || !pregnanciesStarted.isEmpty || totalMoneyEarned != 0
-        || facilitiesEmptied > 0
+        || !pregnanciesStarted.isEmpty || !pigdexDiscoveries.isEmpty
+        || totalMoneyEarned != 0 || facilitiesEmptied > 0
     }
 }

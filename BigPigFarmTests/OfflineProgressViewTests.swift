@@ -8,47 +8,47 @@ import Foundation
 @Suite("Offline Duration Formatting")
 struct OfflineDurationFormattingTests {
     @Test func underOneMinute() {
-        #expect(formatOfflineDuration(30) == "Less than a minute")
+        #expect(OfflineDurationFormatter.format(30) == "Less than a minute")
     }
 
     @Test func exactlyOneMinute() {
-        #expect(formatOfflineDuration(60) == "1 minute")
+        #expect(OfflineDurationFormatter.format(60) == "1 minute")
     }
 
     @Test func minutesOnly() {
-        #expect(formatOfflineDuration(300) == "5 minutes")
+        #expect(OfflineDurationFormatter.format(300) == "5 minutes")
     }
 
     @Test func exactlyOneHour() {
-        #expect(formatOfflineDuration(3600) == "1 hour")
+        #expect(OfflineDurationFormatter.format(3600) == "1 hour")
     }
 
     @Test func hoursAndMinutes() {
-        #expect(formatOfflineDuration(8100) == "2 hours 15 minutes")
+        #expect(OfflineDurationFormatter.format(8100) == "2 hours 15 minutes")
     }
 
     @Test func hoursNoMinutes() {
-        #expect(formatOfflineDuration(7200) == "2 hours")
+        #expect(OfflineDurationFormatter.format(7200) == "2 hours")
     }
 
     @Test func singularHourAndMinute() {
-        #expect(formatOfflineDuration(3660) == "1 hour 1 minute")
+        #expect(OfflineDurationFormatter.format(3660) == "1 hour 1 minute")
     }
 
     @Test func pluralHoursAndMinutes() {
-        #expect(formatOfflineDuration(7320) == "2 hours 2 minutes")
+        #expect(OfflineDurationFormatter.format(7320) == "2 hours 2 minutes")
     }
 
     @Test func exactlyOneDay() {
-        #expect(formatOfflineDuration(86400) == "1 day")
+        #expect(OfflineDurationFormatter.format(86400) == "1 day")
     }
 
     @Test func dayAndHours() {
-        #expect(formatOfflineDuration(90000) == "1 day 1 hour")
+        #expect(OfflineDurationFormatter.format(90000) == "1 day 1 hour")
     }
 
     @Test func zeroSeconds() {
-        #expect(formatOfflineDuration(0) == "Less than a minute")
+        #expect(OfflineDurationFormatter.format(0) == "Less than a minute")
     }
 }
 
@@ -64,6 +64,12 @@ struct OfflineSummaryPropertyTests {
     @Test func deathsAloneMeaningful() {
         var summary = OfflineProgressSummary(wallClockElapsed: 100, gameHoursElapsed: 5)
         summary.pigsDied.append(.init(name: "Fluffy", ageDays: 42))
+        #expect(summary.hasMeaningfulEvents)
+    }
+
+    @Test func pigdexAloneMeaningful() {
+        var summary = OfflineProgressSummary(wallClockElapsed: 100, gameHoursElapsed: 5)
+        summary.pigdexDiscoveries = ["New phenotype discovered!"]
         #expect(summary.hasMeaningfulEvents)
     }
 
