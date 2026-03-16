@@ -10,6 +10,10 @@ struct BigPigFarmApp: App {
     @State private var engine: GameEngine
     // SimulationRunner must be retained here; the engine tick callback holds a weak ref.
     @State private var runner: SimulationRunner
+    @State private var offlineSummary: OfflineProgressSummary?
+    /// Guards against false catch-ups from inactive→active without a background transition
+    /// (e.g. notification center pull-down, phone call popup).
+    @State private var didEnterBackground = false
     private let saveManager: SaveManager
 
     init() {
@@ -34,7 +38,11 @@ struct BigPigFarmApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(gameState: gameState, engine: engine)
+            ContentView(
+                gameState: gameState,
+                engine: engine,
+                offlineSummary: $offlineSummary
+            )
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(from: oldPhase, to: newPhase)
@@ -45,21 +53,63 @@ struct BigPigFarmApp: App {
     private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
         switch newPhase {
         case .active:
-            engine.resume()
+            // Only check for offline progress if we actually went to background.
+            // Prevents false catch-ups from notification center or phone call popups
+            // (inactive → active without a background transition).
+            guard didEnterBackground else {
+                engine.resume()
+                return
+            }
+            didEnterBackground = false
+            let duration = computeOfflineDuration()
+            if duration >= GameConfig.Offline.minThresholdSeconds {
+                runOfflineCatchUp(wallClockSeconds: duration)
+            } else {
+                engine.resume()
+            }
         case .inactive:
             engine.pause()
         case .background:
+            didEnterBackground = true
             lifecycleSave()
         @unknown default:
             break
         }
     }
 
+    // MARK: - Offline Progress
+
+    @MainActor
+    private func computeOfflineDuration() -> TimeInterval {
+        guard let lastSave = gameState.lastSave else { return 0 }
+        return max(0, Date().timeIntervalSince(lastSave))
+    }
+
+    @MainActor
+    private func runOfflineCatchUp(wallClockSeconds: TimeInterval) {
+        let summary = OfflineProgressRunner.runCatchUp(
+            state: gameState,
+            wallClockSeconds: wallClockSeconds
+        )
+        // Save to disk after catch-up — if the app is killed during the popup,
+        // progress is preserved.
+        do {
+            try saveManager.save(gameState)
+        } catch {
+            print("[BigPigFarmApp] post-catchup save failed: \(error)")
+        }
+        if summary.hasMeaningfulEvents {
+            offlineSummary = summary
+            // Engine stays paused — resumes when user taps "Continue"
+        } else {
+            engine.resume()
+        }
+    }
+
+    // MARK: - Persistence
+
     @MainActor
     private func lifecycleSave() {
-        // Save errors are logged but not surfaced to the user.
-        // The OS gives very limited time in background — a synchronous write
-        // is the safest approach to ensure completion before suspension.
         do {
             try saveManager.save(gameState)
         } catch {
