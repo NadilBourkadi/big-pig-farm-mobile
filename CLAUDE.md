@@ -118,6 +118,7 @@ xcrun simctl io <UDID> screenshot /absolute/path/to/.tmp/sim-screenshot.png
 - This technique is especially useful for camera/HUD positioning bugs, biome rendering issues, and any visual artifact that's easier to see than describe.
 - Always use `.tmp/` for the screenshot output path — `/tmp/` is outside the repo sandbox and triggers permission prompts.
 - `xcrun simctl list devices booted` shows the UDID of whichever simulator is currently running the app.
+- **User-taken screenshots** (via Cmd+S in Simulator.app) are saved to `~/Desktop/` with the pattern `Simulator Screenshot - <device> - <date>.png`. When the user says "look at my screenshot" or "the latest screenshot", check `~/Desktop/Simulator Screenshot*.png` (use `find` with `-mmin` to get recent ones, since glob may miss filenames with spaces).
 
 ## Testing
 
