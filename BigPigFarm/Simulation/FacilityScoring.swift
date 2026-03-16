@@ -250,6 +250,10 @@ extension FacilityManager {
 
     /// True if another pig is within `radius` of `point` while using a facility,
     /// or is heading to this exact point.
+    ///
+    /// The heading-pig check iterates all pigs (not just spatially nearby ones)
+    /// because a pig assigned this target earlier in the same tick is still at
+    /// its old position — getNearby at the interaction point won't find it.
     private func isInteractionPointOccupied(
         point: GridPosition,
         excludePig: GuineaPig,
@@ -258,18 +262,27 @@ extension FacilityManager {
         let usingStates: Set<BehaviorState> = [.eating, .drinking, .sleeping, .playing, .socializing]
         let pointPos = Position(x: Double(point.x), y: Double(point.y))
 
+        // 1. Check pigs physically at the point and using a facility (spatial grid — fast).
         for other in collision.spatialGrid.getNearby(x: Double(point.x), y: Double(point.y), pigs: pigs) {
             if other.id == excludePig.id { continue }
             if usingStates.contains(other.behaviorState)
                 && other.position.distanceTo(pointPos) < radius {
                 return true
             }
+        }
+
+        // 2. Check ALL pigs heading to this point — not just nearby ones.
+        // A pig dispatched earlier in the same tick has targetPosition set but
+        // is still at its old position, so getNearby at the point misses it.
+        for other in pigs.values {
+            if other.id == excludePig.id { continue }
             if other.targetFacilityId != nil,
                let tp = other.targetPosition,
                tp.distanceTo(pointPos) < radius {
                 return true
             }
         }
+
         return false
     }
 }
