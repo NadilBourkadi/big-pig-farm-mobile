@@ -91,8 +91,9 @@ struct BigPigFarmApp: App {
             state: gameState,
             wallClockSeconds: wallClockSeconds
         )
-        // Save to disk after catch-up — if the app is killed during the popup,
-        // progress is preserved.
+        // Advance lastSave unconditionally so a failed disk write doesn't cause
+        // the next foreground transition to re-simulate the same time window.
+        gameState.lastSave = Date()
         do {
             try saveManager.save(gameState)
         } catch {

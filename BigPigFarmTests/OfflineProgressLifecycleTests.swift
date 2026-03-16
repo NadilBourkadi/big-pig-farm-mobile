@@ -112,11 +112,10 @@ struct OfflineLifecycleEdgeCaseTests {
         #expect(duration >= GameConfig.Offline.minThresholdSeconds)
     }
 
-    @Test @MainActor func summaryIdentifiableConformance() {
-        let summary = OfflineProgressSummary(wallClockElapsed: 100, gameHoursElapsed: 5)
-        // Identifiable conformance needed for .fullScreenCover(item:)
-        let id = summary.id
-        #expect(id == summary.id)  // UUID is stable
+    @Test @MainActor func summaryIdStableAcrossCopies() {
+        let original = OfflineProgressSummary(wallClockElapsed: 100, gameHoursElapsed: 5)
+        let copy = original
+        #expect(original.id == copy.id)
     }
 
     @Test @MainActor func twoSummariesHaveDistinctIds() {
