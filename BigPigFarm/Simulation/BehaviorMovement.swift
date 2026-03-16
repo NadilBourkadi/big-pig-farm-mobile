@@ -123,11 +123,15 @@ enum BehaviorMovement {
         pig.behaviorState = .idle
         if let areaId = pig.currentAreaId,
            let safe = controller.gameState.farm.findRandomWalkableInArea(areaId) {
+            let oldPos = pig.position
             pig.position = Position(x: Double(safe.x), y: Double(safe.y))
+            controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
             return
         }
         if let safe = controller.gameState.farm.findRandomWalkable() {
+            let oldPos = pig.position
             pig.position = Position(x: Double(safe.x), y: Double(safe.y))
+            controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
         }
     }
 }
@@ -169,7 +173,9 @@ private extension BehaviorMovement {
             let dist = (dx * dx + dy * dy).squareRoot()
             if dist < GameConfig.Behavior.waypointReached {
                 if !controller.collision.isPositionBlocked(targetX: wx, targetY: wy, excludePig: pig) {
+                    let oldPos = pig.position
                     pig.position = Position(x: wx, y: wy)
+                    controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
                     pig.path.removeFirst()
                     moved = true
                 }
@@ -177,7 +183,9 @@ private extension BehaviorMovement {
             }
             if remaining >= dist {
                 if !controller.collision.isPositionBlocked(targetX: wx, targetY: wy, excludePig: pig) {
+                    let oldPos = pig.position
                     pig.position = Position(x: wx, y: wy)
+                    controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
                     pig.path.removeFirst()
                     remaining -= dist
                     moved = true
@@ -190,7 +198,9 @@ private extension BehaviorMovement {
                 let ny = pig.position.y + (dy / dist) * remaining
                 if controller.gameState.farm.isWalkable(Int(nx), Int(ny)) &&
                     !controller.collision.isPositionBlocked(targetX: nx, targetY: ny, excludePig: pig) {
+                    let oldPos = pig.position
                     pig.position = Position(x: nx, y: ny)
+                    controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
                     moved = true
                 } else {
                     handleMovementBlocked(controller: controller, pig: &pig, dx: dx, dy: dy, tick: tick)
@@ -216,7 +226,9 @@ private extension BehaviorMovement {
             let ny = pig.position.y + pdy * moveDist
             if controller.gameState.farm.isWalkable(Int(nx), Int(ny)) &&
                 !controller.collision.isPositionBlocked(targetX: nx, targetY: ny, excludePig: pig) {
+                let oldPos = pig.position
                 pig.position = Position(x: nx, y: ny)
+                controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
                 return true
             }
         }

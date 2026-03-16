@@ -21,6 +21,30 @@ struct SpatialGrid: Sendable {
         }
     }
 
+    /// Incrementally move a pig from one bucket to another.
+    /// Call after each committed position update during the tick to keep
+    /// isPositionBlocked accurate for pigs that cross bucket boundaries.
+    mutating func movePig(id: UUID, from oldPosition: Position, to newPosition: Position) {
+        let oldKey = GridPosition(
+            x: Int(oldPosition.x) / Self.cellSize,
+            y: Int(oldPosition.y) / Self.cellSize
+        )
+        let newKey = GridPosition(
+            x: Int(newPosition.x) / Self.cellSize,
+            y: Int(newPosition.y) / Self.cellSize
+        )
+        guard oldKey != newKey else { return }
+        if var bucket = cells[oldKey] {
+            bucket.removeAll { $0 == id }
+            if bucket.isEmpty {
+                cells.removeValue(forKey: oldKey)
+            } else {
+                cells[oldKey] = bucket
+            }
+        }
+        cells[newKey, default: []].append(id)
+    }
+
     func getNearby(x: Double, y: Double, pigs: [UUID: GuineaPig]) -> [GuineaPig] {
         let cx = Int(x) / Self.cellSize
         let cy = Int(y) / Self.cellSize
@@ -87,6 +111,13 @@ final class CollisionHandler {
 
     init(gameState: GameState) {
         self.gameState = gameState
+    }
+
+    /// Update the spatial grid bucket for a pig that just moved.
+    /// Call from BehaviorMovement after each committed position change so that
+    /// subsequent isPositionBlocked queries in the same tick see the new location.
+    func notifyPigMoved(id: UUID, from oldPosition: Position, to newPosition: Position) {
+        spatialGrid.movePig(id: id, from: oldPosition, to: newPosition)
     }
 
     /// Re-bin all pigs and rebuild the facility target index.
