@@ -76,22 +76,33 @@ extension OfflineProgressRunner {
             if state.hasUpgrade("pig_spa") { recovery *= 2.0 }
             pig.needs.health += recovery * hours
         }
+        // Mercy rule: pigs suffer but survive when facilities are empty
+        pig.needs.health = max(pig.needs.health, GameConfig.Offline.healthMercyFloor)
     }
 
     /// Simplified behavior substitute: if a need is low and a matching facility
-    /// type exists, apply recovery. Facility stock is NOT consumed — this is an
-    /// intentional design decision (offline should reward, not punish absence).
+    /// has stock, apply recovery and consume from the facility at a reduced rate
+    /// (25% of real-time). When all facilities of a type are empty, recovery stops.
     @MainActor
     private static func equilibrateNeeds(
         pig: inout GuineaPig, state: GameState, hours: Double
     ) {
         let low = Double(GameConfig.Needs.lowThreshold)
-        if pig.needs.thirst < low && hasFacilityType([.waterBottle], in: state) {
-            pig.needs.thirst += GameConfig.Needs.waterRecovery * hours
+        let rate = GameConfig.Offline.consumptionRateMultiplier
+
+        if pig.needs.thirst < low {
+            let cost = GameConfig.Needs.waterRecovery * hours * rate
+            if consumeFromFacilities(types: [.waterBottle], amount: cost, state: state) {
+                pig.needs.thirst += GameConfig.Needs.waterRecovery * hours
+            }
         }
-        if pig.needs.hunger < low && hasFacilityType([.foodBowl, .hayRack, .feastTable], in: state) {
-            pig.needs.hunger += GameConfig.Needs.foodRecovery * hours
+        if pig.needs.hunger < low {
+            let cost = GameConfig.Needs.foodRecovery * hours * rate
+            if consumeFromFacilities(types: [.foodBowl, .hayRack, .feastTable], amount: cost, state: state) {
+                pig.needs.hunger += GameConfig.Needs.foodRecovery * hours
+            }
         }
+        // Energy and happiness don't consume — hideouts and play areas are infinite-use
         if pig.needs.energy < low && hasFacilityType([.hideout], in: state) {
             pig.needs.energy += GameConfig.Needs.sleepRecoveryPerHour * hours
         }
@@ -99,6 +110,24 @@ extension OfflineProgressRunner {
             pig.needs.happiness += GameConfig.Needs.playHappinessBoost * hours
             pig.needs.boredom -= GameConfig.Needs.boredomPlayRecovery * hours
         }
+    }
+
+    /// Try to consume `amount` from the first non-empty facility of the given types.
+    /// Returns true if any consumption occurred (facility had stock).
+    @MainActor
+    @discardableResult
+    private static func consumeFromFacilities(
+        types: [FacilityType], amount: Double, state: GameState
+    ) -> Bool {
+        for type in types {
+            for facility in state.getFacilitiesByType(type) where !facility.isEmpty {
+                var mutable = facility
+                let consumed = mutable.consume(amount)
+                state.updateFacility(mutable)
+                return consumed > 0
+            }
+        }
+        return false
     }
 
     @MainActor

@@ -35,6 +35,7 @@ enum OfflineProgressRunner {
         guard checkpointCount > 0 else { return summary }
 
         let moneyBefore = state.money
+        let emptyBefore = state.getFacilitiesList().filter(\.isEmpty).count
 
         for _ in 0..<checkpointCount {
             runCheckpoint(state: state, summary: &summary)
@@ -44,6 +45,8 @@ enum OfflineProgressRunner {
         resetBehaviorStates(state: state)
 
         summary.totalMoneyEarned = max(0, state.money - moneyBefore)
+        let emptyAfter = state.getFacilitiesList().filter(\.isEmpty).count
+        summary.facilitiesEmptied = max(0, emptyAfter - emptyBefore)
 
         return summary
     }

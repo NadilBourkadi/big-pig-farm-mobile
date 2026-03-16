@@ -34,9 +34,11 @@ struct OfflineProgressSummary: Sendable {
     var pigdexDiscoveries: [String] = []
 
     var totalMoneyEarned: Int = 0
+    var facilitiesEmptied: Int = 0
 
     var hasMeaningfulEvents: Bool {
         !pigsBorn.isEmpty || !pigsDied.isEmpty || !pigsSold.isEmpty
         || !pregnanciesStarted.isEmpty || totalMoneyEarned != 0
+        || facilitiesEmptied > 0
     }
 }
