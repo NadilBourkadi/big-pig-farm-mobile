@@ -55,4 +55,4 @@ jobs:
             -skipPackagePluginValidation
 
       - name: Lint
-        run: swiftlint lint --quiet --reporter github-actions-logging
+        run: swiftlint lint --strict --quiet --reporter github-actions-logging
