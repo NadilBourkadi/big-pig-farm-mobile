@@ -91,6 +91,9 @@ struct BigPigFarmApp: App {
             state: gameState,
             wallClockSeconds: wallClockSeconds
         )
+        // Clear stale behavior tracking (pathfinding caches, unreachable-need
+        // backoffs, failed facilities) — pigs have been repositioned.
+        runner.resetAfterOffline()
         // Advance lastSave unconditionally so a failed disk write doesn't cause
         // the next foreground transition to re-simulate the same time window.
         gameState.lastSave = Date()
