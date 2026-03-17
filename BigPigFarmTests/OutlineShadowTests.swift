@@ -190,8 +190,7 @@ struct OutlineShadowTests {
         var opaqueCount = 0
         for index in 0..<(width * height) {
             let alpha = pixels[index * 4 + 3]
-            if alpha == 0 { transparentCount += 1 }
-            else { opaqueCount += 1 }
+            if alpha == 0 { transparentCount += 1 } else { opaqueCount += 1 }
         }
 
         #expect(transparentCount > 0, "No transparent pixels found — alpha may be stripped")

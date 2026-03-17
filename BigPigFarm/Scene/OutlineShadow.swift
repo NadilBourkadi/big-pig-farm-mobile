@@ -71,24 +71,11 @@ enum OutlineShadow {
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
 
-        // Step 1: Create fully opaque black silhouette.
-        guard let silCtx = CGContext(
-            data: nil, width: srcW, height: srcH,
-            bitsPerComponent: 8, bytesPerRow: 0,
-            space: colorSpace, bitmapInfo: bitmapInfo
+        guard let silhouette = createSilhouette(
+            from: cgImage, colorSpace: colorSpace, bitmapInfo: bitmapInfo
         ) else { return nil }
 
-        let srcRect = CGRect(x: 0, y: 0, width: srcW, height: srcH)
-        silCtx.draw(cgImage, in: srcRect)
-        silCtx.setBlendMode(.sourceIn)
-        silCtx.setFillColor(UIColor.black.cgColor)
-        silCtx.fill(srcRect)
-
-        guard let silhouette = silCtx.makeImage() else { return nil }
-
-        // Step 2: Draw opaque silhouette at 8 offsets (cardinal + diagonal).
-        // The center position is at (totalPadding, totalPadding) so there's room
-        // for both the offset AND the blur to extend outward.
+        // Draw opaque silhouette at 8 offsets (cardinal + diagonal).
         guard let outCtx = CGContext(
             data: nil, width: outW, height: outH,
             bitsPerComponent: 8, bytesPerRow: 0,
@@ -136,6 +123,28 @@ enum OutlineShadow {
         let texture = SKTexture(cgImage: blurredCG)
         texture.filteringMode = .linear
         return texture
+    }
+
+    /// Create a fully opaque black silhouette from the source alpha channel.
+    private static func createSilhouette(
+        from cgImage: CGImage,
+        colorSpace: CGColorSpace,
+        bitmapInfo: UInt32
+    ) -> CGImage? {
+        let srcW = cgImage.width
+        let srcH = cgImage.height
+        guard let ctx = CGContext(
+            data: nil, width: srcW, height: srcH,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: colorSpace, bitmapInfo: bitmapInfo
+        ) else { return nil }
+
+        let rect = CGRect(x: 0, y: 0, width: srcW, height: srcH)
+        ctx.draw(cgImage, in: rect)
+        ctx.setBlendMode(.sourceIn)
+        ctx.setFillColor(UIColor.black.cgColor)
+        ctx.fill(rect)
+        return ctx.makeImage()
     }
 
     // MARK: - Asset Loading
