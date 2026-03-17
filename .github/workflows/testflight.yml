@@ -73,7 +73,6 @@ jobs:
 
       - name: Set TestFlight "What to Test" notes
         env:
-          ASC_KEY_PATH: ~/".appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
