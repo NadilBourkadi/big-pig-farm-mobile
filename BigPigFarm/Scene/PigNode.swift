@@ -10,6 +10,7 @@ class PigNode: SKSpriteNode {
     private let nameLabel: SKLabelNode
     private var indicatorNode: SKSpriteNode?
     private var selectionGlow: SKShapeNode?
+    private var shadowNode: SKSpriteNode?
     var isSelected: Bool = false { didSet { updateSelectionGlow() } }
     private var currentAnimationKey: String = ""
 
@@ -41,6 +42,19 @@ class PigNode: SKSpriteNode {
         )
 
         super.init(texture: texture, color: .clear, size: nodeSize)
+
+        // Always use "idle" for the shadow — it exists as a single-frame asset
+        // for all colors/ages, and the silhouette is close enough for all states.
+        let initAssetName = Self.pigAssetName(
+            baseColor: pig.phenotype.baseColor, state: "idle",
+            direction: "right", isBaby: pig.isBaby
+        )
+        if let cgImage = OutlineShadow.loadCGImage(named: initAssetName),
+           let outlineTex = OutlineShadow.outlineTexture(from: cgImage) {
+            let shadow = OutlineShadow.makeShadowNode(texture: outlineTex, spriteSize: nodeSize)
+            addChild(shadow)
+            shadowNode = shadow
+        }
 
         nameLabel.verticalAlignmentMode = .top
         nameLabel.text = pig.name
@@ -113,6 +127,7 @@ class PigNode: SKSpriteNode {
             isBaby: isBaby
         )
         guard !frames.isEmpty else { return }
+        updateShadowSize()
         if frames.count == 1 {
             texture = frames[0]
             return
@@ -121,6 +136,23 @@ class PigNode: SKSpriteNode {
         let frameDuration = TimeInterval(tpf) / TimeInterval(GameConfig.Simulation.ticksPerSecond)
         let animate = SKAction.animate(with: frames, timePerFrame: frameDuration)
         run(SKAction.repeatForever(animate), withKey: "animation")
+    }
+
+    private func updateShadowSize() {
+        let offset = CGFloat(OutlineShadow.artPixelOffset) * SpriteAssets.pointsPerArtPixel
+        let blurPad = ceil(OutlineShadow.blurRadius * 2.5)
+        let expansion = (offset + blurPad) * 2
+        shadowNode?.size = CGSize(width: size.width + expansion, height: size.height + expansion)
+    }
+
+    private static func pigAssetName(
+        baseColor: BaseColor, state: String, direction: String,
+        isBaby: Bool, frame: Int? = nil
+    ) -> String {
+        let age = isBaby ? "baby" : "adult"
+        var name = "Sprites/Pigs/pig_\(age)_\(baseColor.rawValue)_\(state)_\(direction)"
+        if let frame { name += "_\(frame)" }
+        return name
     }
 
     private func directionFromPath(_ path: [GridPosition]) -> String {

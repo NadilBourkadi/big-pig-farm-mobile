@@ -48,6 +48,16 @@ class FacilityNode: SKSpriteNode {
 
         super.init(texture: texture, color: .clear, size: CGSize(width: nodeWidth, height: nodeHeight))
 
+        let facilityAsset = "Sprites/Facilities/facility_\(facility.facilityType.rawValue)"
+        if let cgImage = OutlineShadow.loadCGImage(named: facilityAsset),
+           let outlineTex = OutlineShadow.outlineTexture(from: cgImage) {
+            let shadow = OutlineShadow.makeShadowNode(
+                texture: outlineTex,
+                spriteSize: CGSize(width: nodeWidth, height: nodeHeight)
+            )
+            addChild(shadow)
+        }
+
         label.text = facility.facilityType.displayName
         // Position label above the top edge of the sprite (which is at +nodeHeight/2 from center).
         label.position = CGPoint(x: 0, y: nodeHeight / 2 + 4)
