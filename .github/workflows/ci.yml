@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Verify environment
+        run: |
+          echo "::group::Xcode version"
+          xcodebuild -version
+          echo "::endgroup::"
+          echo "::group::Available iOS runtimes"
+          xcrun simctl list runtimes iOS
+          echo "::endgroup::"
+          echo "::group::Available simulators"
+          xcrun simctl list devicetypes iPhone
+          echo "::endgroup::"
+
+      - name: Install dependencies
+        run: |
+          brew install xcodegen swiftlint
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -scheme BigPigFarm \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -skipPackagePluginValidation
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme BigPigFarm \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -skipPackagePluginValidation
+
+      - name: Lint
+        run: swiftlint lint --strict --quiet --reporter github-actions-logging

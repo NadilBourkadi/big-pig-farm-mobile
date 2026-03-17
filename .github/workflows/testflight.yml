@@ -1,0 +1,108 @@
+name: TestFlight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  group: testflight-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' &&
+       !contains(github.event.pull_request.labels.*.name, 'skip-testflight'))
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Verify environment
+        run: |
+          echo "::group::Xcode version"
+          xcodebuild -version
+          echo "::endgroup::"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Install App Store Connect API key
+        env:
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$KEY_DIR"
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_DIR/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
+
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -scheme BigPigFarm \
+            -archivePath "${{ runner.temp }}/BigPigFarm.xcarchive" \
+            -destination 'generic/platform=iOS' \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/".appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8" \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Export and upload to TestFlight
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "${{ runner.temp }}/BigPigFarm.xcarchive" \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath "${{ runner.temp }}/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/".appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8" \
+            -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
+            -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const buildNumber = '${{ github.run_number }}';
+            const version = '1.0.0';
+            const existing = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = existing.data.find(c =>
+              c.user.type === 'Bot' && c.body.includes('TestFlight build')
+            );
+            const body = [
+              `**TestFlight build ${version} (${buildNumber})** uploaded successfully.`,
+              '',
+              `Install via the TestFlight app — look for version **${version}**, build **${buildNumber}**.`,
+            ].join('\n');
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Clean up API key
+        if: always()
+        run: rm -rf ~/.appstoreconnect
