@@ -127,6 +127,21 @@ extension GameState {
         return true
     }
 
+    /// Force-add a facility, bypassing grid placement validation.
+    /// Used as a last-resort fallback to prevent data loss during auto-arrange.
+    /// May cause brief visual overlap if the target cells are occupied.
+    func forceAddFacility(_ facility: Facility) {
+        facilities[facility.id] = facility
+        for pos in facility.cells {
+            guard farm.isValidPosition(pos.x, pos.y) else { continue }
+            farm.cells[pos.y][pos.x].facilityId = facility.id
+            farm.cells[pos.y][pos.x].isWalkable = false
+        }
+        farm.invalidateWalkableCache()
+        facilitiesListCache = nil
+        facilitiesByTypeCache = nil
+    }
+
     func removeFacility(_ facilityID: UUID) -> Facility? {
         guard let facility = facilities.removeValue(forKey: facilityID) else { return nil }
         // TODO(5jp): If FarmGrid.removeFacility gains error handling, restore on failure

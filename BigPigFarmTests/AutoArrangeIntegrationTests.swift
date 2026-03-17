@@ -196,6 +196,93 @@ private func addArrangeFacility(_ state: GameState, type: FacilityType, x: Int =
     }
 }
 
+// MARK: - Facility Preservation Tests
+
+@Test @MainActor func applyArrangementNeverLosesFacilities() {
+    let state = makeArrangeFarmState(tier: 1)
+    // Pack a small tier-1 farm (18x18) with many facilities including large ones
+    addArrangeFacility(state, type: .foodBowl, x: 1, y: 1)
+    addArrangeFacility(state, type: .waterBottle, x: 3, y: 1)
+    addArrangeFacility(state, type: .hideout, x: 5, y: 1)
+    addArrangeFacility(state, type: .exerciseWheel, x: 9, y: 1)
+    addArrangeFacility(state, type: .feastTable, x: 1, y: 5)
+    addArrangeFacility(state, type: .campfire, x: 7, y: 5)
+    addArrangeFacility(state, type: .breedingDen, x: 1, y: 11)
+    let countBefore = state.getFacilitiesList().count
+    let idsBefore = Set(state.facilities.keys)
+    let (placements, overflow) = AutoArrange.computeArrangement(state: state)
+    AutoArrange.applyArrangement(state: state, placements: placements, overflow: overflow)
+    let countAfter = state.getFacilitiesList().count
+    let idsAfter = Set(state.facilities.keys)
+    #expect(countAfter == countBefore, "Facilities lost: \(countBefore) → \(countAfter)")
+    #expect(idsAfter == idsBefore, "Facility IDs changed after auto-arrange")
+}
+
+@Test @MainActor func applyArrangementPreservesLargeFacilitiesOnSmallFarm() {
+    let state = makeArrangeFarmState(tier: 1)
+    // Two 5x5 + one 6x6 on an 18x18 farm is very tight
+    addArrangeFacility(state, type: .feastTable, x: 1, y: 1)
+    addArrangeFacility(state, type: .campfire, x: 7, y: 1)
+    addArrangeFacility(state, type: .hotSpring, x: 1, y: 7)
+    let countBefore = state.getFacilitiesList().count
+    let (placements, overflow) = AutoArrange.computeArrangement(state: state)
+    AutoArrange.applyArrangement(state: state, placements: placements, overflow: overflow)
+    let countAfter = state.getFacilitiesList().count
+    #expect(countAfter == countBefore, "Large facilities lost: \(countBefore) → \(countAfter)")
+}
+
+@Test @MainActor func applyArrangementPreservesAllFacilitiesNearCapacity() {
+    let state = makeArrangeFarmState(tier: 2)
+    // Fill a tier-2 farm (21x21) with many small + large facilities
+    for idx in 0..<6 {
+        addArrangeFacility(state, type: .foodBowl, x: 1 + idx * 2, y: 1)
+    }
+    for idx in 0..<4 {
+        addArrangeFacility(state, type: .waterBottle, x: 1 + idx * 2, y: 3)
+    }
+    addArrangeFacility(state, type: .feastTable, x: 1, y: 5)
+    addArrangeFacility(state, type: .therapyGarden, x: 7, y: 5)
+    addArrangeFacility(state, type: .hideout, x: 13, y: 5)
+    addArrangeFacility(state, type: .exerciseWheel, x: 1, y: 11)
+    addArrangeFacility(state, type: .breedingDen, x: 5, y: 11)
+    let countBefore = state.getFacilitiesList().count
+    let (placements, overflow) = AutoArrange.computeArrangement(state: state)
+    AutoArrange.applyArrangement(state: state, placements: placements, overflow: overflow)
+    let countAfter = state.getFacilitiesList().count
+    #expect(countAfter == countBefore, "Facilities lost near capacity: \(countBefore) → \(countAfter)")
+}
+
+@Test @MainActor func findGridPositionUsesOpenCellCheck() {
+    // Verify findGridPosition finds spots among facility-occupied cells
+    let state = makeArrangeFarmState(tier: 1)
+    // Place a facility to make some cells non-walkable but facility-occupied
+    addArrangeFacility(state, type: .foodBowl, x: 2, y: 2)
+    let target = Facility.create(type: .foodBowl, x: 0, y: 0)
+    // Should find a position even though some cells are facility-occupied
+    let pos = AutoArrange.findGridPosition(for: target, in: state.farm)
+    #expect(pos != nil, "findGridPosition should find open cells near facility-occupied ones")
+    if let pos {
+        #expect(state.farm.isCellOpenForFacility(pos.x, pos.y))
+    }
+}
+
+// MARK: - isCellOpenForFacility Tests
+
+@Test @MainActor func isCellOpenForFacilityDistinguishesWallsFromFacilities() {
+    var farm = FarmGrid.createStarter()
+    let facility = Facility.create(type: .foodBowl, x: 3, y: 3)
+    _ = farm.placeFacility(facility)
+    // Wall cell: not open
+    #expect(!farm.isCellOpenForFacility(0, 0))
+    // Facility cell: not open
+    #expect(!farm.isCellOpenForFacility(3, 3))
+    // Empty interior cell: open
+    #expect(farm.isCellOpenForFacility(5, 5))
+    // Importantly: isWalkable is false for BOTH walls and facilities
+    #expect(!farm.isWalkable(0, 0))
+    #expect(!farm.isWalkable(3, 3))
+}
+
 // MARK: - findNearestWalkable Tests
 
 @Test @MainActor func findNearestWalkableFindsAdjacentCell() {

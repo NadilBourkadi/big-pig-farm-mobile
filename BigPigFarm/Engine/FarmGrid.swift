@@ -114,6 +114,14 @@ extension FarmGrid {
         return cells[y][x].isWalkable
     }
 
+    /// True if the cell exists, is not a wall, and has no facility placed on it.
+    /// Unlike `isWalkable`, this distinguishes walls from facility-occupied cells.
+    func isCellOpenForFacility(_ x: Int, _ y: Int) -> Bool {
+        guard isValidPosition(x, y) else { return false }
+        let cell = cells[y][x]
+        return cell.facilityId == nil && cell.cellType != .wall
+    }
+
     func getCell(_ x: Int, _ y: Int) -> Cell? {
         guard isValidPosition(x, y) else { return nil }
         return cells[y][x]
