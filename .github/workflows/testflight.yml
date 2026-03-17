@@ -71,6 +71,20 @@ jobs:
             -authenticationKeyID ${{ secrets.APP_STORE_CONNECT_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
 
+      - name: Set TestFlight "What to Test" notes
+        env:
+          ASC_KEY_PATH: ~/".appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8"
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          NOTES: |-
+            ${{ github.event.pull_request.title || format('Push to {0}', github.ref_name) }}
+            Branch: ${{ github.head_ref || github.ref_name }}
+            Commit: ${{ github.sha }}
+        run: |
+          pip3 install PyJWT cryptography --quiet --break-system-packages
+          python3 scripts/set-testflight-notes.py
+
       - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
