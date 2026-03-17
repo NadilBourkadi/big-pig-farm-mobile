@@ -88,7 +88,10 @@ extension FarmScene {
     }
 
     fileprivate func makeTileGroup(biome: String, tileType: String, size: CGSize) -> SKTileGroup {
-        let texture = SpriteAssets.terrainTexture(biome: biome, tileType: tileType)
+        let baseTexture = SpriteAssets.terrainTexture(biome: biome, tileType: tileType)
+        let texture = (tileType == "wall" || tileType == "post")
+            ? OutlineShadow.wallTileWithShadow(baseTexture)
+            : baseTexture
         let definition = SKTileDefinition(texture: texture, size: size)
         return SKTileGroup(tileDefinition: definition)
     }
