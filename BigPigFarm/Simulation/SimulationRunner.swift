@@ -58,6 +58,15 @@ final class SimulationRunner {
         self.saveManager = saveManager
     }
 
+    // MARK: - Offline Progress
+
+    /// Clear all behavior tracking state after offline catch-up.
+    /// Pigs have been repositioned to random locations, so pathfinding caches,
+    /// unreachable-need backoffs, and failed-facility lists are all stale.
+    func resetAfterOffline() {
+        behaviorController.resetAllTracking()
+    }
+
     // MARK: - Tick Entry Point
 
     /// Process one simulation tick. `gameMinutes` is already speed-scaled by GameEngine.

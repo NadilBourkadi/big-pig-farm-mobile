@@ -13,7 +13,7 @@ extension OfflineProgressRunner {
         for var pig in pigs {
             decayPrimaryNeeds(pig: &pig, hours: hours)
             applyHappinessEffects(pig: &pig, hours: hours)
-            applySocialDecay(pig: &pig, hours: hours, pigCount: pigCount)
+            applySocialEffects(pig: &pig, hours: hours, pigCount: pigCount)
             applyHealthEffects(pig: &pig, hours: hours, state: state)
             equilibrateNeeds(pig: &pig, state: state, hours: hours)
             pig.needs.clampAll()
@@ -52,9 +52,20 @@ extension OfflineProgressRunner {
         }
     }
 
-    private static func applySocialDecay(pig: inout GuineaPig, hours: Double, pigCount: Int) {
+    /// Social: decay + recovery. With multiple pigs on the farm, apply a moderate
+    /// proximity boost to simulate natural encounters during offline time. Without
+    /// this, social inevitably hits 0 on long absences because decay runs every
+    /// checkpoint but real-time proximity-based recovery is skipped.
+    private static func applySocialEffects(pig: inout GuineaPig, hours: Double, pigCount: Int) {
         if pigCount > 1 {
             pig.needs.social -= GameConfig.Needs.socialDecayWithPigs * hours
+            // Assume pigs encounter ~2 others per hour on average while offline
+            let offlineNearbyCount = min(pigCount - 1, 2)
+            let boost = min(
+                Double(offlineNearbyCount) * GameConfig.Needs.socialBoostPerPig,
+                GameConfig.Needs.socialBoostCap
+            ) * hours
+            pig.needs.social += boost
         } else {
             pig.needs.social -= GameConfig.Needs.socialDecayAlone * hours
         }
