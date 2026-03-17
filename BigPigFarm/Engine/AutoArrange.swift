@@ -99,6 +99,7 @@ enum AutoArrange {
     }
 
     /// Apply computed placements: remove all facilities and re-place at new positions.
+    /// Guarantees no facility is lost — uses fallback placement if needed.
     @MainActor
     static func applyArrangement(
         state: GameState, placements: [Placement], overflow: [Facility]
@@ -109,21 +110,56 @@ enum AutoArrange {
                 saved[removed.id] = removed
             }
         }
+        var placed: Set<UUID> = []
         for placement in placements {
             guard var facility = saved[placement.facility.id] else { continue }
             facility.positionX = placement.newX
             facility.positionY = placement.newY
             facility.areaId = state.farm.getAreaAt(placement.newX, placement.newY)?.id
-            _ = state.addFacility(facility)
+            if state.addFacility(facility) {
+                placed.insert(facility.id)
+            }
         }
         for overflowFacility in overflow {
             guard var facility = saved[overflowFacility.id] else { continue }
+            guard !placed.contains(facility.id) else { continue }
             if let pos = findGridPosition(for: facility, in: state.farm) {
                 facility.positionX = pos.x
                 facility.positionY = pos.y
                 facility.areaId = state.farm.getAreaAt(pos.x, pos.y)?.id
-                _ = state.addFacility(facility)
+                if state.addFacility(facility) {
+                    placed.insert(facility.id)
+                }
             }
+        }
+        restoreUnplacedFacilities(saved: saved, placed: &placed, state: state)
+    }
+
+    /// Safety net: restore any facilities that were removed but never re-added.
+    @MainActor
+    private static func restoreUnplacedFacilities(
+        saved: [UUID: Facility], placed: inout Set<UUID>, state: GameState
+    ) {
+        for (id, originalFacility) in saved where !placed.contains(id) {
+            var facility = originalFacility
+            // Try relaxed grid search for any open position
+            if let pos = findGridPosition(for: facility, in: state.farm) {
+                facility.positionX = pos.x
+                facility.positionY = pos.y
+                facility.areaId = state.farm.getAreaAt(pos.x, pos.y)?.id
+                if state.addFacility(facility) {
+                    placed.insert(id)
+                    continue
+                }
+            }
+            // Try original position (might be free now)
+            if state.addFacility(facility) {
+                placed.insert(id)
+                continue
+            }
+            // Last resort: force-restore to prevent data loss
+            state.forceAddFacility(facility)
+            placed.insert(id)
         }
     }
 
@@ -238,7 +274,7 @@ enum AutoArrange {
                     guard gridY + facility.height < farm.height - 1 else { continue }
                     let fits = (0..<facility.height).allSatisfy { dy in
                         (0..<facility.width).allSatisfy { dx in
-                            farm.isWalkable(gridX + dx, gridY + dy)
+                            farm.isCellOpenForFacility(gridX + dx, gridY + dy)
                         }
                     }
                     if fits { return GridPosition(x: gridX, y: gridY) }
