@@ -2,7 +2,6 @@
 """Set 'What to Test' notes on a TestFlight build via App Store Connect API.
 
 Required environment variables:
-    ASC_KEY_PATH    — path to the .p8 private key
     ASC_KEY_ID      — App Store Connect API key ID
     ASC_ISSUER_ID   — App Store Connect issuer ID
     BUILD_NUMBER    — the build number to annotate
@@ -23,7 +22,8 @@ except ImportError:
 
 
 def create_token():
-    key_path = os.path.expanduser(os.environ["ASC_KEY_PATH"])
+    key_id = os.environ["ASC_KEY_ID"]
+    key_path = os.path.expanduser(f"~/.appstoreconnect/private_keys/AuthKey_{key_id}.p8")
     with open(key_path) as f:
         private_key = f.read()
 
