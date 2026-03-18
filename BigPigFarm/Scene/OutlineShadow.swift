@@ -56,14 +56,16 @@ enum OutlineShadow {
     static func outlineTexture(
         from cgImage: CGImage,
         scale: Int = Int(SpriteAssets.pointsPerArtPixel),
-        color: UIColor = shadowColor
+        color: UIColor = shadowColor,
+        pixelOffset: Int = artPixelOffset,
+        blur: CGFloat = blurRadius
     ) -> SKTexture? {
         let srcW = cgImage.width
         let srcH = cgImage.height
         guard srcW > 0, srcH > 0 else { return nil }
 
-        let offset = artPixelOffset * scale
-        let blurPadding = Int(ceil(blurRadius * 2.5))
+        let offset = pixelOffset * scale
+        let blurPadding = Int(ceil(blur * 2.5))
         let totalPadding = offset + blurPadding
         let outW = srcW + 2 * totalPadding
         let outH = srcH + 2 * totalPadding
@@ -109,7 +111,7 @@ enum OutlineShadow {
         let ciImage = CIImage(cgImage: tintedImage)
         guard let blurFilter = CIFilter(name: "CIGaussianBlur") else { return nil }
         blurFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        blurFilter.setValue(blurRadius, forKey: kCIInputRadiusKey)
+        blurFilter.setValue(blur, forKey: kCIInputRadiusKey)
         guard let blurred = blurFilter.outputImage else { return nil }
 
         // Crop to original canvas bounds (blur extends the CIImage extent).
@@ -204,17 +206,20 @@ enum OutlineShadow {
     /// Create a shadow sprite node positioned behind the main sprite.
     static func makeShadowNode(
         texture: SKTexture,
-        spriteSize: CGSize
+        spriteSize: CGSize,
+        pixelOffset: Int = artPixelOffset,
+        blur: CGFloat = blurRadius,
+        zPosition: CGFloat = shadowNodeZPosition
     ) -> SKSpriteNode {
-        let offset = CGFloat(artPixelOffset) * SpriteAssets.pointsPerArtPixel
-        let blurPad = ceil(blurRadius * 2.5)
+        let offset = CGFloat(pixelOffset) * SpriteAssets.pointsPerArtPixel
+        let blurPad = ceil(blur * 2.5)
         let expansion = (offset + blurPad) * 2
         let shadowSize = CGSize(
             width: spriteSize.width + expansion,
             height: spriteSize.height + expansion
         )
         let node = SKSpriteNode(texture: texture, size: shadowSize)
-        node.zPosition = shadowNodeZPosition
+        node.zPosition = zPosition
         return node
     }
 }
