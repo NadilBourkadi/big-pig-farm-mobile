@@ -74,7 +74,7 @@ enum GameConfig {
         static let gestationDays: Int = 2
         static let minLitterSize: Int = 1
         static let maxLitterSize: Int = 4
-        static let recoveryDays: Int = 2
+        static let recoveryDays: Int = 1
         static let breedingDistance: Double = 3.0
         static let baseBreedingChance: Double = 0.05
         static let breedingDenBonus: Double = 0.10
