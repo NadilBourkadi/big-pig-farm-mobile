@@ -12,6 +12,7 @@
 - **When inside a worktree, use the worktree root for ALL file paths.** Never read or write files via the main repo path (e.g. `/Users/.../big-pig-farm-mobile/…`) — every Read, Write, Edit, Glob, Grep, and `cat` must use the worktree absolute path (e.g. `/Users/.../big-pig-farm-mobile/.claude/worktrees/<name>/…`). The main repo's files are not the ones being modified.
 - Never use inline env vars; use `export` on a separate line
 - **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
+- **`**` glob in permissions does not match subdirectories.** `Read(path:~/.claude/skills/**)` does NOT match `~/.claude/skills/code-review/swift.md`. Always add explicit `/*/*` patterns alongside `**` patterns in `settings.json` for multi-level paths.
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`

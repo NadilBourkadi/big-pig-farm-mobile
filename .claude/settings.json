@@ -45,6 +45,8 @@
       "Read(path:.tmp/*)",
       "Read(path:/Users/nadilbourkadi/.claude/skills/**)",
       "Read(path:~/.claude/skills/**)",
+      "Read(path:~/.claude/skills/*/*)",
+      "Read(path:/Users/nadilbourkadi/.claude/skills/*/*)",
       "Bash(grep:*)",
       "Bash(sed:*)",
       "Bash(swiftlint lint:*)",
