@@ -2,9 +2,6 @@
 /// Maps from: new SpriteKit rendering layer
 import SpriteKit
 
-/// A SpriteKit node that renders a facility on the farm grid.
-/// Uses center-based positioning (default anchor 0.5, 0.5) so FarmScene.gridToScene
-/// can map the facility center directly.
 /// Edit mode glow state for facility nodes.
 enum FacilityGlowState: Sendable {
     case none
@@ -12,6 +9,9 @@ enum FacilityGlowState: Sendable {
     case moving
 }
 
+/// A SpriteKit node that renders a facility on the farm grid.
+/// Uses center-based positioning (default anchor 0.5, 0.5) so FarmScene.gridToScene
+/// can map the facility center directly.
 class FacilityNode: SKSpriteNode {
     let facilityID: UUID
     let facilityType: FacilityType

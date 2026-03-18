@@ -22,8 +22,9 @@ struct GlowEffectTests {
         return image.cgImage!  // swiftlint:disable:this force_unwrapping
     }
 
-    private func expectedGlowPadding(scale: Int) -> Int {
-        let offset = GlowEffect.glowPixelOffset * scale
+    // GlowEffect.glowTexture uses the default scale (pointsPerArtPixel).
+    private func expectedGlowPadding() -> Int {
+        let offset = GlowEffect.glowPixelOffset * Int(SpriteAssets.pointsPerArtPixel)
         let blurPad = Int(ceil(GlowEffect.glowBlurRadius * 2.5))
         return offset + blurPad
     }
@@ -33,7 +34,7 @@ struct GlowEffectTests {
     @Test func glowTextureExpandsDimensions() throws {
         let source = makeTestCGImage(width: 56, height: 32)
         let glow = try #require(GlowEffect.glowTexture(from: source, color: GlowEffect.pigSelectionColor))
-        let padding = expectedGlowPadding(scale: Int(SpriteAssets.pointsPerArtPixel))
+        let padding = expectedGlowPadding()
         let cgImage = glow.cgImage()
         #expect(cgImage.width == 56 + 2 * padding)
         #expect(cgImage.height == 32 + 2 * padding)
@@ -47,10 +48,10 @@ struct GlowEffectTests {
         #expect(glow.cgImage().height > shadow.cgImage().height)
     }
 
-    @Test func glowTextureUsesLinearFiltering() {
+    @Test func glowTextureUsesLinearFiltering() throws {
         let source = makeTestCGImage(width: 32, height: 32)
-        let glow = GlowEffect.glowTexture(from: source, color: GlowEffect.facilitySelectedColor)
-        #expect(glow?.filteringMode == .linear)
+        let glow = try #require(GlowEffect.glowTexture(from: source, color: GlowEffect.facilitySelectedColor))
+        #expect(glow.filteringMode == .linear)
     }
 
     // MARK: - makeGlowNode
