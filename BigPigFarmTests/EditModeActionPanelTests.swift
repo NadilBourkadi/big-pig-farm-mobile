@@ -1,5 +1,5 @@
 /// EditModeActionPanelTests — Tests for edit mode action panel logic, callbacks,
-/// and the move/remove/auto-arrange call sequences.
+/// and the drag/remove/auto-arrange call sequences.
 import Testing
 import Foundation
 @testable import BigPigFarm
@@ -44,11 +44,11 @@ struct CoordinatorFacilityCallbackTests {
     }
 }
 
-// MARK: - FarmScene Move State
+// MARK: - FarmScene Drag State
 
-@Suite("FarmScene move state")
+@Suite("FarmScene drag state")
 @MainActor
-struct FarmSceneMoveStateTests {
+struct FarmSceneDragStateTests {
 
     let state: GameState = {
         let gameState = GameState()
@@ -56,33 +56,35 @@ struct FarmSceneMoveStateTests {
         return gameState
     }()
 
-    @Test("startMovingSelectedFacility does nothing when no facility is selected")
-    func startMoveWithNoSelectionDoesNothing() {
-        let farmScene = FarmScene(gameState: state)
-        farmScene.selectedFacilityID = nil
-        farmScene.startMovingSelectedFacility()
-        #expect(farmScene.isMovingFacility == false)
-    }
-
-    @Test("startMovingSelectedFacility sets isMovingFacility when a facility is selected")
-    func startMoveWithSelectionSetsFlag() {
+    @Test("beginDraggingFacility sets both selectedFacilityID and draggedFacilityID")
+    func beginDraggingSetsState() {
         let farmScene = FarmScene(gameState: state)
         let facility = Facility.create(type: .foodBowl, x: 2, y: 2)
         _ = state.addFacility(facility)
-        farmScene.selectedFacilityID = facility.id
-        farmScene.startMovingSelectedFacility()
-        #expect(farmScene.isMovingFacility == true)
+        farmScene.beginDraggingFacility(facility.id)
+        #expect(farmScene.selectedFacilityID == facility.id)
+        #expect(farmScene.draggedFacilityID == facility.id)
     }
 
-    @Test("confirmFacilityPlacement resets isMovingFacility to false")
-    func confirmPlacementResetsFlag() {
+    @Test("beginDraggingFacility fires onFacilityDragBegan callback")
+    func beginDraggingFiresCallback() {
+        let farmScene = FarmScene(gameState: state)
+        var capturedID: UUID?
+        farmScene.onFacilityDragBegan = { capturedID = $0 }
+        let facility = Facility.create(type: .foodBowl, x: 2, y: 2)
+        _ = state.addFacility(facility)
+        farmScene.beginDraggingFacility(facility.id)
+        #expect(capturedID == facility.id)
+    }
+
+    @Test("confirmFacilityPlacement clears draggedFacilityID")
+    func confirmPlacementClearsDrag() {
         let farmScene = FarmScene(gameState: state)
         let facility = Facility.create(type: .foodBowl, x: 2, y: 2)
         _ = state.addFacility(facility)
-        farmScene.selectedFacilityID = facility.id
-        farmScene.startMovingSelectedFacility()
+        farmScene.beginDraggingFacility(facility.id)
         farmScene.confirmFacilityPlacement()
-        #expect(farmScene.isMovingFacility == false)
+        #expect(farmScene.draggedFacilityID == nil)
     }
 
     @Test("confirmFacilityPlacement calls onFacilityMoveEnded")
@@ -90,7 +92,7 @@ struct FarmSceneMoveStateTests {
         let farmScene = FarmScene(gameState: state)
         var called = false
         farmScene.onFacilityMoveEnded = { called = true }
-        farmScene.isMovingFacility = true
+        farmScene.draggedFacilityID = UUID()
         farmScene.confirmFacilityPlacement()
         #expect(called == true)
     }
@@ -99,16 +101,16 @@ struct FarmSceneMoveStateTests {
     func confirmPlacementNoClosureNoCrash() {
         let farmScene = FarmScene(gameState: state)
         farmScene.onFacilityMoveEnded = nil
-        farmScene.isMovingFacility = true
-        farmScene.confirmFacilityPlacement()   // must not crash
+        farmScene.draggedFacilityID = UUID()
+        farmScene.confirmFacilityPlacement()
     }
 
-    @Test("confirmFacilityPlacement does not call onFacilityMoveEnded when not moving")
+    @Test("confirmFacilityPlacement does not call onFacilityMoveEnded when not dragging")
     func confirmPlacementGuardPreventsClosure() {
         let farmScene = FarmScene(gameState: state)
         var called = false
         farmScene.onFacilityMoveEnded = { called = true }
-        farmScene.isMovingFacility = false
+        farmScene.draggedFacilityID = nil
         farmScene.confirmFacilityPlacement()
         #expect(called == false)
     }
@@ -130,19 +132,19 @@ struct FarmSceneRemoveStateTests {
     func removeWithNoSelectionNoCrash() {
         let farmScene = FarmScene(gameState: state)
         farmScene.selectedFacilityID = nil
-        farmScene.removeSelectedFacility()   // guard let — must be a no-op
+        farmScene.removeSelectedFacility()
     }
 
-    @Test("removeSelectedFacility clears selectedFacilityID and isMovingFacility")
+    @Test("removeSelectedFacility clears selectedFacilityID and draggedFacilityID")
     func removeClearsSelectionState() {
         let farmScene = FarmScene(gameState: state)
         let facility = Facility.create(type: .foodBowl, x: 2, y: 2)
         _ = state.addFacility(facility)
         farmScene.selectedFacilityID = facility.id
-        farmScene.isMovingFacility = true
+        farmScene.draggedFacilityID = facility.id
         farmScene.removeSelectedFacility()
         #expect(farmScene.selectedFacilityID == nil)
-        #expect(farmScene.isMovingFacility == false)
+        #expect(farmScene.draggedFacilityID == nil)
     }
 
     @Test("removeSelectedFacility removes the facility from game state")
@@ -153,6 +155,19 @@ struct FarmSceneRemoveStateTests {
         farmScene.selectedFacilityID = facility.id
         farmScene.removeSelectedFacility()
         #expect(state.getFacility(facility.id) == nil)
+    }
+}
+
+// MARK: - FarmScene Facility Hit Test
+
+@Suite("Facility hit test")
+@MainActor
+struct FacilityHitTestTests {
+
+    @Test("facilityIDAtPoint returns nil on empty scene")
+    func hitTestEmptySceneReturnsNil() {
+        let farmScene = FarmScene(gameState: GameState())
+        #expect(farmScene.facilityIDAtPoint(.zero) == nil)
     }
 }
 
