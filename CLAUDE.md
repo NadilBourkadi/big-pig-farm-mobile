@@ -123,10 +123,15 @@ xcrun simctl io <UDID> screenshot /absolute/path/to/.tmp/sim-screenshot.png
 ## Testing
 
 - Use Swift Testing framework (`@Test`, `#expect`, `#require`)
-- Test files go in `BigPigFarmTests/`
-- Run tests before pushing: `xcodebuild test` or via Xcode
+- **Two test targets:**
+  - `BigPigFarmCoreTests/` — logic tests (59 files, ~1,076 tests). Run via `swift test` on macOS, no simulator needed. ~4 seconds.
+  - `BigPigFarmTests/` — scene + app tests (20 files). Run via `xcodebuild test` on iOS Simulator. Requires SpriteKit/UIKit/SwiftUI.
+- **New logic tests go in `BigPigFarmCoreTests/`** with `@testable import BigPigFarmCore` — unless they reference app-only types (Views, Scene, HapticManager, etc.), in which case they go in `BigPigFarmTests/` with `@testable import BigPigFarm`.
+- **Run tests before pushing:** `bash scripts/run-tests.sh` (defaults to `--fast`, logic tests only). Use `--all` for both logic and scene tests.
+- **`/test` skill** runs tests in a subagent to keep context clean. Use `/test` (fast), `/test --full` (scene), or `/test --all` (both).
 - Zero-warning policy applies to test targets too
 - **Every implementation task must include tests.** Tests are a deliverable of the task, not a separate ticket. Do not create standalone test beads.
+- **Package.swift** at repo root defines `BigPigFarmCore` — a parallel SPM build of the 54 platform-agnostic source files. It coexists with the Xcode project; the two don't interact.
 
 ## Spec Documents
 

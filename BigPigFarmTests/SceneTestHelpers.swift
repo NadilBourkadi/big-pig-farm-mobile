@@ -1,9 +1,21 @@
 /// SceneTestHelpers — Factory helpers for scene tests that remain in the Xcode test target.
 ///
-/// These are copies of helpers from BigPigFarmCoreTests/TestHelpers.swift, scoped to
-/// the BigPigFarm module (not BigPigFarmCore) since scene tests need SpriteKit types.
+/// Intentional copies of helpers from BigPigFarmCoreTests/TestHelpers.swift.
+/// Scene tests import BigPigFarm (not BigPigFarmCore), so a separate copy is unavoidable.
+/// Keep in sync with the canonical versions in TestHelpers.swift.
 import Foundation
 @testable import BigPigFarm
+
+// MARK: - Game State Helper
+
+@MainActor
+func makeGameState(withArea: Bool = true) -> GameState {
+    let state = GameState()
+    if withArea {
+        state.farm = FarmGrid.createStarter()
+    }
+    return state
+}
 
 // MARK: - Save Manager Helper
 
@@ -49,4 +61,17 @@ func makeLargeIntegrationState(pigCount: Int) -> (GameState, SimulationRunner) {
         saveManager: makeTempSaveManager()
     )
     return (state, runner)
+}
+
+// MARK: - Duration Extension
+
+extension Duration {
+    /// Wall-clock milliseconds as a Double.
+    ///
+    /// `Duration.components` returns `(seconds: Int64, attoseconds: Int64)`.
+    /// 1 millisecond = 10^15 attoseconds, so: `seconds*1000 + attoseconds/10^15`.
+    var milliseconds: Double {
+        let parts = components
+        return Double(parts.seconds) * 1_000.0 + Double(parts.attoseconds) / 1_000_000_000_000_000.0
+    }
 }
