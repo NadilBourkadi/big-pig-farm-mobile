@@ -57,6 +57,18 @@ func pigColorSwiftUI(_ baseColor: BaseColor) -> Color {
     }
 }
 
+// MARK: - Gender Display
+
+extension Gender {
+    /// SwiftUI color for gender display (blue for male, pink for female).
+    var displayColor: Color {
+        switch self {
+        case .male: .blue
+        case .female: .pink
+        }
+    }
+}
+
 // MARK: - CurrencyLabel
 
 /// Displays a formatted currency amount with the Squeaks prefix.

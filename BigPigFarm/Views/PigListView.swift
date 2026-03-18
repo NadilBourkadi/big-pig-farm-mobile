@@ -195,9 +195,9 @@ private struct PigRow: View {
                     Text("\(Int(pig.ageDays))d")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(pig.gender == .male ? "♂" : "♀")
+                    Text(pig.gender.displaySymbol)
                         .font(.caption)
-                        .foregroundStyle(pig.gender == .male ? .blue : .pink)
+                        .foregroundStyle(pig.gender.displayColor)
                 }
             }
             Spacer()

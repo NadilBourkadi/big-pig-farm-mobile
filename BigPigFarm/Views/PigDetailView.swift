@@ -40,9 +40,9 @@ private extension PigDetailView {
         HStack {
             Text(pig.name)
                 .font(.title2.bold())
-            Text(pig.gender == .male ? "♂" : "♀")
+            Text(pig.gender.displaySymbol)
                 .font(.title2)
-                .foregroundStyle(pig.gender == .male ? .blue : .pink)
+                .foregroundStyle(pig.gender.displayColor)
             Spacer()
             RarityBadge(rarity: pig.phenotype.rarity)
         }

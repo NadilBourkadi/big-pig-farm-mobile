@@ -108,6 +108,16 @@ import Foundation
     #expect(Gender.female.rawValue == "female")
 }
 
+@Test func genderDisplaySymbol() {
+    #expect(Gender.male.displaySymbol == "♂")
+    #expect(Gender.female.displaySymbol == "♀")
+}
+
+@Test func genderDisplayLabel() {
+    #expect(Gender.male.displayLabel == "Male")
+    #expect(Gender.female.displayLabel == "Female")
+}
+
 @Test func ageGroupHas3Cases() {
     // Python source has 3 stages: baby, adult, senior (no juvenile)
     #expect(AgeGroup.allCases.count == 3)
