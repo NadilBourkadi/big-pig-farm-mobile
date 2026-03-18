@@ -207,9 +207,13 @@ final class SimulationRunner {
         guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-        guard let data = try? state.encodeToJSON() else { return }
-        try? saveManager.saveData(data)
+        let previousLastSave = state.lastSave
         state.lastSave = Date()
+        guard let data = try? state.encodeToJSON() else {
+            state.lastSave = previousLastSave
+            return
+        }
+        try? saveManager.saveData(data)
     }
 
     private func recordTimestamp(_ time: CFTimeInterval) {
