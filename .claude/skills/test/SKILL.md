@@ -1,6 +1,6 @@
 ---
 name: test
-description: Run the test suite, execute tests, check if tests pass, verify changes don't break anything. Runs in a subagent to keep context clean. Use when asked to "run tests", "test this", "check tests", "verify it passes", or any variation of running/checking tests. --fast for logic (default), --full for scene tests, --all for both.
+description: Run the test suite. ALWAYS use this instead of running swift test or xcodebuild test directly — it runs in a subagent to keep context clean. Triggers on "run tests", "test this", "check tests", "verify it passes", or ANY test execution during /implement workflows. --fast for logic (default), --full for scene tests, --all for both.
 argument-hint: "[--fast|--full|--all]"
 ---
 
@@ -33,8 +33,9 @@ Launch `Agent(subagent_type="general-purpose", model="haiku")` with this prompt:
 Before launching the subagent, replace `{{WORKTREE_PATH}}` with the absolute path
 of the current working directory (e.g. the worktree root).
 >
-> Run this command via the Bash tool:
+> Run this command via the Bash tool using the RELATIVE path (never absolute):
 >   `bash scripts/run-tests.sh <MODE>`
+> IMPORTANT: Use exactly `bash scripts/run-tests.sh`, NOT an absolute path. The working directory is already correct.
 > Use timeout 120000 for --fast, 300000 for --full or --all.
 >
 > Parse the output and return EXACTLY this format:
