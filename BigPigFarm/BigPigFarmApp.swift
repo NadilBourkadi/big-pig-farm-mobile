@@ -13,7 +13,9 @@ struct BigPigFarmApp: App {
     @State private var offlineSummary: OfflineProgressSummary?
     /// Guards against false catch-ups from inactive→active without a background transition
     /// (e.g. notification center pull-down, phone call popup).
-    @State private var didEnterBackground = false
+    /// Initialised to `true` when loading an existing save so that a cold start
+    /// (app terminated by iOS or force-quit) triggers catch-up on the first `.active`.
+    @State private var didEnterBackground: Bool
     private let saveManager: SaveManager
 
     init() {
@@ -21,6 +23,11 @@ struct BigPigFarmApp: App {
         let loaded = sm.load()
         let isNewGame = loaded == nil
         let state = loaded ?? GameState()
+        // Defensive fallback: saves from before this fix may have nil lastSave.
+        // Use sessionStart as a conservative approximation.
+        if !isNewGame && state.lastSave == nil {
+            state.lastSave = state.sessionStart
+        }
         let behaviorController = BehaviorController(gameState: state)
         let sim = SimulationRunner(state: state, behaviorController: behaviorController, saveManager: sm)
         let eng = GameEngine(state: state)
@@ -34,6 +41,9 @@ struct BigPigFarmApp: App {
         _gameState = State(initialValue: state)
         _engine = State(initialValue: eng)
         _runner = State(initialValue: sim)
+        // Cold start with existing save: treat as "returning from background"
+        // so the first .active transition triggers offline catch-up.
+        _didEnterBackground = State(initialValue: !isNewGame)
     }
 
     var body: some Scene {
@@ -96,6 +106,8 @@ struct BigPigFarmApp: App {
         runner.resetAfterOffline()
         // Advance lastSave unconditionally so a failed disk write doesn't cause
         // the next foreground transition to re-simulate the same time window.
+        // Note: save() also sets lastSave — the pre-set here is the safety net
+        // for when the disk write inside save() fails.
         gameState.lastSave = Date()
         do {
             try saveManager.save(gameState)
@@ -156,4 +168,5 @@ func setupNewGame(state: GameState) {
     _ = state.addFacility(hideout)
 
     state.logEvent("Welcome to Big Pig Farm!", eventType: "info")
+    state.lastSave = Date()
 }

@@ -28,9 +28,9 @@ extension SaveManager {
     /// Encode `state` to JSON and write atomically, backing up the previous save first.
     @MainActor
     func save(_ state: GameState) throws {
+        state.lastSave = Date()
         let data = try state.encodeToJSON()
         try saveData(data)
-        state.lastSave = Date()
     }
 
     /// Write pre-encoded JSON data atomically, backing up the previous save first.
