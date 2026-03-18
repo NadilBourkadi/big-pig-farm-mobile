@@ -8,6 +8,22 @@ import Foundation
 enum Gender: String, Codable, CaseIterable, Sendable {
     case male
     case female
+
+    /// Unicode gender symbol for display (`♂` / `♀`).
+    var displaySymbol: String {
+        switch self {
+        case .male: "♂"
+        case .female: "♀"
+        }
+    }
+
+    /// Human-readable label (`"Male"` / `"Female"`).
+    var displayLabel: String {
+        switch self {
+        case .male: "Male"
+        case .female: "Female"
+        }
+    }
 }
 
 // MARK: - AgeGroup
