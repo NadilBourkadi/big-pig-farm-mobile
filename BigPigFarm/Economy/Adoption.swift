@@ -46,8 +46,8 @@ enum Adoption {
     /// Get all bloodlines available at the given farm tier.
     ///
     /// Delegates to the Models-layer free function in Bloodline.swift.
-    static func getAvailableBloodlines(farmTier: Int) -> [Bloodline] {
-        BigPigFarm.getAvailableBloodlines(farmTier: farmTier)
+    static func availableBloodlines(farmTier: Int) -> [Bloodline] {
+        getAvailableBloodlines(farmTier: farmTier)
     }
 
     // MARK: - Pig Generation
