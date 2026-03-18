@@ -9,7 +9,7 @@ class PigNode: SKSpriteNode {
     private var isBaby: Bool
     private let nameLabel: SKLabelNode
     private var indicatorNode: SKSpriteNode?
-    private var selectionGlow: SKShapeNode?
+    private var glowNode: SKSpriteNode?
     private var shadowNode: SKSpriteNode?
     var isSelected: Bool = false { didSet { updateSelectionGlow() } }
     private var currentAnimationKey: String = ""
@@ -128,6 +128,7 @@ class PigNode: SKSpriteNode {
         )
         guard !frames.isEmpty else { return }
         updateShadowSize()
+        if isSelected { regenerateGlow() }
         if frames.count == 1 {
             texture = frames[0]
             return
@@ -162,19 +163,29 @@ class PigNode: SKSpriteNode {
 
     private func updateSelectionGlow() {
         if isSelected {
-            if selectionGlow == nil {
-                let radius = max(size.width, size.height) / 2 + 4
-                let glow = SKShapeNode(circleOfRadius: radius)
-                glow.fillColor = .clear
-                glow.strokeColor = SKColor(red: 1.0, green: 0.9, blue: 0.2, alpha: 0.8)
-                glow.lineWidth = 2
-                glow.zPosition = -1
-                addChild(glow)
-                selectionGlow = glow
+            if glowNode == nil {
+                regenerateGlow()
             }
         } else {
-            selectionGlow?.removeFromParent()
-            selectionGlow = nil
+            glowNode?.removeFromParent()
+            glowNode = nil
+        }
+    }
+
+    private func regenerateGlow() {
+        glowNode?.removeFromParent()
+        let direction = currentAnimationKey.contains("left") ? "left" : "right"
+        let assetName = Self.pigAssetName(
+            baseColor: baseColor, state: "idle",
+            direction: direction, isBaby: isBaby
+        )
+        if let cgImage = OutlineShadow.loadCGImage(named: assetName),
+           let glowTex = GlowEffect.glowTexture(from: cgImage, color: GlowEffect.pigSelectionColor) {
+            let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
+            addChild(node)
+            glowNode = node
+        } else {
+            glowNode = nil
         }
     }
 }

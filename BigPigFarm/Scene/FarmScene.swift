@@ -79,10 +79,12 @@ class FarmScene: SKScene {
 
     var isEditMode: Bool = false
     var selectedFacilityID: UUID?
-    var isMovingFacility: Bool = false
+    var draggedFacilityID: UUID?
 
-    /// Called by confirmFacilityPlacement() when a move gesture ends.
-    /// ContentView uses this to reset its editModeIsMovingFacility @State.
+    /// Called when a drag gesture begins on a facility in edit mode.
+    var onFacilityDragBegan: ((UUID) -> Void)?
+
+    /// Called when a drag gesture ends (facility placed or cancelled).
     var onFacilityMoveEnded: (() -> Void)?
 
     // MARK: - Terrain State

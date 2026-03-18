@@ -5,12 +5,19 @@ import SpriteKit
 /// A SpriteKit node that renders a facility on the farm grid.
 /// Uses center-based positioning (default anchor 0.5, 0.5) so FarmScene.gridToScene
 /// can map the facility center directly.
+/// Edit mode glow state for facility nodes.
+enum FacilityGlowState: Sendable {
+    case none
+    case selected
+    case moving
+}
+
 class FacilityNode: SKSpriteNode {
     let facilityID: UUID
     let facilityType: FacilityType
     private let nameLabel: SKLabelNode
-    var isSelectedInEditMode: Bool = false { didSet { updateEditHighlight() } }
-    var isBeingMoved: Bool = false { didSet { updateEditHighlight() } }
+    private var glowNode: SKSpriteNode?
+    var glowState: FacilityGlowState = .none { didSet { if glowState != oldValue { updateGlow() } } }
 
     init(facility: Facility, scene: FarmScene) {
         self.facilityID = facility.id
@@ -75,19 +82,29 @@ class FacilityNode: SKSpriteNode {
         position = scene.gridToScene(centerGridX, centerGridY)
     }
 
-    private func updateEditHighlight() {
-        if isBeingMoved {
-            alpha = 0.6
-            colorBlendFactor = 0.35
-            color = .yellow
-        } else if isSelectedInEditMode {
+    private func updateGlow() {
+        glowNode?.removeFromParent()
+        glowNode = nil
+
+        let glowColor: UIColor
+        switch glowState {
+        case .none:
             alpha = 1.0
-            colorBlendFactor = 0.2
-            color = .white
-        } else {
+            return
+        case .selected:
+            glowColor = GlowEffect.facilitySelectedColor
             alpha = 1.0
-            colorBlendFactor = 0
-            color = .clear
+        case .moving:
+            glowColor = GlowEffect.facilityMovingColor
+            alpha = 0.7
+        }
+
+        let facilityAsset = "Sprites/Facilities/facility_\(facilityType.rawValue)"
+        if let cgImage = OutlineShadow.loadCGImage(named: facilityAsset),
+           let glowTex = GlowEffect.glowTexture(from: cgImage, color: glowColor) {
+            let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
+            addChild(node)
+            glowNode = node
         }
     }
 }

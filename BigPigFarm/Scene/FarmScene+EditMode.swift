@@ -1,7 +1,9 @@
-/// FarmScene+EditMode — Facility placement and removal in edit mode.
+/// FarmScene+EditMode — Facility selection, drag-to-move, and removal in edit mode.
 import SpriteKit
 
 extension FarmScene {
+
+    // MARK: - Tap Selection
 
     func handleEditModeTap(at location: CGPoint) {
         for node in nodes(at: location) {
@@ -20,16 +22,33 @@ extension FarmScene {
         sceneDelegate?.farmSceneDidDeselectFacility(self)
     }
 
-    func startMovingSelectedFacility() {
-        guard selectedFacilityID != nil else { return }
-        isMovingFacility = true
+    // MARK: - Hit Test
+
+    /// Returns the facility ID at a scene point, or nil if no facility is there.
+    func facilityIDAtPoint(_ scenePoint: CGPoint) -> UUID? {
+        for node in nodes(at: scenePoint) {
+            if let facilityNode = node as? FacilityNode {
+                return facilityNode.facilityID
+            }
+        }
+        return nil
     }
 
-    /// Move the selected facility to a new origin aligned to the grid.
+    // MARK: - Drag-to-Move
+
+    /// Begin dragging a facility. Called by CameraController when a pan gesture
+    /// starts on a facility in edit mode.
+    func beginDraggingFacility(_ facilityID: UUID) {
+        selectedFacilityID = facilityID
+        draggedFacilityID = facilityID
+        sceneDelegate?.farmScene(self, didSelectFacility: facilityID)
+        onFacilityDragBegan?(facilityID)
+    }
+
+    /// Move the dragged facility to a new origin aligned to the grid.
     /// If the new position is invalid, the facility is restored to its prior location.
     func moveSelectedFacility(to scenePoint: CGPoint) {
-        guard isMovingFacility,
-              let facilityID = selectedFacilityID,
+        guard let facilityID = draggedFacilityID,
               var facility = gameState.getFacility(facilityID) else { return }
 
         let gridPos = sceneToGrid(scenePoint)
@@ -39,7 +58,6 @@ extension FarmScene {
         let oldX = facility.positionX
         let oldY = facility.positionY
 
-        // Remove from old cells, try new cells.
         gameState.farm.removeFacility(facility)
         facility.positionX = newX
         facility.positionY = newY
@@ -47,7 +65,6 @@ extension FarmScene {
         if gameState.farm.placeFacility(facility) {
             gameState.updateFacility(facility)
         } else {
-            // Restore original position.
             facility.positionX = oldX
             facility.positionY = oldY
             _ = gameState.farm.placeFacility(facility)
@@ -57,32 +74,18 @@ extension FarmScene {
     }
 
     func confirmFacilityPlacement() {
-        guard isMovingFacility else { return }
-        isMovingFacility = false
+        guard draggedFacilityID != nil else { return }
+        draggedFacilityID = nil
         onFacilityMoveEnded?()
     }
 
-    /// Begins a facility move gesture: marks the facility as moving and routes
-    /// pan gestures from the camera to the facility.
-    func beginFacilityMove() {
-        startMovingSelectedFacility()
-        cameraController.isInFacilityMoveMode = true
-    }
-
-    /// Ends facility move mode without confirming placement (e.g. exiting edit mode mid-move).
-    /// Calls onFacilityMoveEnded so SwiftUI state stays in sync via the same
-    /// callback path used by confirmFacilityPlacement.
-    func endFacilityMove() {
-        cameraController.isInFacilityMoveMode = false
-        isMovingFacility = false
-        onFacilityMoveEnded?()
-    }
+    // MARK: - Remove
 
     func removeSelectedFacility() {
         guard let facilityID = selectedFacilityID else { return }
         sceneDelegate?.farmScene(self, didRemoveFacility: facilityID)
         _ = gameState.removeFacility(facilityID)
         selectedFacilityID = nil
-        isMovingFacility = false
+        draggedFacilityID = nil
     }
 }
