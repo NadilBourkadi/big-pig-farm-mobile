@@ -73,6 +73,8 @@ extension FarmScene {
         }
     }
 
+    /// End the current drag gesture. `selectedFacilityID` is intentionally retained
+    /// so the user can immediately Remove the just-placed facility without tapping again.
     func confirmFacilityPlacement() {
         guard draggedFacilityID != nil else { return }
         draggedFacilityID = nil

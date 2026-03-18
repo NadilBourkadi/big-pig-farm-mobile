@@ -128,6 +128,7 @@ class PigNode: SKSpriteNode {
         )
         guard !frames.isEmpty else { return }
         updateShadowSize()
+        // Regenerate the glow so it tracks the new direction's silhouette.
         if isSelected { regenerateGlow() }
         if frames.count == 1 {
             texture = frames[0]
