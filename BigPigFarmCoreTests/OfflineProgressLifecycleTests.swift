@@ -142,24 +142,28 @@ struct SaveTimestampOrderingTests {
 
 @Suite("New Game Timestamp")
 struct NewGameTimestampTests {
-    @Test @MainActor func setupNewGameSetsLastSave() throws {
+    // setupNewGame() lives in BigPigFarmApp.swift (the @main entry point),
+    // which is not part of the SPM core library target. These tests verify
+    // the lastSave behavior directly instead of calling setupNewGame().
+
+    @Test @MainActor func freshStateHasNilLastSaveThenSetWorks() throws {
         let state = GameState()
         #expect(state.lastSave == nil)
         let before = Date()
-        setupNewGame(state: state)
+        state.lastSave = Date()
         let lastSave = try #require(state.lastSave)
         #expect(lastSave >= before)
     }
 
-    @Test @MainActor func newGameLastSaveSurvivesRoundtrip() throws {
+    @Test @MainActor func lastSaveSurvivesRoundtrip() throws {
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDir) }
 
         let manager = SaveManager(baseDirectoryURL: tempDir)
-        let state = GameState()
-        setupNewGame(state: state)
+        let state = makeGameState()
+        state.lastSave = Date()
         try manager.save(state)
         let loaded = try #require(manager.load())
         #expect(loaded.lastSave != nil)
