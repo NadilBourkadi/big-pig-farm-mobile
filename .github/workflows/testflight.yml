@@ -43,11 +43,10 @@ jobs:
       - name: Determine marketing version
         id: version
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "value=1.0.0" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=0.${{ github.event.pull_request.number }}.0" >> "$GITHUB_OUTPUT"
-          fi
+          BASE=$(grep 'MARKETING_VERSION:' project.yml | awk '{print $2}')
+          MAJOR=$(echo "$BASE" | cut -d. -f1)
+          MINOR=$(echo "$BASE" | cut -d. -f2)
+          echo "value=${MAJOR}.${MINOR}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Install signing certificate
         env:
