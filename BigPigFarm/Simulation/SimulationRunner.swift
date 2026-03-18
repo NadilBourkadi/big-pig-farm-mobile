@@ -181,7 +181,9 @@ final class SimulationRunner {
         for record in Culling.sellMarkedAdults(gameState: state) {
             behaviorController.cleanupDeadPig(record.pigID)
             onPigSold?(record.pigName, record.totalValue, record.contractBonus, record.pigID)
+            #if canImport(UIKit)
             HapticManager.pigSold()
+            #endif
         }
         breedingCheckCounter += 1
         let runExpensive = breedingCheckCounter >= breedingCheckInterval
@@ -191,7 +193,9 @@ final class SimulationRunner {
         // Fire haptics for every birth, regardless of whether the UI callback is registered.
         for event in state.events[eventCountBefore...] where event.eventType == "birth" {
             onBirth?(event.message)
+            #if canImport(UIKit)
             HapticManager.birth()
+            #endif
         }
     }
 
