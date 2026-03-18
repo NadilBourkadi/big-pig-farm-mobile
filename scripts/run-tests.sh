@@ -76,6 +76,7 @@ case "$MODE" in
     fast) run_fast ;;
     full) run_full ;;
     all)
+        # --fast runs first; if it fails, the script exits and --full is skipped (set -e).
         run_fast
         echo ""
         echo "=========================================="

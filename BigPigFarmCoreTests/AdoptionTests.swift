@@ -111,7 +111,7 @@ private func makeAdoptionPig(rarity: Rarity = .common, originTag: String? = nil)
     #expect(Adoption.calculateAdoptionCost(pig, state: state) == 50)
 }
 
-// MARK: - getAvailableBloodlines
+// MARK: - availableBloodlines
 
 @Test func adoptionGetAvailableBloodlinesTier1() {
     let result = Adoption.availableBloodlines(farmTier: 1)
