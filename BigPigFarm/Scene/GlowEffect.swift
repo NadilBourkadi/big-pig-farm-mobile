@@ -11,13 +11,13 @@ enum GlowEffect {
     // MARK: - Glow Colors
 
     /// Pig follow/selection glow — soft white.
-    static let pigSelectionColor = UIColor(white: 1.0, alpha: 0.35)
+    static let pigSelectionColor = UIColor(white: 1.0, alpha: 0.25)
 
     /// Facility selected (edit mode) — soft white.
-    static let facilitySelectedColor = UIColor(white: 1.0, alpha: 0.3)
+    static let facilitySelectedColor = UIColor(white: 1.0, alpha: 0.2)
 
     /// Facility being dragged — soft white.
-    static let facilityMovingColor = UIColor(white: 1.0, alpha: 0.3)
+    static let facilityMovingColor = UIColor(white: 1.0, alpha: 0.2)
 
     // MARK: - Glow Parameters
 
