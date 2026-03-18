@@ -18,6 +18,7 @@ enum AlmanacTab: String, Sendable {
 struct AlmanacView: View {
     let gameState: GameState
     @State private var selectedTab: AlmanacTab = .pigdex
+    @State private var showingNotificationSettings = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -36,9 +37,21 @@ struct AlmanacView: View {
             .navigationTitle(selectedTab.rawValue)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingNotificationSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Notification Settings")
+                    .accessibilityIdentifier("notificationSettingsButton")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingNotificationSettings) {
+                NotificationSettingsView()
             }
         }
     }
