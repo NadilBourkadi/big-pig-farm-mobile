@@ -93,6 +93,119 @@ struct OfflineCatchUpFlowTests {
     }
 }
 
+// MARK: - Save Timestamp Ordering
+
+@Suite("Save Timestamp Ordering")
+struct SaveTimestampOrderingTests {
+    @Test @MainActor func saveManagerSaveRecordsCurrentTimestamp() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let manager = SaveManager(baseDirectoryURL: tempDir)
+        let state = makeGameState()
+        let before = Date()
+        try manager.save(state)
+
+        // In-memory lastSave should be set
+        let lastSave = try #require(state.lastSave)
+        #expect(lastSave >= before)
+
+        // On-disk lastSave should match in-memory (not be stale)
+        let loaded = try #require(manager.load())
+        let loadedLastSave = try #require(loaded.lastSave)
+        #expect(abs(loadedLastSave.timeIntervalSince(lastSave)) < 1.0)
+    }
+
+    @Test @MainActor func saveManagerPersistsTimestampInJSON() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let manager = SaveManager(baseDirectoryURL: tempDir)
+        let state = makeGameState()
+        state.lastSave = nil
+        try manager.save(state)
+
+        // Decode raw JSON to verify lastSave is in the persisted data
+        let rawData = try Data(contentsOf: manager.saveFileURL)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let envelope = try decoder.decode(SaveEnvelope.self, from: rawData)
+        #expect(envelope.snapshot.lastSave != nil)
+    }
+}
+
+// MARK: - New Game Timestamp
+
+@Suite("New Game Timestamp")
+struct NewGameTimestampTests {
+    @Test @MainActor func setupNewGameSetsLastSave() throws {
+        let state = GameState()
+        #expect(state.lastSave == nil)
+        let before = Date()
+        setupNewGame(state: state)
+        let lastSave = try #require(state.lastSave)
+        #expect(lastSave >= before)
+    }
+
+    @Test @MainActor func newGameLastSaveSurvivesRoundtrip() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let manager = SaveManager(baseDirectoryURL: tempDir)
+        let state = GameState()
+        setupNewGame(state: state)
+        try manager.save(state)
+        let loaded = try #require(manager.load())
+        #expect(loaded.lastSave != nil)
+    }
+}
+
+// MARK: - Cold Start Detection
+
+@Suite("Cold Start Detection")
+struct ColdStartDetectionTests {
+    @Test @MainActor func existingSaveWithStaleLastSaveHasPositiveDuration() {
+        let state = makeGameState()
+        state.lastSave = Date().addingTimeInterval(-300)  // 5 minutes ago
+        let duration = offlineDuration(lastSave: state.lastSave)
+        #expect(duration >= GameConfig.Offline.minThresholdSeconds)
+    }
+
+    // The actual fallback assignment (state.lastSave = state.sessionStart)
+    // lives in BigPigFarmApp.init() and cannot be unit-tested without refactoring.
+    // This test confirms the data condition that triggers it is persisted correctly.
+    @Test @MainActor func loadedSaveWithNilLastSaveFallsBackToSessionStart() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let manager = SaveManager(baseDirectoryURL: tempDir)
+        let state = makeGameState()
+        // Simulate a legacy save with nil lastSave by saving, then
+        // reloading and verifying fallback logic works
+        state.lastSave = nil
+        // Manually encode with nil lastSave
+        let data = try state.encodeToJSON()
+        try manager.saveData(data)
+
+        let loaded = try #require(manager.load())
+        // Legacy save has nil lastSave
+        #expect(loaded.lastSave == nil)
+        // The defensive fallback in BigPigFarmApp.init() would set
+        // lastSave = sessionStart. Verify sessionStart is usable.
+        #expect(loaded.sessionStart <= Date())
+        let fallbackDuration = offlineDuration(lastSave: loaded.sessionStart)
+        #expect(fallbackDuration >= 0)
+    }
+}
+
 // MARK: - Edge Cases
 
 @Suite("Offline Lifecycle Edge Cases")
