@@ -74,10 +74,10 @@ final class NotificationManager: @unchecked Sendable {
         pendingBatch[category, default: []].append(message)
 
         if throttleTask == nil {
-            throttleTask = Task { [weak self] in
-                guard let window = self?.throttleWindow else { return }
-                try? await Task.sleep(for: .seconds(window))
-                self?.flushBatch()
+            throttleTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                try? await Task.sleep(for: .seconds(self.throttleWindow))
+                self.flushBatch()
             }
         }
     }
@@ -93,6 +93,7 @@ final class NotificationManager: @unchecked Sendable {
     /// and in tests (to avoid timing-dependent assertions).
     func flush() {
         throttleTask?.cancel()
+        throttleTask = nil
         guard !pendingBatch.isEmpty else { return }
         flushBatch()
     }
@@ -145,10 +146,9 @@ final class NotificationManager: @unchecked Sendable {
 
     /// Schedule auto-dismiss for a toast after the configured delay.
     private func scheduleAutoDismiss(for toastID: UUID) {
-        dismissTasks[toastID] = Task { [weak self] in
-            guard let delay = self?.autoDismissDelay else { return }
-            try? await Task.sleep(for: .seconds(delay))
+        dismissTasks[toastID] = Task { @MainActor [weak self] in
             guard let self else { return }
+            try? await Task.sleep(for: .seconds(self.autoDismissDelay))
             self.visibleToasts.removeAll { $0.id == toastID }
             self.dismissTasks[toastID] = nil
         }

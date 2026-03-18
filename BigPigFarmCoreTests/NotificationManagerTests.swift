@@ -100,7 +100,8 @@ func autoDismissRemovesToastAfterDelay() async {
     manager.flush()
     #expect(manager.visibleToasts.count == 1)
 
-    // Poll until dismissed or timeout (1.5s max, 30x margin over 50ms delay)
+    // Poll: dismiss delay is 50 ms; we poll every 50 ms for up to 1.5 s (30x).
+    // This keeps the test fast on unloaded machines while tolerating slow CI.
     for _ in 0..<30 {
         if manager.visibleToasts.isEmpty { break }
         try? await Task.sleep(for: .milliseconds(50))
@@ -216,6 +217,38 @@ func dismissAllClearsEverything() {
     #expect(manager.visibleToasts.isEmpty)
 }
 
+// MARK: - Flush + HandleEvent Sequencing
+
+@Test @MainActor
+func handleEventAfterFlushCreatesNewBatch() {
+    let manager = makeManager()
+
+    manager.handleEvent(message: "First", eventType: "birth")
+    manager.flush()
+    #expect(manager.visibleToasts.count == 1)
+
+    // After flush, a new handleEvent should start a fresh batch
+    manager.handleEvent(message: "Second", eventType: "death")
+    manager.flush()
+    #expect(manager.visibleToasts.count == 2)
+}
+
+// MARK: - Suppression Does Not Queue
+
+@Test @MainActor
+func suppressedEventsDoNotQueueInPendingBatch() {
+    let manager = makeManager()
+    manager.isSuppressed = true
+
+    manager.handleEvent(message: "Pig born", eventType: "birth")
+    manager.handleEvent(message: "Pig died", eventType: "death")
+
+    // Unsuppress and flush — nothing should appear because events were dropped, not deferred
+    manager.isSuppressed = false
+    manager.flush()
+    #expect(manager.visibleToasts.isEmpty)
+}
+
 // MARK: - Summary Messages
 
 @Test @MainActor
@@ -232,18 +265,18 @@ func summaryMessagesForAllCategories() {
 
 // MARK: - ToastItem
 
-@Test
+@Test @MainActor
 func toastItemEquality() {
     let id = UUID()
     let date = Date()
-    let a = ToastItem(id: id, message: "Test", category: .births, timestamp: date)
-    let b = ToastItem(id: id, message: "Test", category: .births, timestamp: date)
-    #expect(a == b)
+    let toast1 = ToastItem(id: id, message: "Test", category: .births, timestamp: date)
+    let toast2 = ToastItem(id: id, message: "Test", category: .births, timestamp: date)
+    #expect(toast1 == toast2)
 }
 
-@Test
+@Test @MainActor
 func toastItemInequality() {
-    let a = ToastItem(message: "Test", category: .births)
-    let b = ToastItem(message: "Test", category: .births)
-    #expect(a != b) // Different UUIDs
+    let toast1 = ToastItem(message: "Test", category: .births)
+    let toast2 = ToastItem(message: "Test", category: .births)
+    #expect(toast1 != toast2) // Different UUIDs
 }
