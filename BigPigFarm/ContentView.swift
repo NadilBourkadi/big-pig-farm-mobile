@@ -103,7 +103,7 @@ struct ContentView: View {
     @State private var editModeSelectedFacilityID: UUID?
 
     /// True while the user is actively dragging a facility to a new position.
-    @State private var editModeIsMovingFacility = false
+    @State private var isDraggingFacility = false
 
     /// Controls visibility of the remove-facility confirmation dialog.
     @State private var showRemoveConfirmation = false
@@ -146,8 +146,7 @@ struct ContentView: View {
                 if isEditMode {
                     EditModeActionPanel(
                         selectedFacilityID: editModeSelectedFacilityID,
-                        isMovingFacility: editModeIsMovingFacility,
-                        onMove: { startMoveFacility() },
+                        isDragging: isDraggingFacility,
                         onRemove: { handleRemoveFacility() },
                         onAutoArrange: { performAutoArrange() }
                     )
@@ -230,8 +229,12 @@ struct ContentView: View {
             coordinator.onFacilitySelected = { facilityID in
                 editModeSelectedFacilityID = facilityID
             }
+            farmScene.onFacilityDragBegan = { facilityID in
+                editModeSelectedFacilityID = facilityID
+                isDraggingFacility = true
+            }
             farmScene.onFacilityMoveEnded = {
-                editModeIsMovingFacility = false
+                isDraggingFacility = false
             }
             engine.start()
         }
@@ -263,19 +266,11 @@ extension ContentView {
         isEditMode.toggle()
         farmScene.isEditMode = isEditMode
         if !isEditMode {
-            if editModeIsMovingFacility {
-                // endFacilityMove calls onFacilityMoveEnded, which resets editModeIsMovingFacility.
-                farmScene.endFacilityMove()
-            }
             farmScene.selectedFacilityID = nil
+            farmScene.draggedFacilityID = nil
             editModeSelectedFacilityID = nil
+            isDraggingFacility = false
         }
-    }
-
-    /// Start moving the currently selected facility.
-    private func startMoveFacility() {
-        farmScene.beginFacilityMove()
-        editModeIsMovingFacility = true
     }
 
     /// Show the remove-facility confirmation dialog.
@@ -287,9 +282,7 @@ extension ContentView {
     private func confirmRemoveFacility() {
         farmScene.removeSelectedFacility()
         editModeSelectedFacilityID = nil
-        // Defensive reset: the Remove button is disabled during an active move,
-        // but reset here in case the confirmation dialog outlives a move end.
-        editModeIsMovingFacility = false
+        isDraggingFacility = false
     }
 
     /// Compute and apply the auto-arrange layout, then reset pig navigation paths.

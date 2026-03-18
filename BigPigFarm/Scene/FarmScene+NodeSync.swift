@@ -52,8 +52,17 @@ extension FarmScene {
                 facilityNodes[id] = node
             }
             if let node = facilityNodes[id] {
-                node.isSelectedInEditMode = (id == selectedFacilityID && isEditMode)
-                node.isBeingMoved = (id == selectedFacilityID && isMovingFacility)
+                if isEditMode {
+                    if id == draggedFacilityID {
+                        node.glowState = .moving
+                    } else if id == selectedFacilityID {
+                        node.glowState = .selected
+                    } else {
+                        node.glowState = .none
+                    }
+                } else {
+                    node.glowState = .none
+                }
             }
         }
     }

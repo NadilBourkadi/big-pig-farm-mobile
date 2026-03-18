@@ -1,22 +1,21 @@
 /// EditModeActionPanel — Action strip overlay displayed above the toolbar in edit mode.
-/// Provides Move, Remove, and Auto-Arrange controls for the selected facility.
+/// Provides Remove and Auto-Arrange controls. Facilities are moved by direct drag.
 import SwiftUI
 
 // MARK: - EditModeActionPanel
 
 /// Bottom-of-screen overlay that appears while edit mode is active.
 ///
-/// Move and Remove are disabled when no facility is selected or when a move is
-/// already in progress. Auto-Arrange is disabled only during an active move.
+/// Remove is disabled when no facility is selected or when a drag is in progress.
+/// Auto-Arrange is disabled only during an active drag.
 struct EditModeActionPanel: View {
 
     /// The facility currently selected in the scene, or nil if none.
     var selectedFacilityID: UUID?
 
-    /// True while the user is dragging a facility to a new position.
-    var isMovingFacility: Bool
+    /// True while the user is actively dragging a facility to a new position.
+    var isDragging: Bool
 
-    var onMove: () -> Void
     var onRemove: () -> Void
     var onAutoArrange: () -> Void
 
@@ -26,21 +25,15 @@ struct EditModeActionPanel: View {
         HStack(spacing: 24) {
             Spacer()
             HUDButton(
-                systemImage: "arrow.up.and.down.and.arrow.left.and.right",
-                label: isMovingFacility ? "Moving…" : "Move",
-                isDisabled: !hasSelection || isMovingFacility,
-                action: onMove
-            )
-            HUDButton(
                 systemImage: "trash",
                 label: "Remove",
-                isDisabled: !hasSelection || isMovingFacility,
+                isDisabled: !hasSelection || isDragging,
                 action: onRemove
             )
             HUDButton(
                 systemImage: "square.grid.2x2",
                 label: "Auto-Arrange",
-                isDisabled: isMovingFacility,
+                isDisabled: isDragging,
                 action: onAutoArrange
             )
             Spacer()
@@ -58,8 +51,7 @@ struct EditModeActionPanel: View {
         Spacer()
         EditModeActionPanel(
             selectedFacilityID: nil,
-            isMovingFacility: false,
-            onMove: {},
+            isDragging: false,
             onRemove: {},
             onAutoArrange: {}
         )
@@ -72,8 +64,7 @@ struct EditModeActionPanel: View {
         Spacer()
         EditModeActionPanel(
             selectedFacilityID: UUID(),
-            isMovingFacility: false,
-            onMove: {},
+            isDragging: false,
             onRemove: {},
             onAutoArrange: {}
         )
@@ -81,13 +72,12 @@ struct EditModeActionPanel: View {
     .background(.black)
 }
 
-#Preview("Moving in progress") {
+#Preview("Drag in progress") {
     VStack {
         Spacer()
         EditModeActionPanel(
             selectedFacilityID: UUID(),
-            isMovingFacility: true,
-            onMove: {},
+            isDragging: true,
             onRemove: {},
             onAutoArrange: {}
         )

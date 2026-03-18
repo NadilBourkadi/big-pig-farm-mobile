@@ -12,8 +12,8 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
     private var farmHeight: Int
     private var pinchStartScale: CGFloat = 1.0
 
-    /// When true, pan gestures drive facility movement instead of camera panning.
-    var isInFacilityMoveMode: Bool = false
+    /// The facility currently being dragged, or nil for normal camera panning.
+    private var draggedFacilityID: UUID?
 
     var currentScale: CGFloat { camera.xScale }
 
@@ -207,16 +207,30 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let scene = scene, let view = scene.view else { return }
-        if isInFacilityMoveMode {
+
+        // In edit mode, check if pan starts on a facility → enter drag mode.
+        if gesture.state == .began, scene.isEditMode {
+            let viewPoint = gesture.location(in: view)
+            let scenePoint = scene.convertPoint(fromView: viewPoint)
+            if let facilityID = scene.facilityIDAtPoint(scenePoint) {
+                draggedFacilityID = facilityID
+                scene.beginDraggingFacility(facilityID)
+            }
+        }
+
+        // Route drag to facility movement.
+        if draggedFacilityID != nil {
             let viewPoint = gesture.location(in: view)
             let scenePoint = scene.convertPoint(fromView: viewPoint)
             scene.moveSelectedFacility(to: scenePoint)
             if gesture.state == .ended || gesture.state == .cancelled {
                 scene.confirmFacilityPlacement()
-                isInFacilityMoveMode = false
+                draggedFacilityID = nil
             }
             return
         }
+
+        // Normal camera pan.
         let sceneW = CGFloat(farmWidth) * SceneConstants.cellSize
         let sceneH = CGFloat(farmHeight) * SceneConstants.cellSize
         let ds = displayScale(sceneW: sceneW, sceneH: sceneH, view: view)
