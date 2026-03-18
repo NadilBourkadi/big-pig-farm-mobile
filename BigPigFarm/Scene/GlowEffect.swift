@@ -10,22 +10,22 @@ enum GlowEffect {
 
     // MARK: - Glow Colors
 
-    /// Pig follow/selection glow — warm yellow.
-    static let pigSelectionColor = UIColor(red: 1.0, green: 0.9, blue: 0.2, alpha: 0.55)
+    /// Pig follow/selection glow — soft white.
+    static let pigSelectionColor = UIColor(white: 1.0, alpha: 0.35)
 
-    /// Facility selected (edit mode) — cool blue.
-    static let facilitySelectedColor = UIColor(red: 0.4, green: 0.8, blue: 1.0, alpha: 0.45)
+    /// Facility selected (edit mode) — soft white.
+    static let facilitySelectedColor = UIColor(white: 1.0, alpha: 0.3)
 
-    /// Facility being dragged — warm yellow matching pig selection.
-    static let facilityMovingColor = UIColor(red: 1.0, green: 0.9, blue: 0.2, alpha: 0.45)
+    /// Facility being dragged — soft white.
+    static let facilityMovingColor = UIColor(white: 1.0, alpha: 0.3)
 
     // MARK: - Glow Parameters
 
     /// Larger offset than shadow for a thicker silhouette core.
     static let glowPixelOffset = 2
 
-    /// Wider blur than shadow for a softer, more visible glow.
-    static let glowBlurRadius: CGFloat = 10.0
+    /// Wide blur for a soft, diffuse glow.
+    static let glowBlurRadius: CGFloat = 14.0
 
     /// Z-position for glow nodes (behind shadow at -0.5, behind sprite at 0).
     static let glowNodeZPosition: CGFloat = -1.0
