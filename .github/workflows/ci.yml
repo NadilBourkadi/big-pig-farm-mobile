@@ -46,7 +46,10 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -skipPackagePluginValidation
 
-      - name: Test
+      - name: Logic tests (swift test — no simulator)
+        run: swift test
+
+      - name: Scene tests (xcodebuild — simulator)
         run: |
           set -o pipefail
           xcodebuild test \
