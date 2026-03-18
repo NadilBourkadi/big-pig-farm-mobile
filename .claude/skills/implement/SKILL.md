@@ -76,7 +76,7 @@ The `xcodegen generate` step is mandatory after switching branches — `project.
 **From this point forward, your primary reference is the plan file at `.tmp/plan-<bead-id>.md`.** Read it and work through it systematically:
 
 1. **Implement** — write Swift code following the plan's file order and type signatures. Follow all CLAUDE.md conventions.
-2. **Test** — write tests as specified in the plan. Use Swift Testing framework (`@Test`, `#expect`, `#require`). Tests are a mandatory deliverable.
+2. **Test** — write tests as specified in the plan. Use Swift Testing framework (`@Test`, `#expect`, `#require`). Tests are a mandatory deliverable. **Run tests via `/test` (the Skill tool), NEVER via `swift test` or `xcodebuild test` directly** — the `/test` skill runs in a subagent to preserve context.
 3. **Commit** — make atomic commits (one logical change per commit). Do NOT push yet.
 4. **Update backlog** — create beads for any bugs, tech debt, or follow-ups discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
 5. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
