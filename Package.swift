@@ -26,7 +26,7 @@ let package = Package(
                 "Config/PigNames.swift",
                 // Economy (all 6)
                 "Economy",
-                // Engine (13 of 14 — HapticManager needs UIKit)
+                // Engine (14 of 15 — HapticManager needs UIKit)
                 "Engine/AreaManager.swift",
                 "Engine/AutoArrange.swift",
                 "Engine/AutoArrangeLayout.swift",
@@ -35,12 +35,13 @@ let package = Package(
                 "Engine/GameState.swift",
                 "Engine/GameState+Codable.swift",
                 "Engine/GridExpansion.swift",
+                "Engine/NotificationManager.swift",
                 "Engine/Pathfinding.swift",
                 "Engine/Protocols.swift",
                 "Engine/SaveManager.swift",
                 "Engine/SaveMigration.swift",
                 "Engine/Tunnels.swift",
-                // Models (17 of 18 — NotificationCategory+Color needs SwiftUI)
+                // Models (18 of 19 — NotificationCategory+Color needs SwiftUI)
                 "Models/BiomeType.swift",
                 "Models/Bloodline.swift",
                 "Models/BreedingPair.swift",
@@ -58,6 +59,7 @@ let package = Package(
                 "Models/NotificationPreset.swift",
                 "Models/Pigdex.swift",
                 "Models/SpriteTypes.swift",
+                "Models/ToastItem.swift",
                 // Scene (2 of 15 — only platform-agnostic data files)
                 "Scene/AnimationData.swift",
                 "Scene/SpriteFurMaps.swift",

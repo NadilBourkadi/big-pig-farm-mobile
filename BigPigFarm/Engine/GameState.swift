@@ -51,6 +51,12 @@ final class GameState: @unchecked Sendable {
     var events: [EventLog] = []
     let maxEvents: Int = 100
 
+    // MARK: - Notifications
+
+    /// Toast notification coordinator. Weak to avoid retain cycle — owned by the app.
+    @ObservationIgnored
+    weak var notificationManager: NotificationManager?
+
     // MARK: - Collections
 
     var pigdex = Pigdex()
@@ -206,6 +212,7 @@ extension GameState {
         if events.count > maxEvents {
             events.removeFirst(events.count - maxEvents)
         }
+        notificationManager?.handleEvent(message: message, eventType: eventType)
     }
 
     // MARK: - Computed Properties

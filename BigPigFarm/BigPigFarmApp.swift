@@ -10,6 +10,7 @@ struct BigPigFarmApp: App {
     @State private var engine: GameEngine
     // SimulationRunner must be retained here; the engine tick callback holds a weak ref.
     @State private var runner: SimulationRunner
+    @State private var notificationManager: NotificationManager
     @State private var offlineSummary: OfflineProgressSummary?
     /// Guards against false catch-ups from inactive→active without a background transition
     /// (e.g. notification center pull-down, phone call popup).
@@ -37,7 +38,11 @@ struct BigPigFarmApp: App {
         if isNewGame {
             setupNewGame(state: state)
         }
+        let notifications = NotificationManager()
+        state.notificationManager = notifications
+
         saveManager = sm
+        _notificationManager = State(initialValue: notifications)
         _gameState = State(initialValue: state)
         _engine = State(initialValue: eng)
         _runner = State(initialValue: sim)
@@ -97,6 +102,8 @@ struct BigPigFarmApp: App {
 
     @MainActor
     private func runOfflineCatchUp(wallClockSeconds: TimeInterval) {
+        notificationManager.isSuppressed = true
+        notificationManager.dismissAll()
         let summary = OfflineProgressRunner.runCatchUp(
             state: gameState,
             wallClockSeconds: wallClockSeconds
@@ -114,6 +121,8 @@ struct BigPigFarmApp: App {
         } catch {
             print("[BigPigFarmApp] post-catchup save failed: \(error)")
         }
+        notificationManager.isSuppressed = false
+
         if summary.hasMeaningfulEvents {
             offlineSummary = summary
             // Engine stays paused — resumes when user taps "Continue"
