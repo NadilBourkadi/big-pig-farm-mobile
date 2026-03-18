@@ -56,6 +56,7 @@ struct BigPigFarmApp: App {
             ContentView(
                 gameState: gameState,
                 engine: engine,
+                notificationManager: notificationManager,
                 offlineSummary: $offlineSummary
             )
         }

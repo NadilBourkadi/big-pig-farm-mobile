@@ -76,6 +76,11 @@ struct ContentView: View {
     /// The game engine managing the tick loop.
     @State var engine: GameEngine
 
+    /// Toast notification coordinator. Passed as `let` (not @State) because it's
+    /// created once in BigPigFarmApp and never replaced. @Observable tracking works
+    /// through ToastOverlayView's body reading visibleToasts — no wrapper needed.
+    let notificationManager: NotificationManager
+
     /// Non-nil while the offline progress summary popup is presented.
     @Binding var offlineSummary: OfflineProgressSummary?
 
@@ -113,11 +118,13 @@ struct ContentView: View {
     init(
         gameState: GameState,
         engine: GameEngine,
+        notificationManager: NotificationManager,
         offlineSummary: Binding<OfflineProgressSummary?>
     ) {
         let gs = gameState
         _gameState = State(initialValue: gs)
         _engine = State(initialValue: engine)
+        self.notificationManager = notificationManager
         _offlineSummary = offlineSummary
         _farmScene = State(initialValue: FarmScene(gameState: gs))
         _coordinator = State(initialValue: FarmSceneCoordinator(gameState: gs))
@@ -143,6 +150,7 @@ struct ContentView: View {
             VStack {
                 StatusInfoRow(gameState: gameState)
                 Spacer()
+                ToastOverlayView(notificationManager: notificationManager)
                 if isEditMode {
                     EditModeActionPanel(
                         selectedFacilityID: editModeSelectedFacilityID,
