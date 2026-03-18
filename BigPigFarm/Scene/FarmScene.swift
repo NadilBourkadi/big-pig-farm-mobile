@@ -87,6 +87,10 @@ class FarmScene: SKScene {
     /// Called when a drag gesture ends (facility placed or cancelled).
     var onFacilityMoveEnded: (() -> Void)?
 
+    /// Called when the user long-presses a facility outside edit mode.
+    /// ContentView uses this to enter edit mode and select the facility.
+    var onFacilityLongPressed: ((UUID) -> Void)?
+
     // MARK: - Terrain State
 
     var lastGridGeneration: Int = -1

@@ -236,6 +236,13 @@ struct ContentView: View {
             farmScene.onFacilityMoveEnded = {
                 isDraggingFacility = false
             }
+            farmScene.onFacilityLongPressed = { facilityID in
+                isEditMode = true
+                farmScene.isEditMode = true
+                editModeSelectedFacilityID = facilityID
+                farmScene.selectedFacilityID = facilityID
+                HapticManager.pigSelected()
+            }
             engine.start()
         }
     }

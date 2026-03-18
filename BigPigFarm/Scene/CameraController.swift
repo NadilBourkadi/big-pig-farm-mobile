@@ -46,11 +46,17 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
 
+        let longPress = UILongPressGestureRecognizer(
+            target: self, action: #selector(handleLongPress(_:))
+        )
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         tap.require(toFail: pan)
+        tap.require(toFail: longPress)
 
         view.addGestureRecognizer(pan)
         view.addGestureRecognizer(pinch)
+        view.addGestureRecognizer(longPress)
         view.addGestureRecognizer(tap)
     }
 
@@ -187,6 +193,17 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         let viewPoint = gesture.location(in: view)
         let scenePoint = scene.convertPoint(fromView: viewPoint)
         scene.handleTap(at: scenePoint)
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        guard let scene = scene, let view = scene.view else { return }
+        guard !scene.isEditMode else { return }
+        let viewPoint = gesture.location(in: view)
+        let scenePoint = scene.convertPoint(fromView: viewPoint)
+        if let facilityID = scene.facilityIDAtPoint(scenePoint) {
+            scene.onFacilityLongPressed?(facilityID)
+        }
     }
 
     // MARK: - UIGestureRecognizerDelegate
