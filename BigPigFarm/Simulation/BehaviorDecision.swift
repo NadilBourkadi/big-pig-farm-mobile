@@ -333,7 +333,6 @@ private func behaviorTryCampfireAttraction(controller: BehaviorController, pig: 
         ) else { continue }
         var trimmedPath = path
         if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
-        guard !trimmedPath.isEmpty else { continue }
         pig.path = trimmedPath
         pig.behaviorState = .wandering
         pig.targetFacilityId = campfire.id

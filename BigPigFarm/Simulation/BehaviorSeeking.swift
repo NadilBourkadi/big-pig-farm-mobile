@@ -44,18 +44,17 @@ enum BehaviorSeeking {
                 ) else { continue }
                 var trimmedPath = path
                 if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
-                if !trimmedPath.isEmpty {
-                    pig.path = trimmedPath
-                    pig.behaviorState = .wandering
-                    pig.targetFacilityId = facility.id
-                    pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
-                    pig.targetDescription = "going to \(facility.name)"
-                    #if (DEBUG || INTERNAL) && canImport(UIKit)
-                    logSeekDispatch(pig: pig, need: need, facility: facility)
-                    #endif
-                    return
-                }
-                controller.facilityManager.addFailedFacility(pig.id, facility.id)
+                // Dispatch even when trimmedPath is empty (pig is at the interaction point).
+                // The arrival handler fires in the same tick when path is empty + targetFacilityId is set.
+                pig.path = trimmedPath
+                pig.behaviorState = .wandering
+                pig.targetFacilityId = facility.id
+                pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.targetDescription = "going to \(facility.name)"
+                #if (DEBUG || INTERNAL) && canImport(UIKit)
+                logSeekDispatch(pig: pig, need: need, facility: facility)
+                #endif
+                return
             }
         }
 
@@ -87,15 +86,12 @@ enum BehaviorSeeking {
                 ) else { continue }
                 var trimmedPath = path
                 if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
-                if !trimmedPath.isEmpty {
-                    pig.path = trimmedPath
-                    pig.behaviorState = .wandering
-                    pig.targetFacilityId = facility.id
-                    pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
-                    pig.targetDescription = "going to \(facility.name)"
-                    return
-                }
-                controller.facilityManager.addFailedFacility(pig.id, facility.id)
+                pig.path = trimmedPath
+                pig.behaviorState = .wandering
+                pig.targetFacilityId = facility.id
+                pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.targetDescription = "going to \(facility.name)"
+                return
             }
         }
 
@@ -125,15 +121,12 @@ enum BehaviorSeeking {
                 ) else { continue }
                 var trimmedPath = path
                 if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
-                if !trimmedPath.isEmpty {
-                    pig.path = trimmedPath
-                    pig.behaviorState = .wandering
-                    pig.targetFacilityId = facility.id
-                    pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
-                    pig.targetDescription = "going to \(facility.name)"
-                    return
-                }
-                controller.facilityManager.addFailedFacility(pig.id, facility.id)
+                pig.path = trimmedPath
+                pig.behaviorState = .wandering
+                pig.targetFacilityId = facility.id
+                pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.targetDescription = "going to \(facility.name)"
+                return
             }
         }
 
@@ -254,14 +247,12 @@ enum BehaviorSeeking {
             ) else { continue }
             var trimmedPath = path
             if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
-            if !trimmedPath.isEmpty {
-                pig.path = trimmedPath
-                pig.behaviorState = .socializing
-                pig.targetFacilityId = campfire.id
-                pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
-                pig.targetDescription = "going to campfire"
-                return true
-            }
+            pig.path = trimmedPath
+            pig.behaviorState = .socializing
+            pig.targetFacilityId = campfire.id
+            pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+            pig.targetDescription = "going to campfire"
+            return true
         }
         return false
     }

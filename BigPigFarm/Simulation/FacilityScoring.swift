@@ -243,8 +243,10 @@ extension FacilityManager {
         // Pick the closest unoccupied point by path length
         candidates.sort { $0.path.count < $1.path.count }
         let best = candidates[0]
-        // Return path excluding current position (pig.path assignment convention)
-        let trimmedPath = best.path.count > 1 ? Array(best.path.dropFirst()) : []
+        // Return path excluding current position (pig.path assignment convention).
+        // When path has only 1 element (pig is already at the point), return [point]
+        // so callers know the destination is valid rather than getting an empty array.
+        let trimmedPath = best.path.count > 1 ? Array(best.path.dropFirst()) : [best.point]
         return (point: best.point, path: trimmedPath)
     }
 
