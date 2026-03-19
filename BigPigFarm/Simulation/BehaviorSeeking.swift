@@ -308,7 +308,7 @@ enum BehaviorSeeking {
 
 #if (DEBUG || INTERNAL) && canImport(UIKit)
 extension BehaviorSeeking {
-    private static func logSeekBackoff(pig: GuineaPig, need: String, backoff: Int) {
+    @MainActor private static func logSeekBackoff(pig: GuineaPig, need: String, backoff: Int) {
         DebugLogger.shared.log(
             category: .behavior, level: .info,
             message: "\(pig.name): seek \(need) blocked by backoff",
@@ -317,7 +317,7 @@ extension BehaviorSeeking {
         )
     }
 
-    private static func logSeekDispatch(pig: GuineaPig, need: String, facility: Facility) {
+    @MainActor private static func logSeekDispatch(pig: GuineaPig, need: String, facility: Facility) {
         DebugLogger.shared.log(
             category: .behavior, level: .info,
             message: "\(pig.name): seeking \(need) -> \(facility.name)",
@@ -331,7 +331,7 @@ extension BehaviorSeeking {
         )
     }
 
-    private static func logSeekFailure(pig: GuineaPig, need: String, isCritical: Bool, cycles: Int) {
+    @MainActor private static func logSeekFailure(pig: GuineaPig, need: String, isCritical: Bool, cycles: Int) {
         DebugLogger.shared.log(
             category: .behavior, level: .warning,
             message: "\(pig.name): no reachable \(need) facility",
