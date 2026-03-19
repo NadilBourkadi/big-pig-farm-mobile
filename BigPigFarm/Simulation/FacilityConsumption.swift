@@ -15,11 +15,19 @@ extension FacilityManager {
                 let manhattan = abs(gridPos.x - point.x) + abs(gridPos.y - point.y)
                 guard manhattan <= GameConfig.FacilityInteraction.adjacencyDistance else { continue }
 
-                if handleArrival(pig: &pig, facility: facility) { return }
+                if handleArrival(pig: &pig, facility: facility) {
+                    #if (DEBUG || INTERNAL) && canImport(UIKit)
+                    logFacilityArrival(pig: pig, facility: facility)
+                    #endif
+                    return
+                }
             }
         }
 
         // No suitable facility — go idle (keep failed list to remember attempts)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        logArrivalFailed(pig: pig)
+        #endif
         pig.behaviorState = .idle
         pig.targetPosition = nil
         pig.targetFacilityId = nil
@@ -190,6 +198,9 @@ extension FacilityManager {
         gameState.updateFacility(mutableFacility)
 
         if consumed <= 0 {
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            logFacilityDepleted(pig: pig, facility: facility)
+            #endif
             pig.behaviorState = .idle
             return
         }
@@ -214,7 +225,12 @@ extension FacilityManager {
         var mutableFacility = facility
         let consumed = mutableFacility.consume(gameMinutes * GameConfig.Behavior.resourceConsumeRate)
         gameState.updateFacility(mutableFacility)
-        if consumed <= 0 { pig.behaviorState = .idle }
+        if consumed <= 0 {
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            logFacilityDepleted(pig: pig, facility: facility)
+            #endif
+            pig.behaviorState = .idle
+        }
     }
 
     private func consumeFromSleep(pig: inout GuineaPig, facility: Facility, gameMinutes: Double) {
@@ -278,68 +294,6 @@ extension FacilityManager {
             pig.needs.happiness = min(100, pig.needs.happiness
                 + info.happinessBonus * gameMinutes * GameConfig.Behavior.facilityBonusScale)
         }
-    }
-
-    // MARK: - Alternative Facility Search
-
-    /// Try to find an alternative facility when the pig is blocked en route.
-    /// Returns true if a new facility was found and the pig's path was updated.
-    func tryAlternativeFacility(pig: inout GuineaPig) -> Bool {
-        blameTargetFacilityIfNear(pig: pig)
-
-        let facilityTypes = inferNeededFacilityTypes(pig: pig)
-        if facilityTypes.isEmpty { return false }
-
-        for facilityType in facilityTypes {
-            let candidates = getCandidateFacilitiesRanked(pig: pig, facilityType: facilityType)
-            for facility in candidates.prefix(GameConfig.Behavior.maxFacilityCandidates) {
-                if let result = findOpenInteractionPoint(pig: pig, facility: facility),
-                   !result.path.isEmpty {
-                    pig.path = result.path
-                    pig.targetPosition = Position(x: Double(result.point.x), y: Double(result.point.y))
-                    pig.targetFacilityId = facility.id
-                    pig.targetDescription = "going to \(facility.name)"
-                    return true
-                }
-            }
-        }
-
-        return false
-    }
-
-    private func blameTargetFacilityIfNear(pig: GuineaPig) {
-        guard let targetId = pig.targetFacilityId,
-              let targetFacility = gameState.getFacility(targetId) else { return }
-        let isNear = targetFacility.interactionPoints.contains { point in
-            abs(pig.position.x - Double(point.x)) <= 3
-                && abs(pig.position.y - Double(point.y)) <= 3
-        }
-        if isNear { addFailedFacility(pig.id, targetId) }
-    }
-
-    private func inferNeededFacilityTypes(pig: GuineaPig) -> [FacilityType] {
-        let description = pig.targetDescription ?? ""
-        let isPlayDesc = description.contains("Exercise Wheel")
-            || description.contains("Tunnel")
-            || description.contains("Play Area")
-        if isPlayDesc { return [.tunnel, .playArea, .exerciseWheel] }
-        let isFoodDesc = description.contains("Food Bowl")
-            || description.contains("Hay Rack")
-            || description.contains("Feast Table")
-        if isFoodDesc { return [.hayRack, .feastTable, .foodBowl] }
-        if description.contains("Water Bottle") { return [.waterBottle] }
-        if description.contains("Hideout") { return [.hideout] }
-
-        // Fall back to most urgent need
-        let urgentNeed = NeedsSystem.getMostUrgentNeed(pig)
-        let needToFacilities: [String: [FacilityType]] = [
-            "hunger": [.hayRack, .feastTable, .foodBowl],
-            "thirst": [.waterBottle],
-            "energy": [.hideout, .hotSpring],
-            "happiness": [.exerciseWheel, .playArea, .tunnel],
-            "social": [.playArea],
-        ]
-        return needToFacilities[urgentNeed] ?? []
     }
 
 }

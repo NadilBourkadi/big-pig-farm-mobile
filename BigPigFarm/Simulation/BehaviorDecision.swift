@@ -28,6 +28,22 @@ enum BehaviorDecision {
     @MainActor
     static func makeDecision(controller: BehaviorController, pig: inout GuineaPig) {
         let oldState = pig.behaviorState
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        defer {
+            if pig.behaviorState != oldState {
+                DebugLogger.shared.log(
+                    category: .behavior, level: .info,
+                    message: "\(pig.name): \(oldState.rawValue) -> \(pig.behaviorState.rawValue)",
+                    pigId: pig.id, pigName: pig.name,
+                    payload: [
+                        "fromState": oldState.rawValue,
+                        "toState": pig.behaviorState.rawValue,
+                        "trigger": pig.targetDescription ?? "decision",
+                    ]
+                )
+            }
+        }
+        #endif
         if shouldKeepTraveling(controller: controller, pig: &pig) { return }
         cleanupTargetState(controller: controller, pig: &pig)
         if handleSleepGuard(pig: &pig) { return }
@@ -39,19 +55,6 @@ enum BehaviorDecision {
         if handleLowPriorityBehaviors(controller: controller, pig: &pig) { return }
         if handleNighttimeCampfire(controller: controller, pig: &pig) { return }
         handleDefaultWander(controller: controller, pig: &pig)
-        #if (DEBUG || INTERNAL) && canImport(UIKit)
-        if pig.behaviorState != oldState {
-            DebugLogger.shared.log(
-                category: .behavior, level: .info,
-                message: "\(pig.name): \(oldState.rawValue) -> \(pig.behaviorState.rawValue)",
-                pigId: pig.id, pigName: pig.name,
-                payload: [
-                    "fromState": oldState.rawValue,
-                    "toState": pig.behaviorState.rawValue,
-                ]
-            )
-        }
-        #endif
     }
 
     // MARK: - Phase 1 — Travel Validation

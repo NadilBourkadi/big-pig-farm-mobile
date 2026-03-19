@@ -18,7 +18,11 @@ enum BehaviorSeeking {
         pig: inout GuineaPig,
         need: String
     ) {
-        if controller.getUnreachableBackoff(pig.id, need: need) > 0 {
+        let backoff = controller.getUnreachableBackoff(pig.id, need: need)
+        if backoff > 0 {
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            logSeekBackoff(pig: pig, need: need, backoff: backoff)
+            #endif
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
             return
@@ -46,6 +50,9 @@ enum BehaviorSeeking {
                     pig.targetFacilityId = facility.id
                     pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
                     pig.targetDescription = "going to \(facility.name)"
+                    #if (DEBUG || INTERNAL) && canImport(UIKit)
+                    logSeekDispatch(pig: pig, need: need, facility: facility)
+                    #endif
                     return
                 }
                 controller.facilityManager.addFailedFacility(pig.id, facility.id)
@@ -58,6 +65,9 @@ enum BehaviorSeeking {
             ? GameConfig.Behavior.unreachableCriticalCycles
             : GameConfig.Behavior.unreachableBackoffCycles
         controller.setUnreachableBackoff(pig.id, need: need, cycles: cycles)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        logSeekFailure(pig: pig, need: need, isCritical: isCritical, cycles: cycles)
+        #endif
         pig.targetDescription = nil
         BehaviorMovement.startWandering(controller: controller, pig: &pig)
     }
@@ -282,7 +292,7 @@ enum BehaviorSeeking {
         return nearest
     }
 
-    private static func getNeedValue(_ pig: GuineaPig, need: String) -> Double {
+    static func getNeedValue(_ pig: GuineaPig, need: String) -> Double {
         switch need {
         case "hunger":    return pig.needs.hunger
         case "thirst":    return pig.needs.thirst
@@ -293,3 +303,46 @@ enum BehaviorSeeking {
         }
     }
 }
+
+// MARK: - Debug Logging Helpers
+
+#if (DEBUG || INTERNAL) && canImport(UIKit)
+extension BehaviorSeeking {
+    private static func logSeekBackoff(pig: GuineaPig, need: String, backoff: Int) {
+        DebugLogger.shared.log(
+            category: .behavior, level: .info,
+            message: "\(pig.name): seek \(need) blocked by backoff",
+            pigId: pig.id, pigName: pig.name,
+            payload: ["need": need, "backoffCycles": String(backoff)]
+        )
+    }
+
+    private static func logSeekDispatch(pig: GuineaPig, need: String, facility: Facility) {
+        DebugLogger.shared.log(
+            category: .behavior, level: .info,
+            message: "\(pig.name): seeking \(need) -> \(facility.name)",
+            pigId: pig.id, pigName: pig.name,
+            payload: [
+                "need": need,
+                "facilityType": facility.facilityType.rawValue,
+                "facilityName": facility.name,
+                "needValue": String(Int(getNeedValue(pig, need: need))),
+            ]
+        )
+    }
+
+    private static func logSeekFailure(pig: GuineaPig, need: String, isCritical: Bool, cycles: Int) {
+        DebugLogger.shared.log(
+            category: .behavior, level: .warning,
+            message: "\(pig.name): no reachable \(need) facility",
+            pigId: pig.id, pigName: pig.name,
+            payload: [
+                "need": need,
+                "isCritical": String(isCritical),
+                "backoffCycles": String(cycles),
+                "needValue": String(Int(getNeedValue(pig, need: need))),
+            ]
+        )
+    }
+}
+#endif
