@@ -135,9 +135,6 @@ enum Market {
                 "Contract fulfilled: \"\(matchedContract?.requirementsText ?? "")\" (+\(contractBonus) bonus)",
                 eventType: "contract"
             )
-            #if canImport(UIKit)
-            HapticManager.contractCompleted()
-            #endif
         } else {
             state.logEvent(
                 "Rehomed \(pig.name) (\(pig.phenotype.displayName)) for \(value) Squeaks",

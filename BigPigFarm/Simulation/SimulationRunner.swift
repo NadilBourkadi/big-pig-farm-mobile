@@ -35,6 +35,9 @@ final class SimulationRunner {
     /// Invoked when a birth event is logged: (eventMessage).
     var onBirth: ((String) -> Void)?
 
+    /// Invoked when a new pigdex phenotype is discovered.
+    var onPigdexDiscovery: (() -> Void)?
+
     // MARK: - Tick State
 
     private var saveCounter: Int = 0
@@ -188,21 +191,21 @@ final class SimulationRunner {
         for record in Culling.sellMarkedAdults(gameState: state) {
             behaviorController.cleanupDeadPig(record.pigID)
             onPigSold?(record.pigName, record.totalValue, record.contractBonus, record.pigID)
-            #if canImport(UIKit)
-            HapticManager.pigSold()
-            #endif
         }
         breedingCheckCounter += 1
         let runExpensive = breedingCheckCounter >= breedingCheckInterval
         if runExpensive { breedingCheckCounter = 0 }
         let eventCountBefore = state.events.count
+        // Snapshot before checkBreedingOpportunities — the only path that
+        // calls registerPigInPigdex. The culling phase above cannot add entries.
+        let pigdexBefore = state.pigdex.discoveredCount
         _ = Breeding.checkBreedingOpportunities(gameState: state, runExpensive: runExpensive)
-        // Fire haptics for every birth, regardless of whether the UI callback is registered.
         for event in state.events[eventCountBefore...] where event.eventType == "birth" {
             onBirth?(event.message)
-            #if canImport(UIKit)
-            HapticManager.birth()
-            #endif
+        }
+        let newDiscoveries = state.pigdex.discoveredCount - pigdexBefore
+        for _ in 0..<newDiscoveries {
+            onPigdexDiscovery?()
         }
     }
 

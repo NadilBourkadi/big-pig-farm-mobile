@@ -38,6 +38,18 @@ struct BigPigFarmApp: App {
             behaviorController: behaviorController,
             saveManager: sm
         )
+        sim.onPigSold = { _, _, contractBonus, _ in
+            HapticManager.pigSold()
+            if contractBonus > 0 {
+                HapticManager.contractCompleted()
+            }
+        }
+        sim.onBirth = { _ in
+            HapticManager.birth()
+        }
+        sim.onPigdexDiscovery = {
+            HapticManager.pigdexDiscovery()
+        }
         let eng = GameEngine(state: state)
         eng.registerTickCallback { [weak sim] minutes in
             sim?.tick(gameMinutes: minutes)
