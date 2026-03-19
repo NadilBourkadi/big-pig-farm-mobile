@@ -101,6 +101,7 @@ enum Market {
 
     // MARK: - Sale
 
+    // swiftlint:disable function_body_length
     /// Sell a pig: remove from state, pay out value + contract bonus, and log events.
     @discardableResult
     @MainActor
@@ -150,8 +151,22 @@ enum Market {
             )
         }
 
+        #if DEBUG
+        DebugLogger.shared.log(
+            category: .economy, level: .info,
+            message: "Sold \(pig.name) for \(result.total) Squeaks",
+            pigId: pig.id, pigName: pig.name,
+            payload: [
+                "baseValue": String(value),
+                "contractBonus": String(contractBonus),
+                "total": String(result.total),
+                "rarity": pig.phenotype.rarity.rawValue,
+            ]
+        )
+        #endif
         return result
     }
+    // swiftlint:enable function_body_length
 
     // MARK: - Market Info
 

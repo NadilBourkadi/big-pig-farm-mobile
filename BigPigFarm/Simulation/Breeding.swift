@@ -64,6 +64,19 @@ enum Breeding {
             "\(male.name) and \(female.name) are expecting!",
             eventType: "breeding"
         )
+        #if DEBUG
+        DebugLogger.shared.log(
+            category: .breeding, level: .info,
+            message: "Pregnancy: \(male.name) + \(female.name)",
+            pigId: female.id, pigName: female.name,
+            payload: [
+                "maleId": male.id.uuidString,
+                "maleName": male.name,
+                "femaleId": female.id.uuidString,
+                "femaleName": female.name,
+            ]
+        )
+        #endif
     }
 
     /// Clear all courtship tracking fields from a pig.
