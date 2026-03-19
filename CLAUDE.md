@@ -121,6 +121,54 @@ xcrun simctl io <UDID> screenshot /absolute/path/to/.tmp/sim-screenshot.png
 - `xcrun simctl list devices booted` shows the UDID of whichever simulator is currently running the app.
 - **User-taken screenshots** (via Cmd+S in Simulator.app) are saved to `~/Desktop/` with the pattern `Simulator Screenshot - <device> - <date>.png`. When the user says "look at my screenshot" or "the latest screenshot", check `~/Desktop/Simulator Screenshot*.png` (use `find` with `-mmin` to get recent ones, since glob may miss filenames with spaces).
 
+## Debugging — Structured Debug Log
+
+The app includes a structured debug logging system (`DebugLogger`) that records simulation events to a SQLite database. Active in Debug and Internal (TestFlight) builds only — stripped from Release.
+
+**Where to find the database:**
+
+- **iCloud sync (preferred — works without the app running):**
+  ```bash
+  sqlite3 "/Users/nadilbourkadi/Library/Mobile Documents/iCloud~com~nadilbourkadi~bigpigfarm/Documents/debug.sqlite"
+  ```
+  Syncs from the device every ~30 seconds (on auto-save) and on every app background transition.
+
+- **Simulator (direct file access):**
+  ```bash
+  CONTAINER=$(xcrun simctl get_app_container booted com.nadilbourkadi.bigpigfarm data)
+  sqlite3 "$CONTAINER/Documents/debug.sqlite"
+  ```
+
+- **HTTP server (live queries, app must be in foreground):**
+  ```bash
+  curl "http://<DEVICE_IP>:8361/events?category=breeding&limit=20"
+  curl "http://<DEVICE_IP>:8361/categories"
+  ```
+
+**Useful queries:**
+
+```sql
+-- Recent breeding events
+SELECT message, pig_name, game_day FROM debug_events WHERE category='breeding' ORDER BY id DESC LIMIT 20;
+
+-- Behavior transitions for a specific pig
+SELECT message, payload FROM debug_events WHERE category='behavior' AND pig_name='Butterscotch' ORDER BY id DESC LIMIT 20;
+
+-- Warning-level events (critical needs, cancelled pregnancies)
+SELECT message, pig_name, category FROM debug_events WHERE level >= 2 ORDER BY id DESC LIMIT 20;
+
+-- Event counts by category
+SELECT category, COUNT(*) as cnt FROM debug_events GROUP BY category ORDER BY cnt DESC;
+
+-- Events for a specific pig by UUID
+SELECT * FROM debug_events WHERE pig_id='<UUID>' ORDER BY id DESC LIMIT 30;
+```
+
+**Categories:** `behavior`, `breeding`, `birth`, `needs`, `culling`, `economy`, `simulation`, `facility`
+**Levels:** 0 = verbose, 1 = info, 2 = warning
+
+When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths), **query the debug log first** before reading source code. The structured events often pinpoint the issue directly.
+
 ## Testing
 
 - Use Swift Testing framework (`@Test`, `#expect`, `#require`)
