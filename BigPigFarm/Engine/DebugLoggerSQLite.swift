@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || INTERNAL
 /// DebugLoggerSQLite — SQLite helpers for DebugLogger background operations.
 ///
 /// All methods are nonisolated and called from the serial flushQueue.

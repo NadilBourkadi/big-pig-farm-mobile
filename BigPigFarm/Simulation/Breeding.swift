@@ -64,7 +64,7 @@ enum Breeding {
             "\(male.name) and \(female.name) are expecting!",
             eventType: "breeding"
         )
-        #if DEBUG && canImport(UIKit)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
         DebugLogger.shared.log(
             category: .breeding, level: .info,
             message: "Pregnancy: \(male.name) + \(female.name)",
