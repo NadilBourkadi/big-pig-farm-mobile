@@ -16,9 +16,10 @@ extension FacilityManager {
         for facilityType in facilityTypes {
             let candidates = getCandidateFacilitiesRanked(pig: pig, facilityType: facilityType)
             for facility in candidates.prefix(GameConfig.Behavior.maxFacilityCandidates) {
-                if let result = findOpenInteractionPoint(pig: pig, facility: facility),
-                   !result.path.isEmpty {
-                    pig.path = result.path
+                if let result = findOpenInteractionPoint(pig: pig, facility: facility) {
+                    var trimmedPath = result.path
+                    if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
+                    pig.path = trimmedPath
                     pig.targetPosition = Position(x: Double(result.point.x), y: Double(result.point.y))
                     pig.targetFacilityId = facility.id
                     pig.targetDescription = "going to \(facility.name)"
