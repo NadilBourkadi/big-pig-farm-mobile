@@ -162,12 +162,26 @@ SELECT category, COUNT(*) as cnt FROM debug_events GROUP BY category ORDER BY cn
 
 -- Events for a specific pig by UUID
 SELECT * FROM debug_events WHERE pig_id='<UUID>' ORDER BY id DESC LIMIT 30;
+
+-- Genetics: what genotypes are being born?
+SELECT json_extract(payload, '$.genotype') as geno, json_extract(payload, '$.color') as color, pig_name
+  FROM debug_events WHERE message LIKE 'Born:%' ORDER BY id DESC LIMIT 20;
+
+-- Genetics: are dilution carriers breeding?
+SELECT message, json_extract(payload, '$.maleGenotype') as male_geno, json_extract(payload, '$.femaleGenotype') as female_geno
+  FROM debug_events WHERE category='breeding' AND payload LIKE '%d%' ORDER BY id DESC LIMIT 20;
+
+-- Genetics: births in a specific biome
+SELECT pig_name, json_extract(payload, '$.color'), json_extract(payload, '$.genotype')
+  FROM debug_events WHERE message LIKE 'Born:%' AND json_extract(payload, '$.biome')='alpine' ORDER BY id DESC LIMIT 20;
 ```
 
 **Categories:** `behavior`, `breeding`, `birth`, `needs`, `culling`, `economy`, `simulation`, `facility`
 **Levels:** 0 = verbose, 1 = info, 2 = warning
 
 When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths), **query the debug log first** before reading source code. The structured events often pinpoint the issue directly.
+
+**Extending the debug log:** If a query reveals that the information needed to diagnose an issue is missing from the log, **extend the instrumentation immediately** — add the missing payload fields to the relevant `DebugLogger.shared.log()` call in the simulation code. Common gaps: genotype/phenotype data on births, facility state on consumption events, grid positions on movement. Treat missing debug data the same as a missing test — fix it as part of the investigation, not as a separate task.
 
 ## Testing
 
