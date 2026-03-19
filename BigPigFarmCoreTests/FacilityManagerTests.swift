@@ -220,39 +220,34 @@ struct FacilityManagerTests {
     // MARK: - findOpenInteractionPoint Tests
 
     @Test("findOpenInteractionPoint returns non-empty path when pig is at the point")
-    func testFindOpenInteractionPointPigAtPoint() {
-        let (manager, state, unusedController) = makeManager()
+    func testFindOpenInteractionPointPigAtPoint() throws {
+        let (manager, state, _) = makeManager()
         let facility = placeFacility(type: .foodBowl, x: 5, y: 5, state: state)
-        // Food bowl 2x1 at (5,5) → front interaction points: (5,6) and (6,6)
-        let pig = pigAt(x: 5.0, y: 6.0)
+        let pigPoint = GridPosition(x: 5, y: 6)
+        try #require(facility.interactionPoints.contains(pigPoint))
+        let pig = pigAt(x: Double(pigPoint.x), y: Double(pigPoint.y))
         state.addGuineaPig(pig)
 
-        let result = manager.findOpenInteractionPoint(pig: pig, facility: facility)
+        let result = try #require(manager.findOpenInteractionPoint(pig: pig, facility: facility))
 
-        #expect(result != nil)
-        if let result {
-            #expect(!result.path.isEmpty)
-            #expect(result.point == GridPosition(x: 5, y: 6))
-        }
+        #expect(!result.path.isEmpty)
+        #expect(result.point == pigPoint)
     }
 
     @Test("findOpenInteractionPoint returns single-step path for adjacent pig")
-    func testFindOpenInteractionPointPigOneStepAway() {
-        let (manager, state, unusedController) = makeManager()
+    func testFindOpenInteractionPointPigOneStepAway() throws {
+        let (manager, state, _) = makeManager()
         let facility = placeFacility(type: .foodBowl, x: 5, y: 5, state: state)
-        // Pig one cell south of front interaction point (5,6) → pig at (5,7)
+        let interactionPoint = GridPosition(x: 5, y: 6)
+        try #require(facility.interactionPoints.contains(interactionPoint))
+        // Pig one cell south of the interaction point
         let pig = pigAt(x: 5.0, y: 7.0)
         state.addGuineaPig(pig)
 
-        let result = manager.findOpenInteractionPoint(pig: pig, facility: facility)
+        let result = try #require(manager.findOpenInteractionPoint(pig: pig, facility: facility))
 
-        #expect(result != nil)
-        if let result {
-            #expect(!result.path.isEmpty)
-            // Path should be just the interaction point (pig's start position trimmed)
-            #expect(result.path.count == 1)
-            #expect(result.path.first == GridPosition(x: 5, y: 6))
-        }
+        #expect(result.path.count == 1)
+        #expect(result.path.first == interactionPoint)
     }
 
     @Test("getCandidateFacilitiesRanked omits empty consumable facilities")

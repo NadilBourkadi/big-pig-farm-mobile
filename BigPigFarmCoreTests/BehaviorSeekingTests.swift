@@ -184,15 +184,15 @@ struct BehaviorSeekingTests {
     // MARK: - Pig at Interaction Point (Edge Case)
 
     @Test("seekFacilityForNeed dispatches when pig is at the interaction point")
-    func testSeekFacilityForNeedPigAtInteractionPoint() {
+    func testSeekFacilityForNeedPigAtInteractionPoint() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
-        // Food bowl at (5, 5), size 2x1 → front interaction points are (5, 6) and (6, 6)
         let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
         _ = state.addFacility(facility)
-        // Place pig exactly at interaction point (5, 6)
-        var pig = makePig(x: 5.0, y: 6.0)
-        pig.needs.hunger = 10.0 // Critically hungry
+        let pigPoint = GridPosition(x: 5, y: 6)
+        try #require(facility.interactionPoints.contains(pigPoint))
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
+        pig.needs.hunger = 10.0
         state.addGuineaPig(pig)
         controller.facilityManager.updateAreaPopulations()
 
@@ -204,12 +204,14 @@ struct BehaviorSeekingTests {
     }
 
     @Test("seekFacilityForNeed at interaction point does not set unreachable backoff")
-    func testSeekFacilityAtPointNoBackoff() {
+    func testSeekFacilityAtPointNoBackoff() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
         let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
         _ = state.addFacility(facility)
-        var pig = makePig(x: 5.0, y: 6.0)
+        let pigPoint = GridPosition(x: 5, y: 6)
+        try #require(facility.interactionPoints.contains(pigPoint))
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
         pig.needs.hunger = 10.0
         state.addGuineaPig(pig)
         controller.facilityManager.updateAreaPopulations()
@@ -220,12 +222,14 @@ struct BehaviorSeekingTests {
     }
 
     @Test("seekFacilityForNeed at interaction point does not add failed facility")
-    func testSeekFacilityAtPointNoFailedFacility() {
+    func testSeekFacilityAtPointNoFailedFacility() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
         let facility = Facility.create(type: .foodBowl, x: 5, y: 5)
         _ = state.addFacility(facility)
-        var pig = makePig(x: 5.0, y: 6.0)
+        let pigPoint = GridPosition(x: 5, y: 6)
+        try #require(facility.interactionPoints.contains(pigPoint))
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
         pig.needs.hunger = 10.0
         state.addGuineaPig(pig)
         controller.facilityManager.updateAreaPopulations()
@@ -236,13 +240,14 @@ struct BehaviorSeekingTests {
     }
 
     @Test("seekSleep dispatches when pig is at hideout interaction point")
-    func testSeekSleepPigAtInteractionPoint() {
+    func testSeekSleepPigAtInteractionPoint() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
-        // Hideout at (5, 5), size 3x2 → front interaction points include (5, 7), (6, 7), (7, 7)
         let hideout = Facility.create(type: .hideout, x: 5, y: 5)
         _ = state.addFacility(hideout)
-        var pig = makePig(x: 6.0, y: 7.0)
+        let pigPoint = GridPosition(x: 6, y: 7)
+        try #require(hideout.interactionPoints.contains(pigPoint))
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
         pig.needs.energy = 10.0
         state.addGuineaPig(pig)
         controller.facilityManager.updateAreaPopulations()
@@ -254,13 +259,14 @@ struct BehaviorSeekingTests {
     }
 
     @Test("seekPlay dispatches when pig is at exercise wheel interaction point")
-    func testSeekPlayPigAtInteractionPoint() {
+    func testSeekPlayPigAtInteractionPoint() throws {
         let state = makeGameState()
         let controller = makeController(state: state)
-        // Exercise wheel at (5, 5), size 2x2 → front points include (5, 7) and (6, 7)
         let wheel = Facility.create(type: .exerciseWheel, x: 5, y: 5)
         _ = state.addFacility(wheel)
-        var pig = makePig(x: 5.0, y: 7.0)
+        let pigPoint = GridPosition(x: 5, y: 7)
+        try #require(wheel.interactionPoints.contains(pigPoint))
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
         pig.needs.boredom = 90.0
         state.addGuineaPig(pig)
         controller.facilityManager.updateAreaPopulations()
@@ -269,5 +275,24 @@ struct BehaviorSeekingTests {
 
         #expect(pig.targetFacilityId == wheel.id)
         #expect(pig.behaviorState == .wandering)
+    }
+
+    @Test("seekCampfire dispatches when pig is at campfire interaction point")
+    func testSeekCampfirePigAtInteractionPoint() throws {
+        let state = makeGameState()
+        let controller = makeController(state: state)
+        let campfire = Facility.create(type: .campfire, x: 5, y: 5)
+        _ = state.addFacility(campfire)
+        let pigPoint = try #require(campfire.interactionPoints.first)
+        var pig = makePig(x: Double(pigPoint.x), y: Double(pigPoint.y))
+        state.addGuineaPig(pig)
+        controller.facilityManager.updateAreaPopulations()
+
+        // seekCampfire is private, but seekSocialInteraction calls it at night
+        state.gameTime.hour = 22
+        BehaviorSeeking.seekSocialInteraction(controller: controller, pig: &pig)
+
+        #expect(pig.targetFacilityId == campfire.id)
+        #expect(pig.behaviorState == .socializing)
     }
 }

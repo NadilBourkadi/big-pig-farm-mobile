@@ -204,7 +204,11 @@ extension FacilityManager {
 
     /// Find an unoccupied interaction point and the path to it.
     /// Returns `(point, path)` where `path` excludes the pig's current position,
-    /// or nil if no open reachable point exists.
+    /// **except** when the pig is already at the interaction point — in that case
+    /// `path` contains `[point]` (the pig's current cell) so callers can distinguish
+    /// "reachable at zero cost" from "no path found". Callers that assign `pig.path`
+    /// should still trim a leading element matching `pig.position.gridPosition`.
+    /// Returns nil if no open reachable point exists.
     func findOpenInteractionPoint(
         pig: GuineaPig,
         facility: Facility
