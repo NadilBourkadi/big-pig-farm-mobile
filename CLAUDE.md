@@ -12,7 +12,7 @@
 - **When inside a worktree, use the worktree root for ALL file paths — no exceptions.** Never read or write files via the main repo path (e.g. `/Users/.../big-pig-farm-mobile/…`) — every Read, Write, Edit, Glob, Grep, and `cat` must use the worktree absolute path (e.g. `/Users/.../big-pig-farm-mobile/.claude/worktrees/<name>/…`). This includes `.claude/settings.json`, `.claude/skills/**`, `CLAUDE.md`, and any other config file. Even if a config fix is discovered mid-task, it goes into the worktree copy so it ships with the PR. The main repo's files are not the ones being modified.
 - Never use inline env vars; use `export` on a separate line
 - **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
-- **`**` glob in permissions does not match subdirectories.** `Read(path:~/.claude/skills/**)` does NOT match `~/.claude/skills/code-review/swift.md`. Always add explicit `/*/*` patterns alongside `**` patterns in `settings.json` for multi-level paths.
+- **`*` in Read permissions only works as a trailing wildcard.** `Read(path:~/.claude/skills/**)` and `Read(path:~/.claude/skills/*/*)` both fail — neither `**` nor intermediate `*` segments match subdirectories. The only pattern that works is a trailing `*` on a concrete directory: `Read(path:/Users/nadilbourkadi/.claude/skills/code-review/*)`. Each skill subdirectory needs its own entry. Use absolute paths, not `~`.
 - Use explicit file lists over `git add -A`
 - Regenerate project after any `project.yml` change: `xcodegen generate`
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
