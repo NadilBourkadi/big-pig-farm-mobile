@@ -104,6 +104,7 @@ struct BigPigFarmApp: App {
             lifecycleSave()
             #if DEBUG || INTERNAL
             DebugLogger.shared.flush()
+            DebugLogger.shared.syncToiCloud()
             #endif
         @unknown default:
             break

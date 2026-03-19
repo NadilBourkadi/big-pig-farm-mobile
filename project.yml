@@ -37,6 +37,15 @@ targets:
     resources:
       - path: BigPigFarm/Resources/Assets.xcassets
       - path: BigPigFarm/PrivacyInfo.xcprivacy
+    entitlements:
+      path: BigPigFarm/BigPigFarm.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.nadilbourkadi.bigpigfarm
+        com.apple.developer.icloud-services:
+          - CloudDocuments
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.nadilbourkadi.bigpigfarm
     settings:
       base:
         INFOPLIST_KEY_CFBundleDisplayName: Big Pig Farm
