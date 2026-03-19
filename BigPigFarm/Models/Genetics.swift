@@ -92,6 +92,17 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
         case .legendary: return 4
         }
     }
+
+    /// Economy multiplier applied to base pig value for this rarity tier.
+    var multiplier: Double {
+        switch self {
+        case .common: 1.0
+        case .uncommon: GameConfig.Economy.uncommonMultiplier
+        case .rare: GameConfig.Economy.rareMultiplier
+        case .veryRare: GameConfig.Economy.veryRareMultiplier
+        case .legendary: GameConfig.Economy.legendaryMultiplier
+        }
+    }
 }
 
 // MARK: - AllelePair

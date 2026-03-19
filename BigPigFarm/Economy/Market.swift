@@ -56,13 +56,7 @@ enum Market {
     static func calculatePigValueBreakdown(pig: GuineaPig, state: any MarketContext) -> PigValueBreakdown {
         let base = GameConfig.Economy.commonPigValue
 
-        let rarityMult: Double = switch pig.phenotype.rarity {
-        case .common: 1.0
-        case .uncommon: GameConfig.Economy.uncommonMultiplier
-        case .rare: GameConfig.Economy.rareMultiplier
-        case .veryRare: GameConfig.Economy.veryRareMultiplier
-        case .legendary: GameConfig.Economy.legendaryMultiplier
-        }
+        let rarityMult = pig.phenotype.rarity.multiplier
 
         let ageMult: Double = switch pig.ageGroup {
         case .baby: 0.5

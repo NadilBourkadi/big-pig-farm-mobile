@@ -28,7 +28,7 @@ enum Adoption {
     @MainActor
     static func calculateAdoptionCost(_ pig: GuineaPig, state: any AdoptionContext) -> Int {
         var cost = Double(GameConfig.Economy.adoptionBaseCost)
-        cost *= rarityMultiplier(pig.phenotype.rarity)
+        cost *= pig.phenotype.rarity.multiplier
         if let originTag = pig.originTag {
             for bloodline in bloodlines.values where bloodline.displayName == originTag {
                 cost *= bloodline.costMultiplier
@@ -108,15 +108,4 @@ enum Adoption {
         state.farm.findRandomWalkable()
     }
 
-    // MARK: - Private Helpers
-
-    private static func rarityMultiplier(_ rarity: Rarity) -> Double {
-        switch rarity {
-        case .common: 1.0
-        case .uncommon: GameConfig.Economy.uncommonMultiplier
-        case .rare: GameConfig.Economy.rareMultiplier
-        case .veryRare: GameConfig.Economy.veryRareMultiplier
-        case .legendary: GameConfig.Economy.legendaryMultiplier
-        }
-    }
 }

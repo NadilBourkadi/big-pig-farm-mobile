@@ -231,18 +231,12 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         personality.contains(trait)
     }
 
-    /// Calculate the monetary value of this guinea pig.
+    /// Rarity-only base value estimate (no age/health/grooming/perk modifiers).
+    ///
+    /// For the full sale value including all modifiers, use
+    /// `Market.calculatePigValue(pig:state:)` instead.
     func getValue() -> Int {
-        let baseValue = GameConfig.Economy.commonPigValue
-        let multiplier: Double
-        switch phenotype.rarity {
-        case .common: multiplier = 1.0
-        case .uncommon: multiplier = GameConfig.Economy.uncommonMultiplier
-        case .rare: multiplier = GameConfig.Economy.rareMultiplier
-        case .veryRare: multiplier = GameConfig.Economy.veryRareMultiplier
-        case .legendary: multiplier = GameConfig.Economy.legendaryMultiplier
-        }
-        return Int(Double(baseValue) * multiplier)
+        Int(Double(GameConfig.Economy.commonPigValue) * phenotype.rarity.multiplier)
     }
 
     /// Factory method with phenotype calculation and random personality.
