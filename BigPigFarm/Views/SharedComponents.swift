@@ -81,6 +81,7 @@ struct CurrencyLabel: View {
         Text(Currency.formatCurrency(amount))
             .font(.caption.bold())
             .foregroundStyle(.yellow)
+            .fixedSize(horizontal: true, vertical: false)
     }
 }
 
