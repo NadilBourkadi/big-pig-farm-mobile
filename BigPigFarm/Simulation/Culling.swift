@@ -41,7 +41,7 @@ enum Culling {
         return sold
     }
 
-    // swiftlint:disable cyclomatic_complexity
+    // swiftlint:disable cyclomatic_complexity function_body_length
     /// Identify and mark surplus breeders for population control.
     /// When above the stock limit: scores all adults and marks the lowest-scoring
     /// surplus for sale, preserving gender balance.
@@ -94,6 +94,14 @@ enum Culling {
             updated.markedForSale = true
             gameState.updateGuineaPig(updated)
             markedCount += 1
+            #if DEBUG
+            DebugLogger.shared.log(
+                category: .culling, level: .info,
+                message: "Marked for sale: \(pig.name) (surplus)",
+                pigId: pig.id, pigName: pig.name,
+                payload: ["reason": "surplus"]
+            )
+            #endif
         }
         if markedCount > 0 {
             gameState.logEvent(
@@ -102,7 +110,7 @@ enum Culling {
             )
         }
     }
-    // swiftlint:enable cyclomatic_complexity
+    // swiftlint:enable cyclomatic_complexity function_body_length
 
     // MARK: - Private Helpers
 

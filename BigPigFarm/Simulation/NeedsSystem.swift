@@ -55,6 +55,26 @@ enum NeedsSystem {
 
         // 12. Clamp
         pig.needs.clampAll()
+
+        #if DEBUG
+        let criticalThreshold = Double(GameConfig.Needs.criticalThreshold)
+        if pig.needs.hunger < criticalThreshold {
+            DebugLogger.shared.log(
+                category: .needs, level: .warning,
+                message: "\(pig.name): critical hunger (\(Int(pig.needs.hunger)))",
+                pigId: pig.id, pigName: pig.name,
+                payload: ["need": "hunger", "value": String(Int(pig.needs.hunger))]
+            )
+        }
+        if pig.needs.thirst < criticalThreshold {
+            DebugLogger.shared.log(
+                category: .needs, level: .warning,
+                message: "\(pig.name): critical thirst (\(Int(pig.needs.thirst)))",
+                pigId: pig.id, pigName: pig.name,
+                payload: ["need": "thirst", "value": String(Int(pig.needs.thirst))]
+            )
+        }
+        #endif
     }
 
     /// Determine the most urgent unmet need for the behavior AI decision tree.

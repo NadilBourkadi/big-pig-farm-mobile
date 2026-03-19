@@ -91,6 +91,19 @@ extension Birth {
             "\(mother.name) gave birth to \(litterSize) piglet(s): \(babyNames)",
             eventType: "birth"
         )
+        #if DEBUG
+        DebugLogger.shared.log(
+            category: .birth, level: .info,
+            message: "Birth: \(mother.name) -> \(litterSize) piglet(s)",
+            pigId: mother.id, pigName: mother.name,
+            payload: [
+                "motherId": mother.id.uuidString,
+                "fatherName": fatherName,
+                "litterSize": String(litterSize),
+                "babyNames": babyNames,
+            ]
+        )
+        #endif
         return true
     }
     // swiftlint:enable function_body_length
@@ -167,6 +180,14 @@ extension Birth {
             "\(mother.name)'s pregnancy was cancelled: \(reason).",
             eventType: "breeding"
         )
+        #if DEBUG
+        DebugLogger.shared.log(
+            category: .birth, level: .warning,
+            message: "Pregnancy cancelled: \(mother.name) (\(reason))",
+            pigId: mother.id, pigName: mother.name,
+            payload: ["reason": reason]
+        )
+        #endif
     }
 
     // MARK: - Breeding Filter
