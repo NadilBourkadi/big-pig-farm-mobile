@@ -104,7 +104,7 @@
 - [x] Implement `AlmanacView` (Pigdex + contracts)
 - [x] Implement `BiomeSelectView` (biome picker)
 - [x] Implement `AdoptionView` (bloodline adoption)
-- [x] Implement `SharedComponents` (currency, badges, bars)
+- [x] Implement `UIComponents` + `DisplayFormatting` (currency, badges, bars, formatting)
 
 ### Phase 5 — Persistence & Polish (Weeks 13–14)
 
