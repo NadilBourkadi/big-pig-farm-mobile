@@ -221,6 +221,16 @@ import Foundation
     #expect(!birthFired)
 }
 
+@Test @MainActor func onPigdexDiscoveryCallbackNotFiredWithNoPigs() {
+    let state = GameState()
+    let controller = BehaviorController(gameState: state)
+    let runner = SimulationRunner(state: state, behaviorController: controller, saveManager: makeTempSaveManager())
+    var discoveryFired = false
+    runner.onPigdexDiscovery = { discoveryFired = true }
+    runner.tick(gameMinutes: 0.3)
+    #expect(!discoveryFired)
+}
+
 // MARK: - Acclimation Phase
 
 @Test @MainActor func acclimationPhaseSkipsPigsWithNoPreferredBiomeAndNoTimer() throws {

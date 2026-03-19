@@ -122,7 +122,12 @@ struct PigListView: View {
     private func sellPig(_ pig: GuineaPig) {
         if selectedPig?.id == pig.id { selectedPig = nil }
         pigToSell = nil
-        Market.sellPig(state: gameState, pig: pig)
+        guard gameState.getGuineaPig(pig.id) != nil else { return }
+        let result = Market.sellPig(state: gameState, pig: pig)
+        HapticManager.pigSold()
+        if result.contractBonus > 0 {
+            HapticManager.contractCompleted()
+        }
     }
 
     private func toggleBreedingLock(_ pigID: UUID) {
