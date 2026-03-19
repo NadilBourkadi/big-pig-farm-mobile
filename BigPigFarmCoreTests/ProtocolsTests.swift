@@ -177,3 +177,55 @@ import Foundation
     // Existential assignment succeeds: GameState satisfies CullingContext.
     // The absence of mutation methods on CullingContext is enforced at compile time.
 }
+
+// MARK: - Intermediate Protocol Conformance
+
+@Test @MainActor func upgradeQueryContextConformance() {
+    let state = GameState()
+    let context: any UpgradeQueryContext = state
+    #expect(!context.hasUpgrade("test_upgrade"))
+    state.purchasedUpgrades.insert("test_upgrade")
+    #expect(context.hasUpgrade("test_upgrade"))
+}
+
+@Test @MainActor func pigQueryContextConformance() {
+    let state = GameState()
+    let context: any PigQueryContext = state
+    #expect(context.getPigsList().isEmpty)
+    #expect(context.getGuineaPig(UUID()) == nil)
+    let pig = GuineaPig.create(name: "Hazel", gender: .female)
+    state.addGuineaPig(pig)
+    #expect(context.getPigsList().count == 1)
+    #expect(context.getGuineaPig(pig.id)?.name == "Hazel")
+}
+
+@Test @MainActor func eventLoggingContextConformance() {
+    let state = GameState()
+    let context: any EventLoggingContext = state
+    context.logEvent("Test event", eventType: "test")
+    #expect(state.events.count == 1)
+    #expect(state.events[0].message == "Test event")
+    #expect(state.events[0].eventType == "test")
+}
+
+// NeedsContext and CullingContext now inherit PigQueryContext, which includes
+// getGuineaPig(_:). This is an intentional widening — read-only pig lookup
+// does not weaken the mutation restrictions these protocols enforce.
+// These tests document protocol surface, not production usage. getGuineaPig
+// is unused by NeedsSystem and Culling today.
+
+@Test @MainActor func needsContextProvidesGetGuineaPig() {
+    let state = GameState()
+    let context: any NeedsContext = state
+    let pig = GuineaPig.create(name: "Clover", gender: .male)
+    state.addGuineaPig(pig)
+    #expect(context.getGuineaPig(pig.id)?.name == "Clover")
+}
+
+@Test @MainActor func cullingContextProvidesGetGuineaPig() {
+    let state = GameState()
+    let context: any CullingContext = state
+    let pig = GuineaPig.create(name: "Bramble", gender: .female)
+    state.addGuineaPig(pig)
+    #expect(context.getGuineaPig(pig.id)?.name == "Bramble")
+}
