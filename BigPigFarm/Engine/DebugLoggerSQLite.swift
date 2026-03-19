@@ -1,3 +1,4 @@
+#if DEBUG
 /// DebugLoggerSQLite — SQLite helpers for DebugLogger background operations.
 ///
 /// All methods are nonisolated and called from the serial flushQueue.
@@ -28,6 +29,7 @@ enum SQLiteHelpers {
             bindOptionalText(stmt, index: 6, value: event.pigId?.uuidString)
             bindOptionalText(stmt, index: 7, value: event.pigName)
             bindOptionalText(stmt, index: 8, value: event.payload)
+            sqlite3_step(stmt)
         }
         sqlite3_exec(db, "COMMIT", nil, nil, nil)
     }
@@ -227,3 +229,4 @@ enum SQLiteHelpers {
         return String(cString: ptr)
     }
 }
+#endif

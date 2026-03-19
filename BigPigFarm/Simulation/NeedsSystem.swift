@@ -29,6 +29,10 @@ enum NeedsSystem {
     ) {
         let hours = gameMinutes / 60.0
         let modifiers = computeModifiers(pig: pig, state: state)
+        #if DEBUG && canImport(UIKit)
+        let hungerBefore = pig.needs.hunger
+        let thirstBefore = pig.needs.thirst
+        #endif
 
         // 1–2. Primary decay with personality modifiers
         pig.needs.hunger -= GameConfig.Needs.hungerDecay * hours * modifiers.hunger
@@ -57,8 +61,9 @@ enum NeedsSystem {
         pig.needs.clampAll()
 
         #if DEBUG && canImport(UIKit)
+        // Only log on transition into critical (not every tick it remains critical)
         let criticalThreshold = Double(GameConfig.Needs.criticalThreshold)
-        if pig.needs.hunger < criticalThreshold {
+        if pig.needs.hunger < criticalThreshold && hungerBefore >= criticalThreshold {
             DebugLogger.shared.log(
                 category: .needs, level: .warning,
                 message: "\(pig.name): critical hunger (\(Int(pig.needs.hunger)))",
@@ -66,7 +71,7 @@ enum NeedsSystem {
                 payload: ["need": "hunger", "value": String(Int(pig.needs.hunger))]
             )
         }
-        if pig.needs.thirst < criticalThreshold {
+        if pig.needs.thirst < criticalThreshold && thirstBefore >= criticalThreshold {
             DebugLogger.shared.log(
                 category: .needs, level: .warning,
                 message: "\(pig.name): critical thirst (\(Int(pig.needs.thirst)))",
