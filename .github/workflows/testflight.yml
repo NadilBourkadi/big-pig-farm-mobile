@@ -105,6 +105,7 @@ jobs:
         run: |
           xcodebuild archive \
             -scheme BigPigFarm \
+            -configuration Internal \
             -archivePath "${{ runner.temp }}/BigPigFarm.xcarchive" \
             -destination 'generic/platform=iOS' \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} \
