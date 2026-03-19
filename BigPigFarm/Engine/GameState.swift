@@ -213,6 +213,13 @@ extension GameState {
             events.removeFirst(events.count - maxEvents)
         }
         notificationManager?.handleEvent(message: message, eventType: eventType)
+        #if DEBUG
+        DebugLogger.shared.log(
+            category: DebugCategory.from(eventType: eventType),
+            level: .info,
+            message: message
+        )
+        #endif
     }
 
     // MARK: - Computed Properties

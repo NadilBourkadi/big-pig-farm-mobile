@@ -18,6 +18,9 @@ struct BigPigFarmApp: App {
     /// (app terminated by iOS or force-quit) triggers catch-up on the first `.active`.
     @State private var didEnterBackground: Bool
     private let saveManager: SaveManager
+    #if DEBUG
+    @State private var debugServer: DebugServer?
+    #endif
 
     init() {
         let sm = SaveManager()
@@ -30,7 +33,11 @@ struct BigPigFarmApp: App {
             state.lastSave = state.sessionStart
         }
         let behaviorController = BehaviorController(gameState: state)
-        let sim = SimulationRunner(state: state, behaviorController: behaviorController, saveManager: sm)
+        let sim = SimulationRunner(
+            state: state,
+            behaviorController: behaviorController,
+            saveManager: sm
+        )
         let eng = GameEngine(state: state)
         eng.registerTickCallback { [weak sim] minutes in
             sim?.tick(gameMinutes: minutes)
@@ -49,6 +56,13 @@ struct BigPigFarmApp: App {
         // Cold start with existing save: treat as "returning from background"
         // so the first .active transition triggers offline catch-up.
         _didEnterBackground = State(initialValue: !isNewGame)
+
+        #if DEBUG
+        DebugLogger.shared.open()
+        let server = DebugServer(logger: DebugLogger.shared)
+        server.start()
+        _debugServer = State(initialValue: server)
+        #endif
     }
 
     var body: some Scene {
@@ -88,6 +102,9 @@ struct BigPigFarmApp: App {
         case .background:
             didEnterBackground = true
             lifecycleSave()
+            #if DEBUG
+            DebugLogger.shared.flush()
+            #endif
         @unknown default:
             break
         }
