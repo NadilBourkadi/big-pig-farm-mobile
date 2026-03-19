@@ -248,12 +248,16 @@ extension FacilityManager {
         return (point: best.point, path: trimmedPath)
     }
 
-    /// True if another pig is within `radius` of `point` while using a facility,
-    /// or is heading to this exact point.
+    /// True if another pig is physically using this point, or has been
+    /// dispatched to this exact grid cell earlier in the same tick.
     ///
-    /// The heading-pig check iterates all pigs (not just spatially nearby ones)
-    /// because a pig assigned this target earlier in the same tick is still at
-    /// its old position — getNearby at the interaction point won't find it.
+    /// Check 1 uses the spatial grid to find pigs already at the point and
+    /// in a facility-using state (eating, drinking, etc.).
+    ///
+    /// Check 2 iterates all pigs because a pig dispatched earlier in the same
+    /// tick is still at its old position — getNearby won't find it. Uses
+    /// exact grid-position matching (not radius) to prevent cross-blocking
+    /// adjacent interaction points on the same facility.
     private func isInteractionPointOccupied(
         point: GridPosition,
         excludePig: GuineaPig,
@@ -271,14 +275,15 @@ extension FacilityManager {
             }
         }
 
-        // 2. Check ALL pigs heading to this point — not just nearby ones.
-        // A pig dispatched earlier in the same tick has targetPosition set but
-        // is still at its old position, so getNearby at the point misses it.
+        // 2. Check pigs dispatched to this exact grid cell earlier in the same tick.
+        // Uses exact grid-position matching to avoid cross-blocking adjacent
+        // interaction points (e.g. a pig heading to a water bottle's front point
+        // should not block its side points).
         for other in pigs.values {
             if other.id == excludePig.id { continue }
             if other.targetFacilityId != nil,
                let tp = other.targetPosition,
-               tp.distanceTo(pointPos) < radius {
+               Int(tp.x) == point.x && Int(tp.y) == point.y {
                 return true
             }
         }
