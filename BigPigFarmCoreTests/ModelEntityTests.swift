@@ -132,6 +132,37 @@ import Foundation
     #expect(facility.maxAmount == 200.0)
 }
 
+@Test func facilityInfoCostsMatchGameConfig() {
+    #expect(facilityInfo[.foodBowl]?.baseCost == GameConfig.Economy.foodBowlCost)
+    #expect(facilityInfo[.waterBottle]?.baseCost == GameConfig.Economy.waterBottleCost)
+    #expect(facilityInfo[.hayRack]?.baseCost == GameConfig.Economy.hayRackCost)
+    #expect(facilityInfo[.hideout]?.baseCost == GameConfig.Economy.hideoutCost)
+    #expect(facilityInfo[.exerciseWheel]?.baseCost == GameConfig.Economy.exerciseWheelCost)
+    #expect(facilityInfo[.tunnel]?.baseCost == GameConfig.Economy.tunnelCost)
+    #expect(facilityInfo[.playArea]?.baseCost == GameConfig.Economy.playAreaCost)
+    #expect(facilityInfo[.breedingDen]?.baseCost == GameConfig.Economy.breedingDenCost)
+    #expect(facilityInfo[.nursery]?.baseCost == GameConfig.Economy.nurseryCost)
+    #expect(facilityInfo[.veggieGarden]?.baseCost == GameConfig.Economy.veggieGardenCost)
+    #expect(facilityInfo[.groomingStation]?.baseCost == GameConfig.Economy.groomingStationCost)
+    #expect(facilityInfo[.geneticsLab]?.baseCost == GameConfig.Economy.geneticsLabCost)
+    #expect(facilityInfo[.feastTable]?.baseCost == GameConfig.Economy.feastTableCost)
+    #expect(facilityInfo[.campfire]?.baseCost == GameConfig.Economy.campfireCost)
+    #expect(facilityInfo[.therapyGarden]?.baseCost == GameConfig.Economy.therapyGardenCost)
+    #expect(facilityInfo[.hotSpring]?.baseCost == GameConfig.Economy.hotSpringCost)
+    #expect(facilityInfo[.stage]?.baseCost == GameConfig.Economy.stageCost)
+}
+
+@Test func facilityUpgradeCostUsesBaseCost() {
+    var facility = Facility.create(type: .foodBowl, x: 0, y: 0)
+    // Level 1: baseCost * (level+1) * 0.75
+    #expect(facility.getUpgradeCost() == Int(Double(GameConfig.Economy.foodBowlCost) * 2.0 * 0.75))
+    _ = facility.upgrade() // now level 2
+    // Level 2: baseCost * (level+1) * 0.75
+    #expect(facility.getUpgradeCost() == Int(Double(GameConfig.Economy.foodBowlCost) * 3.0 * 0.75))
+    _ = facility.upgrade() // now level 3 (max)
+    #expect(facility.getUpgradeCost() == 0)
+}
+
 // MARK: - FarmArea Tests
 
 @Test func farmAreaInteriorBounds() {
