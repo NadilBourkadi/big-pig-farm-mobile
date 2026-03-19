@@ -59,6 +59,7 @@ struct BigPigFarmApp: App {
 
         #if DEBUG || INTERNAL
         DebugLogger.shared.open()
+        DebugLogger.shared.initializeiCloudContainer()
         let server = DebugServer(logger: DebugLogger.shared)
         server.start()
         _debugServer = State(initialValue: server)

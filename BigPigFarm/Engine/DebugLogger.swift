@@ -116,6 +116,9 @@ final class DebugLogger {
     private var insertStatement: OpaquePointer?
     private var countStatement: OpaquePointer?
 
+    /// Cached iCloud container URL, resolved at launch on a background thread.
+    var iCloudContainerURL: URL?
+
     private init() {}
 
     // MARK: - Lifecycle
