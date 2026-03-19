@@ -73,7 +73,7 @@ final class SimulationRunner {
     func tick(gameMinutes: Double) {
         guard let state else { return }
         recordTimestamp(CACurrentMediaTime())
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         DebugLogger.shared.setGameDay(state.gameTime.day)
         #endif
         let gameHours = gameMinutes / 60.0

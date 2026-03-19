@@ -91,7 +91,7 @@ extension Birth {
             "\(mother.name) gave birth to \(litterSize) piglet(s): \(babyNames)",
             eventType: "birth"
         )
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         DebugLogger.shared.log(
             category: .birth, level: .info,
             message: "Birth: \(mother.name) -> \(litterSize) piglet(s)",
@@ -180,7 +180,7 @@ extension Birth {
             "\(mother.name)'s pregnancy was cancelled: \(reason).",
             eventType: "breeding"
         )
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         DebugLogger.shared.log(
             category: .birth, level: .warning,
             message: "Pregnancy cancelled: \(mother.name) (\(reason))",
