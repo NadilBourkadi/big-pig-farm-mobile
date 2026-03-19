@@ -1,4 +1,4 @@
-/// SharedComponentsTests — Tests for free formatting functions and color mappings.
+/// DisplayFormattingTests — Tests for free formatting functions and color mappings.
 /// SwiftUI view rendering is deferred to the polish phase per spec.
 import Testing
 import Foundation
