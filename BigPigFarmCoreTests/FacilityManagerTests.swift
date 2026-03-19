@@ -217,6 +217,44 @@ struct FacilityManagerTests {
         #expect(!ranked.contains { $0.id == facility.id })
     }
 
+    // MARK: - findOpenInteractionPoint Tests
+
+    @Test("findOpenInteractionPoint returns non-empty path when pig is at the point")
+    func testFindOpenInteractionPointPigAtPoint() {
+        let (manager, state, unusedController) = makeManager()
+        let facility = placeFacility(type: .foodBowl, x: 5, y: 5, state: state)
+        // Food bowl 2x1 at (5,5) → front interaction points: (5,6) and (6,6)
+        let pig = pigAt(x: 5.0, y: 6.0)
+        state.addGuineaPig(pig)
+
+        let result = manager.findOpenInteractionPoint(pig: pig, facility: facility)
+
+        #expect(result != nil)
+        if let result {
+            #expect(!result.path.isEmpty)
+            #expect(result.point == GridPosition(x: 5, y: 6))
+        }
+    }
+
+    @Test("findOpenInteractionPoint returns single-step path for adjacent pig")
+    func testFindOpenInteractionPointPigOneStepAway() {
+        let (manager, state, unusedController) = makeManager()
+        let facility = placeFacility(type: .foodBowl, x: 5, y: 5, state: state)
+        // Pig one cell south of front interaction point (5,6) → pig at (5,7)
+        let pig = pigAt(x: 5.0, y: 7.0)
+        state.addGuineaPig(pig)
+
+        let result = manager.findOpenInteractionPoint(pig: pig, facility: facility)
+
+        #expect(result != nil)
+        if let result {
+            #expect(!result.path.isEmpty)
+            // Path should be just the interaction point (pig's start position trimmed)
+            #expect(result.path.count == 1)
+            #expect(result.path.first == GridPosition(x: 5, y: 6))
+        }
+    }
+
     @Test("getCandidateFacilitiesRanked omits empty consumable facilities")
     func testGetCandidatesFiltersEmptyConsumables() {
         let (manager, state, unusedController) = makeManager()
