@@ -5,16 +5,19 @@ import Foundation
 
 // MARK: - DebugLogger Tests
 
-@Suite("DebugLogger")
+@Suite("DebugLogger", .serialized)
 @MainActor
 struct DebugLoggerTests {
 
     /// Create a fresh logger with an isolated temp directory for each test.
+    /// Closes any previously open instance (including the app's own bootstrap)
+    /// so we redirect to a clean temp database.
     private func makeLogger() -> (DebugLogger, URL) {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("DebugLoggerTests-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let logger = DebugLogger.shared
+        logger.close()
         logger.open(baseURL: dir)
         return (logger, dir)
     }
@@ -37,6 +40,8 @@ struct DebugLoggerTests {
 
         let events = await logger.query(limit: 10)
         #expect(events.count == 2)
+        #expect(events.contains { $0.message == "pig changed state" })
+        #expect(events.contains { $0.message == "courtship started" })
     }
 
     // MARK: - Query Filtering
@@ -219,6 +224,7 @@ struct DebugLoggerTests {
         defer { try? FileManager.default.removeItem(at: dir) }
 
         let logger = DebugLogger.shared
+        logger.close()  // Close app-bootstrapped instance first
         logger.open(baseURL: dir)
         logger.log(category: .simulation, level: .info, message: "persisted event")
         logger.flush()

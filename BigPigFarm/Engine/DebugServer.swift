@@ -33,7 +33,8 @@ final class DebugServer {
             print("[DebugServer] Failed to create listener: \(error)")
             return
         }
-        listener?.stateUpdateHandler = { state in
+        listener?.stateUpdateHandler = { [weak self] state in
+            guard let self else { return }
             switch state {
             case .ready:
                 print("[DebugServer] Listening on port \(self.port)")

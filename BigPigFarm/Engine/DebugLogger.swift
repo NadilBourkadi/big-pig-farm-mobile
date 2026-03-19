@@ -1,3 +1,4 @@
+#if DEBUG
 /// DebugLogger — Structured queryable debug logging with SQLite storage.
 ///
 /// Buffers events in memory on @MainActor, flushes to SQLite on a background
@@ -138,14 +139,37 @@ final class DebugLogger {
     }
 
     /// Flush any remaining events and close the database.
+    /// Drains the flush queue synchronously to avoid use-after-free on
+    /// SQLite handles — including any previously dispatched async writes.
     func close() {
-        guard isOpen else { return }
+        guard isOpen, let db else { return }
         flushTimer?.invalidate()
         flushTimer = nil
-        flushSync()
+        // Synchronous drain: write any remaining buffer AND wait for any
+        // previously dispatched async blocks (from flush()) to complete.
+        // Must always sync even if buffer is empty — a prior flushSync()
+        // may have dispatched an async write that hasn't finished yet.
+        let remaining = buffer
+        buffer.removeAll()
+        let insertStmt = insertStatement
+        let countStmt = countStatement
+        let maxRows = maxRows
+        nonisolated(unsafe) let safeDB = db
+        nonisolated(unsafe) let safeInsert = insertStmt
+        nonisolated(unsafe) let safeCount = countStmt
+        flushQueue.sync {
+            if !remaining.isEmpty {
+                SQLiteHelpers.writeBatch(
+                    remaining, db: safeDB, insertStatement: safeInsert
+                )
+                SQLiteHelpers.rotateIfNeeded(
+                    db: safeDB, countStatement: safeCount, maxRows: maxRows
+                )
+            }
+        }
         finalizeStatements()
         sqlite3_close(db)
-        db = nil
+        self.db = nil
         isOpen = false
     }
 
@@ -353,3 +377,4 @@ extension DebugLogger {
         return String(data: data, encoding: .utf8)
     }
 }
+#endif
