@@ -72,8 +72,12 @@ enum Breeding {
             payload: [
                 "maleId": male.id.uuidString,
                 "maleName": male.name,
+                "maleGenotype": male.genotype.debugDescription,
+                "maleColor": male.phenotype.baseColor.rawValue,
                 "femaleId": female.id.uuidString,
                 "femaleName": female.name,
+                "femaleGenotype": female.genotype.debugDescription,
+                "femaleColor": female.phenotype.baseColor.rawValue,
             ]
         )
         #endif

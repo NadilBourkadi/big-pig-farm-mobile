@@ -99,10 +99,28 @@ extension Birth {
             payload: [
                 "motherId": mother.id.uuidString,
                 "fatherName": fatherName,
+                "motherGenotype": mother.genotype.debugDescription,
+                "fatherGenotype": fatherGenotype.debugDescription,
                 "litterSize": String(litterSize),
                 "babyNames": babyNames,
+                "biome": birthArea?.biome.rawValue ?? "unknown",
             ]
         )
+        for baby in babiesBorn {
+            DebugLogger.shared.log(
+                category: .birth, level: .info,
+                message: "Born: \(baby.name) (\(baby.phenotype.displayName))",
+                pigId: baby.id, pigName: baby.name,
+                payload: [
+                    "genotype": baby.genotype.debugDescription,
+                    "color": baby.phenotype.baseColor.rawValue,
+                    "pattern": baby.phenotype.pattern.rawValue,
+                    "intensity": baby.phenotype.intensity.rawValue,
+                    "rarity": baby.phenotype.rarity.rawValue,
+                    "biome": birthArea?.biome.rawValue ?? "unknown",
+                ]
+            )
+        }
         #endif
         return true
     }

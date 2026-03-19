@@ -179,6 +179,13 @@ struct Genotype: Codable, Sendable {
         )
     }
 
+    /// Compact locus string for debug logging (e.g. "E/e B/B S/S C/C r/r D/d").
+    var debugDescription: String {
+        [eLocus, bLocus, sLocus, cLocus, rLocus, dLocus]
+            .map { "\($0.first)/\($0.second)" }
+            .joined(separator: " ")
+    }
+
     enum CodingKeys: String, CodingKey {
         case eLocus = "e_locus"
         case bLocus = "b_locus"
