@@ -117,6 +117,10 @@ final class SimulationRunner {
         if saveCounter >= 300 {
             saveCounter = 0
             backgroundSave()
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            DebugLogger.shared.flush()
+            DebugLogger.shared.syncToiCloud()
+            #endif
         }
     }
 

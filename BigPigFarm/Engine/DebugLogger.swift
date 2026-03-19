@@ -104,7 +104,7 @@ final class DebugLogger {
     // MARK: - State
 
     private var buffer: [BufferedEvent] = []
-    private var db: OpaquePointer?
+    var db: OpaquePointer?
     private let flushQueue = DispatchQueue(
         label: "com.bigpigfarm.debuglogger", qos: .utility
     )
