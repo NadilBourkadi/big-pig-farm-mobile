@@ -130,3 +130,11 @@
 - [x] Render tunnel mouth walls with area biome texture instead of tunnel texture (bead 0q2)
 - [x] Centralize gender display logic with `displaySymbol`/`displayColor` on `Gender` enum (bead 4bj)
 - [x] Implement `NotificationManager` — toast queue, burst throttling, offline suppression (bead c2o)
+
+---
+
+## Debug & Developer Tools
+
+- [x] Implement `DebugLogger` — SQLite storage, in-memory buffer, async queries, log rotation (bead rscr)
+- [x] Implement `DebugServer` — NWListener HTTP server on port 8361, `#if DEBUG` (bead rscr)
+- [x] Instrument simulation subsystems — behavior, breeding, birth, needs, culling, economy (bead rscr)
