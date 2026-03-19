@@ -213,7 +213,7 @@ extension GameState {
             events.removeFirst(events.count - maxEvents)
         }
         notificationManager?.handleEvent(message: message, eventType: eventType)
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         DebugLogger.shared.log(
             category: DebugCategory.from(eventType: eventType),
             level: .info,

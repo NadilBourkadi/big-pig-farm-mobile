@@ -56,7 +56,7 @@ enum NeedsSystem {
         // 12. Clamp
         pig.needs.clampAll()
 
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         let criticalThreshold = Double(GameConfig.Needs.criticalThreshold)
         if pig.needs.hunger < criticalThreshold {
             DebugLogger.shared.log(

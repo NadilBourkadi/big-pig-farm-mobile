@@ -151,7 +151,7 @@ enum Market {
             )
         }
 
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         DebugLogger.shared.log(
             category: .economy, level: .info,
             message: "Sold \(pig.name) for \(result.total) Squeaks",

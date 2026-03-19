@@ -94,7 +94,7 @@ enum Culling {
             updated.markedForSale = true
             gameState.updateGuineaPig(updated)
             markedCount += 1
-            #if DEBUG
+            #if DEBUG && canImport(UIKit)
             DebugLogger.shared.log(
                 category: .culling, level: .info,
                 message: "Marked for sale: \(pig.name) (surplus)",
