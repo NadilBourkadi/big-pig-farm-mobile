@@ -172,12 +172,18 @@ private struct PigdexRow: View {
                     baseColor: color, pattern: pattern,
                     intensity: intensity, roan: roan
                 )
+                let discovered = pigdex.isDiscovered(key)
                 Circle()
-                    .fill(pigdex.isDiscovered(key)
+                    .fill(discovered
                         ? pigColorSwiftUI(color)
                         : Color.gray.opacity(0.2))
                     .frame(width: 22, height: 22)
-                    .overlay(Circle().strokeBorder(.secondary.opacity(0.3), lineWidth: 1))
+                    .overlay(
+                        Circle()
+                            .strokeBorder(.secondary.opacity(0.3), lineWidth: 1)
+                            .accessibilityHidden(true)
+                    )
+                    .accessibilityLabel(circleLabel(color: color, discovered: discovered))
             }
         }
     }
@@ -187,6 +193,12 @@ private struct PigdexRow: View {
         if pattern != .solid { parts.append(pattern.rawValue.capitalized) }
         if intensity != .full { parts.append(intensity.rawValue.capitalized) }
         return parts.isEmpty ? "Solid" : parts.joined(separator: "/")
+    }
+
+    private func circleLabel(color: BaseColor, discovered: Bool) -> String {
+        let roanSuffix = roan != .none ? " roan" : ""
+        let state = discovered ? "discovered" : "not yet discovered"
+        return "\(color.rawValue.capitalized) \(rowLabel)\(roanSuffix), \(state)"
     }
 }
 
