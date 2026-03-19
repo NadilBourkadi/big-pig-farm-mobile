@@ -29,7 +29,7 @@ enum NeedsSystem {
     ) {
         let hours = gameMinutes / 60.0
         let modifiers = computeModifiers(pig: pig, state: state)
-        #if DEBUG && canImport(UIKit)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
         let hungerBefore = pig.needs.hunger
         let thirstBefore = pig.needs.thirst
         #endif
@@ -60,7 +60,7 @@ enum NeedsSystem {
         // 12. Clamp
         pig.needs.clampAll()
 
-        #if DEBUG && canImport(UIKit)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
         // Only log on transition into critical (not every tick it remains critical)
         let criticalThreshold = Double(GameConfig.Needs.criticalThreshold)
         if pig.needs.hunger < criticalThreshold && hungerBefore >= criticalThreshold {

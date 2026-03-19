@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || INTERNAL
 /// DebugLogger — Structured queryable debug logging with SQLite storage.
 ///
 /// Buffers events in memory on @MainActor, flushes to SQLite on a background

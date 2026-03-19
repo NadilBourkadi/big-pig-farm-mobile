@@ -8,6 +8,11 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
 
+configs:
+  Debug: debug
+  Release: release
+  Internal: release  # Release optimizations + INTERNAL flag for TestFlight debug logging
+
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -17,6 +22,9 @@ settings:
     MARKETING_VERSION: 0.0.0
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: SB482MD97S
+  configs:
+    Internal:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: INTERNAL
 
 targets:
   BigPigFarm:

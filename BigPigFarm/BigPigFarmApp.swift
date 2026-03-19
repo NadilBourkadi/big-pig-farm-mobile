@@ -18,7 +18,7 @@ struct BigPigFarmApp: App {
     /// (app terminated by iOS or force-quit) triggers catch-up on the first `.active`.
     @State private var didEnterBackground: Bool
     private let saveManager: SaveManager
-    #if DEBUG
+    #if DEBUG || INTERNAL
     @State private var debugServer: DebugServer?
     #endif
 
@@ -57,7 +57,7 @@ struct BigPigFarmApp: App {
         // so the first .active transition triggers offline catch-up.
         _didEnterBackground = State(initialValue: !isNewGame)
 
-        #if DEBUG
+        #if DEBUG || INTERNAL
         DebugLogger.shared.open()
         let server = DebugServer(logger: DebugLogger.shared)
         server.start()
@@ -102,7 +102,7 @@ struct BigPigFarmApp: App {
         case .background:
             didEnterBackground = true
             lifecycleSave()
-            #if DEBUG
+            #if DEBUG || INTERNAL
             DebugLogger.shared.flush()
             #endif
         @unknown default:

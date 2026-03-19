@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || INTERNAL
 /// DebugServer — Embedded HTTP debug server for querying debug logs.
 ///
 /// Listens on TCP port 8361 via NWListener. Only compiled in DEBUG builds.

@@ -39,7 +39,7 @@ enum BehaviorDecision {
         if handleLowPriorityBehaviors(controller: controller, pig: &pig) { return }
         if handleNighttimeCampfire(controller: controller, pig: &pig) { return }
         handleDefaultWander(controller: controller, pig: &pig)
-        #if DEBUG && canImport(UIKit)
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
         if pig.behaviorState != oldState {
             DebugLogger.shared.log(
                 category: .behavior, level: .info,
