@@ -257,16 +257,25 @@ enum BehaviorSeeking {
         return false
     }
 
-    /// Find the closest other pig using the spatial grid, falling back to full pig list.
+    /// Find the closest other pig using a wide spatial grid search.
+    ///
+    /// Uses a 30-cell radius (covering most of the map) instead of the fixed
+    /// 3×3 neighborhood, eliminating the O(n) full-list fallback in nearly all
+    /// cases. The fallback only fires for extremely isolated pigs (>30 cells
+    /// from any other pig).
     @MainActor
     private static func findNearestSocialTarget(
         controller: BehaviorController,
         pig: GuineaPig
     ) -> GuineaPig? {
+        // Wide radius search — covers 60×60 grid cells (larger than map height).
+        let socialSeekRadius: Double = 30.0
         var nearest: GuineaPig?
         var bestDistSq = Double.infinity
         let nearby = controller.collision.spatialGrid.getNearby(
-            x: pig.position.x, y: pig.position.y, pigs: controller.gameState.guineaPigs
+            x: pig.position.x, y: pig.position.y,
+            radius: socialSeekRadius,
+            pigs: controller.gameState.guineaPigs
         )
         for other in nearby where other.id != pig.id {
             let distSq = (pig.position.x - other.position.x) * (pig.position.x - other.position.x)
@@ -274,6 +283,7 @@ enum BehaviorSeeking {
             if distSq < bestDistSq { bestDistSq = distSq; nearest = other }
         }
         if nearest == nil {
+            // Fallback for extremely isolated pigs (rare with 100+ pigs).
             for other in controller.gameState.getPigsList() where other.id != pig.id {
                 let distSq = (pig.position.x - other.position.x) * (pig.position.x - other.position.x)
                     + (pig.position.y - other.position.y) * (pig.position.y - other.position.y)

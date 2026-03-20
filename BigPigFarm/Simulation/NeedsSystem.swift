@@ -141,8 +141,8 @@ enum NeedsSystem {
 
     /// Pre-compute nearby pig counts using O(n²/2) all-pairs distance check.
     ///
-    /// When the Collision spatial hash is implemented, an overload accepting
-    /// `SpatialGrid` will provide O(n*k) performance.
+    /// Prefer the spatial-grid overload in the tick loop for O(n*k) performance.
+    /// This overload remains for tests and contexts without a spatial grid.
     static func precomputeNearbyCounts(
         pigs: [GuineaPig],
         radius: Double = GameConfig.Needs.socialRadius
@@ -337,5 +337,31 @@ enum NeedsSystem {
         case .idle, .wandering, .courting:
             break
         }
+    }
+}
+
+// MARK: - Spatial Grid Proximity
+
+extension NeedsSystem {
+    /// Pre-compute nearby pig counts using the spatial grid for O(n*k) performance.
+    ///
+    /// Queries each pig's neighborhood via the spatial hash, replacing the
+    /// O(n²/2) all-pairs loop. Results are identical to the brute-force version.
+    static func precomputeNearbyCounts(
+        pigs: [GuineaPig],
+        radius: Double = GameConfig.Needs.socialRadius,
+        spatialGrid: SpatialGrid,
+        pigDict: [UUID: GuineaPig]
+    ) -> [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for pig in pigs {
+            let nearby = spatialGrid.getNearby(
+                x: pig.position.x, y: pig.position.y,
+                radius: radius, pigs: pigDict
+            )
+            // Subtract 1 for the pig itself (getNearby includes it).
+            counts[pig.id] = max(0, nearby.count - 1)
+        }
+        return counts
     }
 }
