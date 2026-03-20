@@ -123,6 +123,22 @@ struct OfflineProgressViewInstantiationTests {
         _ = OfflineProgressView(summary: summary, onContinue: {})
     }
 
+    @Test func acceptsFewPigdexDiscoveries() {
+        var summary = OfflineProgressSummary(wallClockElapsed: 3600, gameHoursElapsed: 180)
+        summary.pigdexDiscoveries = [
+            "White Solid Normal",
+            "Brown Spotted Intense",
+            "Black Roan Normal",
+        ]
+        _ = OfflineProgressView(summary: summary, onContinue: {})
+    }
+
+    @Test func acceptsManyPigdexDiscoveries() {
+        var summary = OfflineProgressSummary(wallClockElapsed: 3600, gameHoursElapsed: 180)
+        summary.pigdexDiscoveries = (0..<8).map { "Phenotype \($0)" }
+        _ = OfflineProgressView(summary: summary, onContinue: {})
+    }
+
     @Test func acceptsDeathOnlySummary() {
         var summary = OfflineProgressSummary(wallClockElapsed: 3600, gameHoursElapsed: 180)
         summary.pigsDied = [
