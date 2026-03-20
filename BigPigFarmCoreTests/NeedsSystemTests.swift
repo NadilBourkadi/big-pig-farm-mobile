@@ -335,3 +335,37 @@ let needsTestOneHour: Double = 60.0
     let expected = 100.0 - GameConfig.Needs.hungerDecay * 0.1
     #expect(abs(pig.needs.hunger - expected) < 0.001)
 }
+
+// MARK: - Spatial Grid Proximity Counts
+
+@Test func spatialPrecomputeMatchesBruteForce() {
+    // Place pigs at known positions and verify both overloads agree.
+    let positions: [(Double, Double)] = [
+        (5, 5), (8, 5), (12, 5), (50, 50), (51, 50),
+    ]
+    var pigs: [GuineaPig] = []
+    for pos in positions {
+        var pig = GuineaPig.create(name: "P\(pigs.count)", gender: .female)
+        pig.position = Position(x: pos.0, y: pos.1)
+        pigs.append(pig)
+    }
+    let pigDict = Dictionary(uniqueKeysWithValues: pigs.map { ($0.id, $0) })
+
+    var grid = SpatialGrid()
+    grid.rebuild(pigs: pigs)
+
+    let bruteForce = NeedsSystem.precomputeNearbyCounts(
+        pigs: pigs, radius: GameConfig.Needs.socialRadius
+    )
+    let spatial = NeedsSystem.precomputeNearbyCounts(
+        pigs: pigs, radius: GameConfig.Needs.socialRadius,
+        spatialGrid: grid, pigDict: pigDict
+    )
+
+    for pig in pigs {
+        #expect(
+            bruteForce[pig.id] == spatial[pig.id],
+            "Mismatch for \(pig.name): brute=\(bruteForce[pig.id] ?? -1) spatial=\(spatial[pig.id] ?? -1)"
+        )
+    }
+}

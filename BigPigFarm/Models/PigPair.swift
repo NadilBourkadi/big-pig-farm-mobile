@@ -10,6 +10,8 @@ struct PigPair: Hashable, Sendable {
     let high: UUID
 
     /// Create a canonically ordered pair. `PigPair(id1, id2) == PigPair(id2, id1)` for any UUIDs.
+    /// Note: equal UUIDs are handled correctly but cannot occur in production —
+    /// SpatialGrid.uniqueNearbyPairs guards `aID != bID` before constructing PigPair.
     init(_ id1: UUID, _ id2: UUID) {
         let firstIsLess = withUnsafeBytes(of: id1.uuid) { buf1 in
             withUnsafeBytes(of: id2.uuid) { buf2 in
