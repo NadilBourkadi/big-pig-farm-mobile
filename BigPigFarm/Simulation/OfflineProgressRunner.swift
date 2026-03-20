@@ -66,7 +66,14 @@ enum OfflineProgressRunner {
         // 2-3. Decay needs + equilibrate
         decayAndEquilibrateNeeds(state: state, hours: hours)
 
-        // 4. Advance pregnancies + check births
+        // 4. Auto-resource replenishment — runs after needs so replenished
+        //    stock is available from the next checkpoint, matching live-tick order.
+        //    tickAoEFacilities is intentionally skipped — stage AoE bonuses require
+        //    an active .playing pig, which is absent during offline catch-up.
+        AutoResources.tickAutoResources(state: state, gameHours: hours)
+        AutoResources.tickVeggieGardens(state: state, gameHours: hours)
+
+        // 5. Advance pregnancies + check births
         Birth.advancePregnancies(gameState: state, gameHours: hours)
         let pigIdsBefore = Set(state.guineaPigs.keys)
         let pigdexCountBefore = state.pigdex.discoveredCount
@@ -78,26 +85,26 @@ enum OfflineProgressRunner {
             summary: &summary
         )
 
-        // 5. Age pigs + death rolls
+        // 6. Age pigs + death rolls
         let deaths = Birth.ageAllPigs(gameState: state, gameHours: hours)
         for pig in deaths {
             summary.pigsDied.append(.init(name: pig.name, ageDays: Int(pig.ageDays)))
         }
 
-        // 6. Acclimation
+        // 7. Acclimation
         advanceAcclimation(state: state, hours: hours)
 
-        // 7. Offline breeding
+        // 8. Offline breeding
         runOfflineBreeding(state: state, summary: &summary)
 
-        // 8. Culling + selling
+        // 9. Culling + selling
         Culling.cullSurplusBreeders(gameState: state)
         let soldRecords = Culling.sellMarkedAdults(gameState: state)
         for record in soldRecords {
             summary.pigsSold.append(.init(name: record.pigName, value: record.totalValue))
         }
 
-        // 9. Contract refresh
+        // 10. Contract refresh
         advanceContracts(state: state)
     }
 

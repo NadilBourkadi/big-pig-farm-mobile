@@ -47,7 +47,7 @@ enum AutoResources {
             if hasAuto && mutableFacility.fillPercentage < autoRefillThreshold * 100 {
                 mutableFacility.refill()
             }
-            state.facilities[mutableFacility.id] = mutableFacility
+            state.updateFacility(mutableFacility)
         }
     }
 
@@ -60,7 +60,7 @@ enum AutoResources {
             var mutableFacility = facility
             mutableFacility.maxAmount *= 2
             mutableFacility.currentAmount *= 2
-            state.facilities[mutableFacility.id] = mutableFacility
+            state.updateFacility(mutableFacility)
         }
     }
 
@@ -92,7 +92,7 @@ enum AutoResources {
             let perTarget = production / Double(targets.count)
             for var target in targets {
                 target.refill(perTarget)
-                state.facilities[target.id] = target
+                state.updateFacility(target)
             }
         }
     }
