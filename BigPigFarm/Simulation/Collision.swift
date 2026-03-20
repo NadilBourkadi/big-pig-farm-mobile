@@ -62,6 +62,38 @@ struct SpatialGrid: Sendable {
         return result
     }
 
+    /// Return pigs within `radius` grid cells of the query point.
+    ///
+    /// Searches enough spatial hash cells to cover the radius, then
+    /// distance-filters the results. Use this instead of the fixed 3×3
+    /// `getNearby(x:y:pigs:)` when the search area exceeds one cell.
+    func getNearby(
+        x: Double, y: Double,
+        radius: Double,
+        pigs: [UUID: GuineaPig]
+    ) -> [GuineaPig] {
+        let cellRadius = Int(ceil(radius / Double(Self.cellSize)))
+        let cx = Int(x) / Self.cellSize
+        let cy = Int(y) / Self.cellSize
+        let radiusSquared = radius * radius
+        var result: [GuineaPig] = []
+        for dx in -cellRadius...cellRadius {
+            for dy in -cellRadius...cellRadius {
+                let key = GridPosition(x: cx + dx, y: cy + dy)
+                for id in cells[key] ?? [] {
+                    if let pig = pigs[id] {
+                        let px = pig.position.x - x
+                        let py = pig.position.y - y
+                        if px * px + py * py <= radiusSquared {
+                            result.append(pig)
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     /// Yield unique (pigA, pigB) pairs from pigs in the same or adjacent cells.
     ///
     /// For each cell, this collects the full 3×3 neighborhood (same + 8 adjacent)
@@ -69,7 +101,7 @@ struct SpatialGrid: Sendable {
     /// Canonical UUID string ordering deduplicates pairs that appear from both sides
     /// of a cell boundary.
     func uniqueNearbyPairs(pigs: [UUID: GuineaPig]) -> [(GuineaPig, GuineaPig)] {
-        var seen = Set<String>()
+        var seen = Set<PigPair>()
         var pairs: [(GuineaPig, GuineaPig)] = []
         for (cellKey, bucket) in cells {
             var neighborhood: [UUID] = []
@@ -84,12 +116,7 @@ struct SpatialGrid: Sendable {
             for aID in bucket {
                 for bID in neighborhood {
                     guard aID != bID else { continue }
-                    let aStr = aID.uuidString
-                    let bStr = bID.uuidString
-                    // Canonical ordering — matches Python's `a.id >= b.id: continue`
-                    guard aStr < bStr else { continue }
-                    let key = "\(aStr):\(bStr)"
-                    guard seen.insert(key).inserted else { continue }
+                    guard seen.insert(PigPair(aID, bID)).inserted else { continue }
                     if let pigA = pigs[aID], let pigB = pigs[bID] {
                         pairs.append((pigA, pigB))
                     }

@@ -58,6 +58,7 @@ let package = Package(
                 "Models/NotificationPreferences.swift",
                 "Models/NotificationPreset.swift",
                 "Models/Pigdex.swift",
+                "Models/PigPair.swift",
                 "Models/SpriteTypes.swift",
                 "Models/ToastItem.swift",
                 // Scene (2 of 15 — only platform-agnostic data files)
