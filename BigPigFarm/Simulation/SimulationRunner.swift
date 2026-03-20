@@ -86,27 +86,33 @@ final class SimulationRunner {
         behaviorController.facilityManager.updateAreaPopulations()
 
         // Phases 2/2a/2b: Needs, Farm Bell, AutoResources
-        updateNeedsPhase(gameMinutes: gameMinutes)
+        // Each phase that calls getPigsList() gets its own batch scope so it
+        // starts with a fresh snapshot. Sharing a scope would cause the second
+        // reader to see stale data from the first reader's cache.
+        state.withBatchUpdate { updateNeedsPhase(gameMinutes: gameMinutes) }
         checkFarmBell(pigs: state.getPigsList())
-        AutoResources.tickAutoResources(state: state, gameHours: gameHours)
-        AutoResources.tickVeggieGardens(state: state, gameHours: gameHours)
-        AutoResources.tickAoEFacilities(state: state, gameHours: gameHours)
+        state.withBatchUpdate { AutoResources.tickAutoResources(state: state, gameHours: gameHours) }
+        state.withBatchUpdate { AutoResources.tickVeggieGardens(state: state, gameHours: gameHours) }
+        state.withBatchUpdate { AutoResources.tickAoEFacilities(state: state, gameHours: gameHours) }
 
         // Phases 3/3b: Behaviors + courtship → pregnancies
-        updateBehaviorsPhase(gameMinutes: gameMinutes)
+        state.withBatchUpdate { updateBehaviorsPhase(gameMinutes: gameMinutes) }
         // Safety net: rebuild so separation sees all post-behavior positions,
         // catching any pigs that crossed bucket boundaries during the behavior phase.
         behaviorController.collision.rebuildSpatialGrid()
-        behaviorController.separateOverlappingPigs()
-        behaviorController.rescueNonWalkablePigs(state.getPigsList())
+        state.withBatchUpdate { behaviorController.separateOverlappingPigs() }
+        state.withBatchUpdate { behaviorController.rescueNonWalkablePigs(state.getPigsList()) }
 
         // Phase 5: Biome acclimation
-        updateAcclimationPhase(gameHours: gameHours)
+        state.withBatchUpdate { updateAcclimationPhase(gameHours: gameHours) }
 
-        // Phases 6/7: Pregnancies + aging
-        Birth.advancePregnancies(gameState: state, gameHours: gameHours)
-        for deadPig in Birth.ageAllPigs(gameState: state, gameHours: gameHours) {
-            behaviorController.cleanupDeadPig(deadPig.id)
+        // Phases 6/7: Pregnancies + aging (separate batches — ageAllPigs must
+        // see pregnancy updates from advancePregnancies via a fresh snapshot)
+        state.withBatchUpdate { Birth.advancePregnancies(gameState: state, gameHours: gameHours) }
+        state.withBatchUpdate {
+            for deadPig in Birth.ageAllPigs(gameState: state, gameHours: gameHours) {
+                behaviorController.cleanupDeadPig(deadPig.id)
+            }
         }
 
         // Phases 8/9/10: Culling + selling + breeding check
@@ -134,7 +140,9 @@ final class SimulationRunner {
         let pigs = state.getPigsList()
         let nearbyCounts = NeedsSystem.precomputeNearbyCounts(
             pigs: pigs,
-            radius: GameConfig.Needs.socialRadius
+            radius: GameConfig.Needs.socialRadius,
+            spatialGrid: behaviorController.collision.spatialGrid,
+            pigDict: state.guineaPigs
         )
         for var pig in pigs {
             NeedsSystem.updateAllNeeds(

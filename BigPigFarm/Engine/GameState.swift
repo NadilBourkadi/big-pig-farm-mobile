@@ -27,6 +27,14 @@ final class GameState: @unchecked Sendable {
     private var facilitiesListCache: [Facility]?
     private var facilitiesByTypeCache: [FacilityType: [Facility]]?
 
+    // MARK: - Batch Update
+
+    /// Depth counter for nested batch updates. While > 0, pig-list cache
+    /// invalidation is suppressed — the cache is invalidated once when the
+    /// outermost batch ends. This eliminates hundreds of redundant
+    /// `Array(guineaPigs.values)` rebuilds per tick.
+    private var batchUpdateDepth: Int = 0
+
     // MARK: - World
 
     var farm = FarmGrid.createStarter()
@@ -88,23 +96,49 @@ final class GameState: @unchecked Sendable {
 // MARK: - GameState Mutation Methods
 
 extension GameState {
+    // MARK: - Batch Update API
+
+    /// Begin suppressing pig-list cache invalidation.
+    /// Must be balanced by a matching `endBatchUpdate()`. Prefer `withBatchUpdate` instead.
+    func beginBatchUpdate() {
+        batchUpdateDepth += 1
+    }
+
+    /// End a batch update. When the outermost batch ends, the pig-list cache is invalidated.
+    func endBatchUpdate() {
+        precondition(batchUpdateDepth > 0, "endBatchUpdate called without matching beginBatchUpdate")
+        batchUpdateDepth -= 1
+        if batchUpdateDepth == 0 {
+            pigsListCache = nil
+        }
+    }
+
+    /// Execute `body` inside a batch update scope. Cache invalidation from
+    /// `updateGuineaPig`, `addGuineaPig`, and `removeGuineaPig` is suppressed
+    /// until the outermost scope exits. Safe to nest.
+    func withBatchUpdate<T>(_ body: () throws -> T) rethrows -> T {
+        beginBatchUpdate()
+        defer { endBatchUpdate() }
+        return try body()
+    }
+
     // MARK: - Guinea Pig Management
 
     func addGuineaPig(_ pig: GuineaPig) {
         guineaPigs[pig.id] = pig
-        pigsListCache = nil
+        if batchUpdateDepth == 0 { pigsListCache = nil }
     }
 
-    /// Update an existing pig in place and invalidate the list cache.
-    /// Use instead of direct `guineaPigs[id] = pig` writes in the simulation tick.
+    /// Update an existing pig in place. Cache invalidation is suppressed
+    /// inside a `withBatchUpdate` scope.
     func updateGuineaPig(_ pig: GuineaPig) {
         guineaPigs[pig.id] = pig
-        pigsListCache = nil
+        if batchUpdateDepth == 0 { pigsListCache = nil }
     }
 
     func removeGuineaPig(_ pigID: UUID) -> GuineaPig? {
         guard let pig = guineaPigs.removeValue(forKey: pigID) else { return nil }
-        pigsListCache = nil
+        if batchUpdateDepth == 0 { pigsListCache = nil }
         let pigStr = pigID.uuidString
         socialAffinity = socialAffinity.filter { key, _ in
             !key.contains(pigStr)
