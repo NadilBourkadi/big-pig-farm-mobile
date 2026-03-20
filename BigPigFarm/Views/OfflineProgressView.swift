@@ -197,7 +197,17 @@ struct OfflineProgressView: View {
         let count = summary.pigdexDiscoveries.count
         let title = count == 1 ? "1 new discovery" : "\(count) new discoveries"
         return sectionCard(icon: "book.fill", title: title, color: .orange) {
-            EmptyView()
+            if count <= inlineThreshold {
+                discoveryList
+            } else {
+                DisclosureGroup("Show all") { discoveryList }
+            }
+        }
+    }
+
+    private var discoveryList: some View {
+        ForEach(Array(summary.pigdexDiscoveries.enumerated()), id: \.offset) { _, discovery in
+            Text(discovery).font(.caption)
         }
     }
 
