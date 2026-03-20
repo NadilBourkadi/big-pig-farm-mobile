@@ -111,6 +111,10 @@ extension GameConfig {
         static let dodgeMaxStep: Double = 1.0
         static let waypointReached: Double = 0.1
 
+        // MARK: - Social seeking
+
+        static let socialSeekRadius: Double = 30.0
+
         // MARK: - Campfire night attraction
 
         static let campfireAttractionRadius: Double = 10.0

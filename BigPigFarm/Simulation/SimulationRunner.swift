@@ -109,6 +109,8 @@ final class SimulationRunner {
         // Phases 6/7: Pregnancies + aging (separate batches — ageAllPigs must
         // see pregnancy updates from advancePregnancies via a fresh snapshot)
         state.withBatchUpdate { Birth.advancePregnancies(gameState: state, gameHours: gameHours) }
+        // SAFE: ageAllPigs calls getPigsList() once at entry, then only updates/removes.
+        // Do NOT add any getPigsList() call after removeGuineaPig inside this scope.
         state.withBatchUpdate {
             for deadPig in Birth.ageAllPigs(gameState: state, gameHours: gameHours) {
                 behaviorController.cleanupDeadPig(deadPig.id)
@@ -116,7 +118,7 @@ final class SimulationRunner {
         }
 
         // Phases 8/9/10: Culling + selling + breeding check
-        processEconomyPhase()
+        state.withBatchUpdate { processEconomyPhase() }
 
         // Phase 11: Contract refresh/expiry
         checkContractRefresh()

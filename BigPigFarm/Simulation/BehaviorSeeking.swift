@@ -268,13 +268,11 @@ enum BehaviorSeeking {
         controller: BehaviorController,
         pig: GuineaPig
     ) -> GuineaPig? {
-        // Wide radius search — covers 60×60 grid cells (larger than map height).
-        let socialSeekRadius: Double = 30.0
         var nearest: GuineaPig?
         var bestDistSq = Double.infinity
         let nearby = controller.collision.spatialGrid.getNearby(
             x: pig.position.x, y: pig.position.y,
-            radius: socialSeekRadius,
+            radius: GameConfig.Behavior.socialSeekRadius,
             pigs: controller.gameState.guineaPigs
         )
         for other in nearby where other.id != pig.id {

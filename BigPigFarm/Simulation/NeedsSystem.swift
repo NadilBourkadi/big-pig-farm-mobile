@@ -359,8 +359,7 @@ extension NeedsSystem {
                 x: pig.position.x, y: pig.position.y,
                 radius: radius, pigs: pigDict
             )
-            // Subtract 1 for the pig itself (getNearby includes it).
-            counts[pig.id] = max(0, nearby.count - 1)
+            counts[pig.id] = nearby.filter { $0.id != pig.id }.count
         }
         return counts
     }
