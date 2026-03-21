@@ -97,9 +97,11 @@ final class SimulationRunner {
 
         // Phases 3/3b: Behaviors + courtship → pregnancies
         state.withBatchUpdate { updateBehaviorsPhase(gameMinutes: gameMinutes) }
-        // Safety net: rebuild so separation sees all post-behavior positions,
-        // catching any pigs that crossed bucket boundaries during the behavior phase.
-        behaviorController.collision.rebuildSpatialGrid()
+        // BehaviorMovement calls notifyPigMoved() after each move, so the grid
+        // is current going into separation. Note: separateOverlappingPigs() does
+        // NOT call notifyPigMoved — the grid may be stale for boundary-crossing
+        // pigs after separation, but rebuildSpatialGrid() at the top of the next
+        // tick re-syncs everything before it matters.
         state.withBatchUpdate { behaviorController.separateOverlappingPigs() }
         state.withBatchUpdate { behaviorController.rescueNonWalkablePigs(state.getPigsList()) }
 
@@ -133,6 +135,9 @@ final class SimulationRunner {
             DebugLogger.shared.syncToiCloud()
             #endif
         }
+
+        // Bump tick counter so FarmScene knows a new tick happened.
+        state.advanceSimulationTick()
     }
 
     // MARK: - Phase Helpers
@@ -221,19 +226,31 @@ final class SimulationRunner {
 
     // MARK: - Private Helpers
 
-    /// Encode game state and write to disk. Guards against re-entrant saves.
+    /// Encode game state on the main actor, then dispatch the file write to a
+    /// background thread. Encoding is synchronous (needs @MainActor state reads),
+    /// but the I/O is fire-and-forget — atomic writes handle concurrent safety.
+    ///
+    /// `isSaving` is cleared before dispatch. A Swift 6 strict-concurrency
+    /// limitation prevents resetting it from inside `Task.detached` (capturing
+    /// `@MainActor self` in a `@Sendable` closure is a sending violation).
+    /// This is safe because saves are 300 ticks apart (~30 s) and file writes
+    /// for 100–200 KB take < 10 ms — overlap is impossible in practice.
     private func backgroundSave() {
         guard let state else { return }
         guard !isSaving else { return }
         isSaving = true
-        defer { isSaving = false }
         let previousLastSave = state.lastSave
         state.lastSave = Date()
         guard let data = try? state.encodeToJSON() else {
             state.lastSave = previousLastSave
+            isSaving = false
             return
         }
-        try? saveManager.saveData(data)
+        isSaving = false
+        let manager = saveManager
+        Task.detached(priority: .utility) {
+            try? manager.saveData(data)
+        }
     }
 
     private func recordTimestamp(_ time: CFTimeInterval) {

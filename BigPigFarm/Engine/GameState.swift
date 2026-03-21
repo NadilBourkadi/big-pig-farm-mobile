@@ -49,6 +49,14 @@ final class GameState: @unchecked Sendable {
     var speed: GameSpeed = .normal
     var isPaused: Bool = false
 
+    // MARK: - Simulation Tick Counter
+
+    /// Monotonically increasing tick counter. Used by FarmScene to gate sprite
+    /// sync to simulation ticks (~10 TPS) instead of render frames (~60 FPS).
+    /// `@ObservationIgnored` prevents SwiftUI re-renders at tick rate.
+    @ObservationIgnored
+    var simulationTick: UInt64 = 0
+
     // MARK: - Session Tracking
 
     var sessionStart = Date()
@@ -96,6 +104,15 @@ final class GameState: @unchecked Sendable {
 // MARK: - GameState Mutation Methods
 
 extension GameState {
+    // MARK: - Tick Counter
+
+    /// Advance the simulation tick counter. Called once at the end of each
+    /// `SimulationRunner.tick()`. FarmScene compares this against its local
+    /// `lastSyncedTick` to skip redundant sprite sync on non-tick frames.
+    func advanceSimulationTick() {
+        simulationTick &+= 1
+    }
+
     // MARK: - Batch Update API
 
     /// Begin suppressing pig-list cache invalidation.

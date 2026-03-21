@@ -88,9 +88,9 @@ extension FarmScene {
             return
         }
         // Pulse: bright for 2 s, dim for 1 s, at 10 TPS.
-        let cycleFrames = GameConfig.Simulation.ticksPerSecond * 3
-        let brightFrames = GameConfig.Simulation.ticksPerSecond * 2
-        let isBright = (frameCount % cycleFrames) < brightFrames
+        let cycleFrames = UInt64(GameConfig.Simulation.ticksPerSecond * 3)
+        let brightFrames = UInt64(GameConfig.Simulation.ticksPerSecond * 2)
+        let isBright = (gameState.simulationTick % cycleFrames) < brightFrames
         node.showIndicator(type: indicatorName, bright: isBright)
     }
 }
