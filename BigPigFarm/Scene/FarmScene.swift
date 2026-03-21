@@ -102,6 +102,7 @@ class FarmScene: SKScene {
 
     var indicatorTimers: [UUID: IndicatorTimer] = [:]
     var frameCount: Int = 0
+    private var lastSyncedTick: UInt64 = 0
 
     // MARK: - Init
 
@@ -182,8 +183,15 @@ extension FarmScene {
             rebuildTerrain()
         }
 
-        syncFacilities()
-        syncPigs()
+        // Only sync sprites when the simulation has ticked since the last frame,
+        // reducing sync from ~60/s (render rate) to ~10/s (tick rate).
+        // Edit mode forces per-frame sync for immediate visual feedback during drag.
+        let currentTick = gameState.simulationTick
+        if currentTick != lastSyncedTick || isEditMode {
+            lastSyncedTick = currentTick
+            syncFacilities()
+            syncPigs()
+        }
 
         // Only track a selected pig when the viewport is small enough that the
         // pig could be off-screen. At fit-zoom the whole farm is visible, so
