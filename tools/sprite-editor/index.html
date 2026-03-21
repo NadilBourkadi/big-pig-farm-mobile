@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Pig Farm — Sprite Editor</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+<!-- Sprite list -->
+<div id="sprite-list">
+    <h3>Sprites</h3>
+    <div id="sprite-tree"></div>
+</div>
+
+<!-- Center area -->
+<div id="center">
+    <div id="toolbar">
+        <label>Palette:</label>
+        <select id="palette-select"></select>
+        <label>Zoom:</label>
+        <input type="range" id="zoom-slider" min="8" max="40" value="20">
+        <button id="tool-paint" class="active-tool" title="Paint (P)">Paint</button>
+        <button id="tool-erase" title="Erase (E)">Erase</button>
+        <button id="tool-pick" title="Eyedropper (I)">Pick</button>
+        <button id="tool-fill" title="Flood Fill (G)">Fill</button>
+        <button id="tool-select" title="Select (S)">Select</button>
+        <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button id="btn-redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+        <button id="btn-grid-toggle" title="Toggle grid lines">Grid</button>
+        <span style="width:1px;height:16px;background:#444;margin:0 4px"></span>
+        <button id="btn-pin" title="Pin overlay (T)">Pin</button>
+        <label id="overlay-opacity-label" style="display:none">Opacity:</label>
+        <input type="range" id="overlay-opacity" min="10" max="100" value="55" style="display:none;width:80px">
+        <span id="overlay-info"></span>
+        <span style="width:1px;height:16px;background:#444;margin:0 4px"></span>
+        <span style="position:relative;display:inline-block">
+            <button id="btn-duplicate" title="Duplicate From... (D)">Duplicate</button>
+            <div id="duplicate-dropdown"></div>
+        </span>
+        <span style="flex:1"></span>
+        <button id="btn-save" style="background:#e94560;color:#fff;font-weight:bold;">Save Changes</button>
+    </div>
+    <div id="grid-container">
+        <div id="pixel-grid"></div>
+    </div>
+    <div id="info-bar">
+        <span id="info-pos">—</span>
+        <span id="info-key">—</span>
+        <span id="info-pinned" style="display:none"></span>
+        <span id="info-dims">—</span>
+        <span id="info-dirty">Clean</span>
+    </div>
+    <div id="preview-bar"></div>
+</div>
+
+<!-- Palette panel -->
+<div id="palette-panel">
+    <h3>Palette Keys</h3>
+    <div id="palette-keys"></div>
+    <button id="btn-add-color">+ Add Color</button>
+</div>
+
+<!-- Colour editor popup (positioned dynamically) -->
+<div id="color-editor-popup"></div>
+
+<script src="editor.js"></script>
+</body>
+</html>
