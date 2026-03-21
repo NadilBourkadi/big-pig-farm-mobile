@@ -53,6 +53,11 @@ final class SimulationRunner {
     /// Measured ticks per second, updated each tick.
     private(set) var currentTPS: Double = 0.0
 
+    // MARK: - Performance Telemetry
+
+    private var perfLogCounter: Int = 0
+    private let perfLogInterval: Int = 100
+
     // MARK: - Init
 
     init(state: GameState, behaviorController: BehaviorController, saveManager: SaveManager) {
@@ -75,7 +80,8 @@ final class SimulationRunner {
     /// Process one simulation tick. `gameMinutes` is already speed-scaled by GameEngine.
     func tick(gameMinutes: Double) {
         guard let state else { return }
-        recordTimestamp(CACurrentMediaTime())
+        let tickStart = CACurrentMediaTime()
+        recordTimestamp(tickStart)
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         DebugLogger.shared.setGameDay(state.gameTime.day)
         #endif
@@ -135,6 +141,10 @@ final class SimulationRunner {
             DebugLogger.shared.syncToiCloud()
             #endif
         }
+
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        logPerfTelemetry(tickStart: tickStart)
+        #endif
 
         // Bump tick counter so FarmScene knows a new tick happened.
         state.advanceSimulationTick()
@@ -241,17 +251,55 @@ final class SimulationRunner {
         isSaving = true
         let previousLastSave = state.lastSave
         state.lastSave = Date()
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        let encodeStart = CACurrentMediaTime()
+        #endif
         guard let data = try? state.encodeToJSON() else {
             state.lastSave = previousLastSave
             isSaving = false
             return
         }
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        let encodeMs = (CACurrentMediaTime() - encodeStart) * 1000.0
+        DebugLogger.shared.log(
+            category: .performance, level: .info,
+            message: "save: encode \(String(format: "%.1f", encodeMs))ms, \(data.count) bytes, \(state.pigCount) pigs",
+            payload: [
+                "encodeDurationMs": String(format: "%.2f", encodeMs),
+                "dataBytes": String(data.count),
+                "pigCount": String(state.pigCount),
+            ]
+        )
+        #endif
         isSaving = false
         let manager = saveManager
         Task.detached(priority: .utility) {
             try? manager.saveData(data)
         }
     }
+
+    #if (DEBUG || INTERNAL) && canImport(UIKit)
+    /// Log tick duration, TPS, and pig count every `perfLogInterval` ticks.
+    private func logPerfTelemetry(tickStart: CFTimeInterval) {
+        guard let state else { return }
+        perfLogCounter += 1
+        guard perfLogCounter >= perfLogInterval else { return }
+        perfLogCounter = 0
+        let tickMs = (CACurrentMediaTime() - tickStart) * 1000.0
+        let tpsStr = String(format: "%.1f", currentTPS)
+        let msStr = String(format: "%.1f", tickMs)
+        DebugLogger.shared.log(
+            category: .performance, level: .verbose,
+            message: "tick: \(msStr)ms, \(tpsStr) TPS, \(state.pigCount) pigs",
+            payload: [
+                "tickDurationMs": String(format: "%.2f", tickMs),
+                "tps": tpsStr,
+                "pigCount": String(state.pigCount),
+                "facilityCount": String(state.facilities.count),
+            ]
+        )
+    }
+    #endif
 
     private func recordTimestamp(_ time: CFTimeInterval) {
         tickTimestamps.append(time)
