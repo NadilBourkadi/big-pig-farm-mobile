@@ -62,9 +62,6 @@ enum OfflineProgressRunner {
 
         // 1. Advance game time
         state.gameTime.advance(minutes: hours * 60.0)
-        #if DEBUG || INTERNAL
-        DebugLogger.shared.setGameDay(state.gameTime.day)
-        #endif
 
         // 2-3. Decay needs + equilibrate
         decayAndEquilibrateNeeds(state: state, hours: hours)
@@ -136,15 +133,53 @@ enum OfflineProgressRunner {
 
     @MainActor
     private static func repositionPigs(state: GameState) {
+        var occupied = Set<GridPosition>()
+
         for var pig in state.getPigsList() {
-            if let areaId = pig.currentAreaId,
-               let pos = state.farm.findRandomWalkableInArea(areaId) {
-                pig.position = Position(x: Double(pos.x), y: Double(pos.y))
-            } else if let pos = state.farm.findRandomWalkable() {
-                pig.position = Position(x: Double(pos.x), y: Double(pos.y))
+            let placed: GridPosition?
+            if let areaId = pig.currentAreaId {
+                placed = findUnoccupiedWalkable(
+                    state: state, areaId: areaId, occupied: occupied
+                )
+            } else {
+                placed = findUnoccupiedWalkableAnywhere(state: state, occupied: occupied)
             }
+
+            if let pos = placed ?? findUnoccupiedWalkableAnywhere(state: state, occupied: occupied) {
+                pig.position = Position(x: Double(pos.x), y: Double(pos.y))
+                occupied.insert(pos)
+            }
+            // If even the global fallback returns nil (pigCount > total walkable cells),
+            // leave pig at its current position. This should never happen in practice.
             state.updateGuineaPig(pig)
         }
+    }
+
+    /// Find a random walkable cell in the given area that is not already occupied.
+    @MainActor
+    private static func findUnoccupiedWalkable(
+        state: GameState,
+        areaId: UUID,
+        occupied: Set<GridPosition>
+    ) -> GridPosition? {
+        // Prime the area walkable cache via findRandomWalkableInArea, then
+        // filter by the occupied set.
+        _ = state.farm.findRandomWalkableInArea(areaId)
+        guard let candidates = state.farm.areaWalkableCache[areaId] else { return nil }
+        let available = candidates.filter { !occupied.contains($0) }
+        return available.randomElement()
+    }
+
+    /// Find a random walkable cell anywhere on the farm that is not occupied.
+    @MainActor
+    private static func findUnoccupiedWalkableAnywhere(
+        state: GameState,
+        occupied: Set<GridPosition>
+    ) -> GridPosition? {
+        _ = state.farm.findRandomWalkable()
+        guard let candidates = state.farm.walkableCache else { return nil }
+        let available = candidates.filter { !occupied.contains($0) }
+        return available.randomElement()
     }
 
     @MainActor

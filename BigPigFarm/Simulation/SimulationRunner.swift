@@ -68,11 +68,22 @@ final class SimulationRunner {
 
     // MARK: - Offline Progress
 
+    /// Rebuild the spatial grid and resolve pig overlaps after offline
+    /// repositioning. Call before `resetAfterOffline()` so separation
+    /// operates on the post-catch-up positions.
+    func rebuildAndSeparateAfterOffline() {
+        behaviorController.collision.rebuildSpatialGrid()
+        behaviorController.separateOverlappingPigs()
+    }
+
     /// Clear all behavior tracking state after offline catch-up.
     /// Pigs have been repositioned to random locations, so pathfinding caches,
     /// unreachable-need backoffs, and failed-facility lists are all stale.
+    /// Decision timers are staggered to prevent thundering-herd facility seeking.
     func resetAfterOffline() {
         behaviorController.resetAllTracking()
+        guard let state else { return }
+        behaviorController.staggerDecisionTimers(pigIds: state.guineaPigs.keys)
     }
 
     // MARK: - Tick Entry Point

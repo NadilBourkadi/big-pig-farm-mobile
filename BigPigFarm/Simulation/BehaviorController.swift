@@ -104,6 +104,16 @@ final class BehaviorController {
         facilityManager.resetAll()
     }
 
+    /// Pre-seed decision timers with random offsets spread across the full
+    /// decision interval. Prevents thundering-herd behavior when many pigs
+    /// start making decisions simultaneously (e.g. after offline catch-up).
+    func staggerDecisionTimers(pigIds: some Collection<UUID>) {
+        let interval = GameConfig.Simulation.decisionIntervalSeconds
+        for pigId in pigIds {
+            decisionTimers[pigId] = Double.random(in: 0..<interval)
+        }
+    }
+
     /// Resolve all overlapping pig positions by applying separation forces.
     func separateOverlappingPigs() {
         collision.separateOverlappingPigs()
