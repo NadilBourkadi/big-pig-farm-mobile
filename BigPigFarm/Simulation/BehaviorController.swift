@@ -219,7 +219,22 @@ extension BehaviorController {
             blockedTimers.removeValue(forKey: pig.id)
             stuckPositions.removeValue(forKey: pig.id)
             stuckTimers.removeValue(forKey: pig.id)
+            let preArrivalState = pig.behaviorState
             facilityManager.checkArrivedAtFacility(pig: &pig)
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            if pig.behaviorState != preArrivalState {
+                DebugLogger.shared.log(
+                    category: .behavior, level: .info,
+                    message: "\(pig.name): \(preArrivalState.rawValue) -> \(pig.behaviorState.rawValue) (arrival)",
+                    pigId: pig.id, pigName: pig.name,
+                    payload: [
+                        "fromState": preArrivalState.rawValue,
+                        "toState": pig.behaviorState.rawValue,
+                        "trigger": "checkArrivedAtFacility",
+                    ]
+                )
+            }
+            #endif
         }
 
         // Courting: advance together-timer when the initiator is adjacent to partner
