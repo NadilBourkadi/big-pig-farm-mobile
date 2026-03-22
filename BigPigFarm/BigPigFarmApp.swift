@@ -71,6 +71,7 @@ struct BigPigFarmApp: App {
 
         #if DEBUG || INTERNAL
         DebugLogger.shared.open()
+        DebugLogger.shared.setGameDay(state.gameTime.day)
         DebugLogger.shared.initializeiCloudContainer()
         let server = DebugServer(logger: DebugLogger.shared)
         server.start()

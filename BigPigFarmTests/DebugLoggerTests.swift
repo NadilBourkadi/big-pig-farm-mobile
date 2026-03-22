@@ -269,6 +269,28 @@ struct DebugLoggerTests {
         }
     }
 
+    // MARK: - Game Day Seeding
+
+    @Test("setGameDay seeds correct day for subsequent log events")
+    func gameDaySeeding() async throws {
+        let (logger, dir) = makeLogger()
+        defer { cleanup(logger, dir: dir) }
+
+        // Seed the day as the app does immediately after open()
+        logger.setGameDay(42)
+        logger.log(category: .simulation, level: .info, message: "after seed")
+        // Advance the day (simulates offline checkpoint advancing game time)
+        logger.setGameDay(43)
+        logger.log(category: .simulation, level: .info, message: "next day")
+        logger.flush()
+
+        let events = await logger.query(limit: 10)
+        let sorted = events.sorted { $0.id < $1.id }
+        try #require(sorted.count == 2)
+        #expect(sorted[0].gameDay == 42, "Event after setGameDay(42) should have day 42")
+        #expect(sorted[1].gameDay == 43, "Event after setGameDay(43) should have day 43")
+    }
+
     // MARK: - DebugCategory Mapping
 
     @Test("DebugCategory.from maps eventType strings correctly")

@@ -62,6 +62,9 @@ enum OfflineProgressRunner {
 
         // 1. Advance game time
         state.gameTime.advance(minutes: hours * 60.0)
+        #if DEBUG || INTERNAL
+        DebugLogger.shared.setGameDay(state.gameTime.day)
+        #endif
 
         // 2-3. Decay needs + equilibrate
         decayAndEquilibrateNeeds(state: state, hours: hours)
