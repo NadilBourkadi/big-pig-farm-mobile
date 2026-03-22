@@ -71,7 +71,6 @@ struct BigPigFarmApp: App {
 
         #if DEBUG || INTERNAL
         DebugLogger.shared.open()
-        DebugLogger.shared.setGameDay(state.gameTime.day)
         DebugLogger.shared.initializeiCloudContainer()
         let server = DebugServer(logger: DebugLogger.shared)
         server.start()
@@ -141,8 +140,11 @@ struct BigPigFarmApp: App {
             state: gameState,
             wallClockSeconds: wallClockSeconds
         )
+        // Resolve pig overlaps from random repositioning before the first tick.
+        runner.rebuildAndSeparateAfterOffline()
         // Clear stale behavior tracking (pathfinding caches, unreachable-need
-        // backoffs, failed facilities) — pigs have been repositioned.
+        // backoffs, failed facilities) and stagger decision timers to prevent
+        // thundering-herd facility seeking.
         runner.resetAfterOffline()
         // Advance lastSave unconditionally so a failed disk write doesn't cause
         // the next foreground transition to re-simulate the same time window.
