@@ -23,9 +23,10 @@ struct StatusInfoRow: View {
                 .font(.caption)
 
             if showLowPopulationWarning {
-                Text("LOW POP")
+                Text(lowPopulationWarningText)
                     .font(.caption2.bold())
                     .foregroundStyle(.red)
+                    .accessibilityLabel(lowPopulationAccessibilityLabel)
             }
 
             Spacer()
@@ -68,6 +69,18 @@ private extension StatusInfoRow {
         guard gameState.breedingProgram.enabled else { return false }
         let adultCount = gameState.getPigsList().filter { !$0.isBaby }.count
         return adultCount <= GameConfig.Breeding.minBreedingPopulation
+    }
+
+    /// Player-facing warning text showing the number of adults needed for breeding.
+    var lowPopulationWarningText: String {
+        let needed = GameConfig.Breeding.minBreedingPopulation + 1
+        return "Need \(needed)+ adults"
+    }
+
+    /// VoiceOver label providing full context for the low-population warning.
+    var lowPopulationAccessibilityLabel: String {
+        let needed = GameConfig.Breeding.minBreedingPopulation + 1
+        return "Low population warning: you need at least \(needed) adult pigs for breeding"
     }
 }
 

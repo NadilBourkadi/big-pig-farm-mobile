@@ -208,6 +208,20 @@ struct StatusBarLowPopWarningTests {
         #expect(!computeLowPopWarning(state: state))
     }
 
+    @Test func warningTextReferencesThresholdFromConfig() {
+        let text = computeLowPopWarningText()
+        // With minBreedingPopulation == 2, this resolves to "Need 3+ adults"
+        let needed = GameConfig.Breeding.minBreedingPopulation + 1
+        #expect(text == "Need \(needed)+ adults")
+    }
+
+    @Test func accessibilityLabelIncludesThreshold() {
+        let label = computeLowPopAccessibilityLabel()
+        let needed = GameConfig.Breeding.minBreedingPopulation + 1
+        #expect(label.contains("at least \(needed)"))
+        #expect(label.contains("breeding"))
+    }
+
     @Test func babiesDoNotCountTowardPopulation() {
         let state = makeGameState()
         state.breedingProgram.enabled = true
@@ -331,4 +345,14 @@ private func computeLowPopWarning(state: GameState) -> Bool {
     guard state.breedingProgram.enabled else { return false }
     let adultCount = state.getPigsList().filter { !$0.isBaby }.count
     return adultCount <= GameConfig.Breeding.minBreedingPopulation
+}
+
+private func computeLowPopWarningText() -> String {
+    let needed = GameConfig.Breeding.minBreedingPopulation + 1
+    return "Need \(needed)+ adults"
+}
+
+private func computeLowPopAccessibilityLabel() -> String {
+    let needed = GameConfig.Breeding.minBreedingPopulation + 1
+    return "Low population warning: you need at least \(needed) adult pigs for breeding"
 }
