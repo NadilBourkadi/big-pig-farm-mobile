@@ -1049,28 +1049,56 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Save
+// Save & Export
 // ---------------------------------------------------------------------------
-document.getElementById('btn-save').onclick = async () => {
+function buildSavePayload() {
     const exportData = JSON.parse(JSON.stringify(DATA));
     exportData.sprites = JSON.parse(JSON.stringify(sprites));
     exportData.palettes = JSON.parse(JSON.stringify(palettes));
     exportData.palette_keys = JSON.parse(JSON.stringify(paletteKeys));
-    const json = JSON.stringify(exportData, null, 2);
+    return JSON.stringify(exportData, null, 2);
+}
 
+function clearDirtyState(message) {
+    dirtySprites.clear();
+    paletteDirty = false;
+    document.querySelectorAll('.sprite-item.dirty').forEach(el => el.classList.remove('dirty'));
+    document.getElementById('info-dirty').textContent = message;
+}
+
+async function postSave(endpoint) {
+    const json = buildSavePayload();
+    const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: json,
+    });
+    return resp;
+}
+
+document.getElementById('btn-save').onclick = async () => {
     try {
-        const resp = await fetch('/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: json,
-        });
+        const resp = await postSave('/save');
         if (resp.ok) {
-            dirtySprites.clear();
-            paletteDirty = false;
-            document.querySelectorAll('.sprite-item.dirty').forEach(el => el.classList.remove('dirty'));
-            document.getElementById('info-dirty').textContent = 'Saved!';
+            clearDirtyState('Saved!');
         } else {
             document.getElementById('info-dirty').textContent = 'Save failed — check server';
+        }
+    } catch (e) {
+        document.getElementById('info-dirty').textContent = 'Save failed — is the server running?';
+    }
+};
+
+document.getElementById('btn-save-export').onclick = async () => {
+    document.getElementById('info-dirty').textContent = 'Saving & exporting...';
+    try {
+        const resp = await postSave('/save-and-export');
+        if (resp.ok) {
+            clearDirtyState('Saved & exported!');
+        } else {
+            const text = await resp.text();
+            document.getElementById('info-dirty').textContent = 'Export failed — check server';
+            console.error('Export failed:', text);
         }
     } catch (e) {
         document.getElementById('info-dirty').textContent = 'Save failed — is the server running?';
