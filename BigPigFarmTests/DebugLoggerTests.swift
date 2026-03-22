@@ -44,6 +44,22 @@ struct DebugLoggerTests {
         #expect(events.contains { $0.message == "courtship started" })
     }
 
+    @Test("flushBlocking guarantees write completes before returning")
+    func flushBlockingWritesImmediately() async {
+        let (logger, dir) = makeLogger()
+        defer { cleanup(logger, dir: dir) }
+
+        logger.log(category: .behavior, level: .info, message: "before background")
+        logger.log(category: .facility, level: .warning, message: "arrival failed")
+        logger.flushBlocking()
+
+        // Events must be queryable immediately — no sleep/delay needed
+        let events = await logger.query(limit: 10)
+        #expect(events.count == 2)
+        #expect(events.contains { $0.message == "before background" })
+        #expect(events.contains { $0.message == "arrival failed" })
+    }
+
     // MARK: - Query Filtering
 
     @Test("Query by category returns only matching events")
