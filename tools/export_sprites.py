@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Export Big Pig Farm sprites from Python pixel data to PNG image sets.
+"""Export Big Pig Farm sprites from pixel data to PNG image sets.
 
 Usage:
     python tools/export_sprites.py \\
-        --source ../big-pig-farm \\
         --output BigPigFarm/Resources/Assets.xcassets/Sprites \\
+        [--source ../big-pig-farm] \\
         [--scale 4] \\
         [--portrait-scale 8] \\
         [--category {all,pigs,facilities,indicators,portraits,terrain,patterns}]
 
-Reads pixel grid data from the Python game repo and writes Xcode .imageset
-directories (with @1x/@2x/@3x PNG variants and Contents.json) to the output path.
+Reads sprite pixel data from tools/sprite-editor/sprite-data.json (pigs,
+facilities, indicators, patterns) and optionally from the Python game repo
+(portraits, terrain — these use algorithmic generation not in the JSON).
 
 Requires: Pillow (pip install Pillow)
 """
@@ -22,6 +23,65 @@ import sys
 from pathlib import Path
 
 from PIL import Image
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SPRITE_DATA_FILE = REPO_ROOT / "tools" / "sprite-editor" / "sprite-data.json"
+
+
+# ---------------------------------------------------------------------------
+# Sprite data loading from JSON
+# ---------------------------------------------------------------------------
+
+def load_sprite_data() -> dict:
+    """Load and prepare sprite data from sprite-data.json.
+
+    Returns a dict with keys:
+        pig_palettes: {COLOR_NAME: {key: hex, ...}, ...}
+        pig_adult_sprites: {sprite_key: pixel_grid, ...}  (with left variants)
+        pig_baby_sprites: {sprite_key: pixel_grid, ...}  (with left variants)
+        facility_palettes: {facility_type: {key: hex, ...}, ...}
+        facility_sprites: {sprite_key: pixel_grid, ...}
+        indicator_palettes: {name: {"bright": {...}, "dim": {...}}, ...}
+        indicator_sprites: {indicator_name: pixel_grid, ...}
+        pig_adult_idle_right: pixel_grid  (for pattern masks)
+        pig_baby_idle_right: pixel_grid   (for pattern masks)
+    """
+    if not SPRITE_DATA_FILE.exists():
+        raise FileNotFoundError(
+            f"Sprite data not found: {SPRITE_DATA_FILE}\n"
+            "Run the sprite data seed step first."
+        )
+
+    with open(SPRITE_DATA_FILE) as f:
+        data = json.load(f)
+
+    pig_palettes = {}
+    for color_name, palette in data["palettes"]["pig"].items():
+        pig_palettes[color_name] = {k: v for k, v in palette.items() if k != "T"}
+
+    pig_adult_sprites = {k: v["pixels"] for k, v in data["sprites"]["pig_adult"].items()}
+    pig_baby_sprites = {k: v["pixels"] for k, v in data["sprites"]["pig_baby"].items()}
+
+    facility_palettes = data["palettes"]["facility"]
+    facility_sprites = {k: v["pixels"] for k, v in data["sprites"]["facility_normal"].items()}
+
+    indicator_palettes = data["palettes"]["indicator"]
+    indicator_sprites = {k: v["pixels"] for k, v in data["sprites"]["indicator_normal"].items()}
+
+    pig_adult_idle = data["sprites"]["pig_adult"]["idle_right"]["pixels"]
+    pig_baby_idle = data["sprites"]["pig_baby"]["idle_right"]["pixels"]
+
+    return {
+        "pig_palettes": pig_palettes,
+        "pig_adult_sprites": pig_adult_sprites,
+        "pig_baby_sprites": pig_baby_sprites,
+        "facility_palettes": facility_palettes,
+        "facility_sprites": facility_sprites,
+        "indicator_palettes": indicator_palettes,
+        "indicator_sprites": indicator_sprites,
+        "pig_adult_idle_right": pig_adult_idle,
+        "pig_baby_idle_right": pig_baby_idle,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -46,8 +106,6 @@ def render_grid_to_image(
     Args:
         grid: 2D array of palette keys (str) or None (transparent).
         palette: Mapping from palette key to hex color string.
-            Pig palettes include a None key (wisp color) — remove it before calling.
-            Facility, indicator, and portrait palettes do not contain None keys.
         scale: Integer scale factor (each art pixel becomes scale x scale PNG pixels).
 
     Returns:
@@ -60,11 +118,9 @@ def render_grid_to_image(
     for y, row in enumerate(grid):
         for x, key in enumerate(row):
             if key is None:
-                continue  # Transparent pixel
+                continue
             color_hex = palette.get(key)
             if color_hex is None:
-                # Key not found in palette — treat key as literal hex color string.
-                # This handles portrait grids that embed raw hex values for background pixels.
                 color_hex = key
             img.putpixel((x, y), hex_to_rgba(color_hex))
 
@@ -78,14 +134,7 @@ def render_grid_to_image(
 
 
 def write_imageset(img_1x: Image.Image, output_dir: Path, name: str) -> None:
-    """Write an Xcode image set with @1x, @2x, @3x variants.
-
-    Creates:
-        output_dir/name.imageset/Contents.json
-        output_dir/name.imageset/name@1x.png
-        output_dir/name.imageset/name@2x.png
-        output_dir/name.imageset/name@3x.png
-    """
+    """Write an Xcode image set with @1x, @2x, @3x variants."""
     imageset_dir = output_dir / f"{name}.imageset"
     imageset_dir.mkdir(parents=True, exist_ok=True)
 
@@ -124,26 +173,20 @@ def write_namespace_contents_json(directory: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Export functions
+# Export functions — JSON-backed (no Python repo needed)
 # ---------------------------------------------------------------------------
 
-def export_pig_sprites(source_path: Path, output_dir: Path, scale: int) -> int:
-    """Export all pig sprites as PNG image sets.
-
-    Returns the number of image sets created.
-    """
-    from big_pig_farm.data.pig_sprites import PIG_PIXELS_ADULT, PIG_PIXELS_BABY
-    from big_pig_farm.data.sprite_engine import PALETTES
-
+def export_pig_sprites(sprite_data: dict, output_dir: Path, scale: int) -> int:
+    """Export all pig sprites as PNG image sets."""
     pigs_dir = output_dir / "Pigs"
     write_namespace_contents_json(pigs_dir)
     count = 0
 
-    for color_name, raw_palette in PALETTES.items():
-        # Remove None key — grid cells with None are transparent, not the wisp color.
-        palette = {k: v for k, v in raw_palette.items() if k is not None}
-
-        for age_label, sprites in [("adult", PIG_PIXELS_ADULT), ("baby", PIG_PIXELS_BABY)]:
+    for color_name, palette in sprite_data["pig_palettes"].items():
+        for age_label, sprites in [
+            ("adult", sprite_data["pig_adult_sprites"]),
+            ("baby", sprite_data["pig_baby_sprites"]),
+        ]:
             for sprite_key, grid in sprites.items():
                 asset_name = f"pig_{age_label}_{color_name.lower()}_{sprite_key}"
                 img = render_grid_to_image(grid, palette, scale=scale)
@@ -153,31 +196,25 @@ def export_pig_sprites(source_path: Path, output_dir: Path, scale: int) -> int:
     return count
 
 
-def export_facility_sprites(source_path: Path, output_dir: Path, scale: int) -> int:
-    """Export all facility sprites as PNG image sets.
-
-    Returns the number of image sets created.
-    """
-    from big_pig_farm.data.facility_pixels import FACILITY_PALETTES, FACILITY_PIXELS
-
+def export_facility_sprites(sprite_data: dict, output_dir: Path, scale: int) -> int:
+    """Export all facility sprites as PNG image sets."""
     facilities_dir = output_dir / "Facilities"
     write_namespace_contents_json(facilities_dir)
     count = 0
 
-    for sprite_key, grid in FACILITY_PIXELS.items():
-        # State variants (food_bowl_empty, food_bowl_full) use the base type palette.
+    for sprite_key, grid in sprite_data["facility_sprites"].items():
         base_type = sprite_key
         for suffix in ("_empty", "_full"):
             if sprite_key.endswith(suffix):
                 base_type = sprite_key[: -len(suffix)]
                 break
 
-        palette = FACILITY_PALETTES.get(base_type)
+        palette = sprite_data["facility_palettes"].get(base_type)
         if palette is None:
             raise ValueError(
                 f"No palette for facility type '{base_type}' "
                 f"(from sprite key '{sprite_key}'). "
-                f"Available: {sorted(FACILITY_PALETTES.keys())}"
+                f"Available: {sorted(sprite_data['facility_palettes'].keys())}"
             )
 
         asset_name = f"facility_{sprite_key}"
@@ -188,32 +225,24 @@ def export_facility_sprites(source_path: Path, output_dir: Path, scale: int) -> 
     return count
 
 
-def export_indicator_sprites(source_path: Path, output_dir: Path, scale: int) -> int:
-    """Export all indicator sprites as PNG image sets.
-
-    Returns the number of image sets created.
-    """
-    from big_pig_farm.data.indicator_pixels import (
-        INDICATOR_PALETTES,
-        INDICATOR_PIXELS_NORMAL,
-    )
-
+def export_indicator_sprites(sprite_data: dict, output_dir: Path, scale: int) -> int:
+    """Export all indicator sprites as PNG image sets."""
     indicators_dir = output_dir / "Indicators"
     write_namespace_contents_json(indicators_dir)
     count = 0
 
-    for indicator_name, grid in INDICATOR_PIXELS_NORMAL.items():
-        if indicator_name not in INDICATOR_PALETTES:
+    for indicator_name, grid in sprite_data["indicator_sprites"].items():
+        if indicator_name not in sprite_data["indicator_palettes"]:
             raise ValueError(
                 f"No palette for indicator '{indicator_name}'. "
-                f"Available: {sorted(INDICATOR_PALETTES.keys())}"
+                f"Available: {sorted(sprite_data['indicator_palettes'].keys())}"
             )
         for brightness in ["bright", "dim"]:
-            if brightness not in INDICATOR_PALETTES[indicator_name]:
+            if brightness not in sprite_data["indicator_palettes"][indicator_name]:
                 raise ValueError(
                     f"No '{brightness}' variant for indicator '{indicator_name}'"
                 )
-            palette = INDICATOR_PALETTES[indicator_name][brightness]
+            palette = sprite_data["indicator_palettes"][indicator_name][brightness]
             asset_name = f"indicator_{indicator_name}_{brightness}"
             img = render_grid_to_image(grid, palette, scale=scale)
             write_imageset(img, indicators_dir, asset_name)
@@ -222,11 +251,98 @@ def export_indicator_sprites(source_path: Path, output_dir: Path, scale: int) ->
     return count
 
 
+def export_pattern_masks(sprite_data: dict, output_dir: Path, scale: int) -> int:
+    """Export pre-baked pattern mask PNGs for Dutch, Chinchilla, and Himalayan."""
+    patterns_dir = output_dir / "Patterns"
+    write_namespace_contents_json(patterns_dir)
+    count = 0
+
+    white_pixel = (255, 255, 255, 255)
+    transparent = (0, 0, 0, 0)
+    body_keys = {"fur", "nose", "eye", "pupil", "belly", "paw", "tooth", "ear", "blush", "tear"}
+
+    for age_label, reference_grid in [
+        ("adult", sprite_data["pig_adult_idle_right"]),
+        ("baby", sprite_data["pig_baby_idle_right"]),
+    ]:
+        height = len(reference_grid)
+        width = max(len(row) for row in reference_grid)
+
+        def at(row: int, col: int) -> str | None:
+            if 0 <= row < height and 0 <= col < len(reference_grid[row]):
+                return reference_grid[row][col]
+            return None
+
+        def is_body(key: str | None) -> bool:
+            return key is not None and key in body_keys
+
+        def is_inner_fur(row: int, col: int) -> bool:
+            """Fur pixel with all 4 cardinal neighbors being body pixels.
+
+            Edge pixels (neighbors out-of-bounds) return None from at(), which
+            fails is_body(), so edge fur is intentionally excluded from the mask.
+            """
+            return (
+                at(row, col) == "fur"
+                and is_body(at(row - 1, col))
+                and is_body(at(row + 1, col))
+                and is_body(at(row, col - 1))
+                and is_body(at(row, col + 1))
+            )
+
+        dutch_img = Image.new("RGBA", (width, height), transparent)
+        for row in range(height):
+            for col in range(width):
+                key = at(row, col)
+                if key != "fur":
+                    continue
+                in_forehead = row <= 3 and 3 <= col <= 10
+                in_belly = row >= 5
+                if in_forehead or in_belly:
+                    dutch_img.putpixel((col, row), white_pixel)
+        dutch_scaled = dutch_img.resize(
+            (width * scale, height * scale), resample=Image.NEAREST
+        )
+        write_imageset(dutch_scaled, patterns_dir, f"pattern_dutch_{age_label}_mask")
+        count += 1
+
+        chinchilla_img = Image.new("RGBA", (width, height), transparent)
+        for row in range(height):
+            for col in range(width):
+                if at(row, col) == "fur" and (row + col) % 3 == 0:
+                    chinchilla_img.putpixel((col, row), white_pixel)
+        chinchilla_scaled = chinchilla_img.resize(
+            (width * scale, height * scale), resample=Image.NEAREST
+        )
+        write_imageset(
+            chinchilla_scaled, patterns_dir, f"pattern_chinchilla_{age_label}_mask"
+        )
+        count += 1
+
+        himalayan_img = Image.new("RGBA", (width, height), transparent)
+        for row in range(height):
+            for col in range(width):
+                if is_inner_fur(row, col):
+                    himalayan_img.putpixel((col, row), white_pixel)
+        himalayan_scaled = himalayan_img.resize(
+            (width * scale, height * scale), resample=Image.NEAREST
+        )
+        write_imageset(
+            himalayan_scaled, patterns_dir, f"pattern_himalayan_{age_label}_mask"
+        )
+        count += 1
+
+    return count
+
+
+# ---------------------------------------------------------------------------
+# Export functions — Python-repo-backed (require --source)
+# ---------------------------------------------------------------------------
+
 def export_portraits(source_path: Path, output_dir: Path, portrait_scale: int) -> int:
     """Export representative portraits for all 144 phenotype combinations.
 
-    Uses a fixed seed per combination so output is deterministic (Pigdex previews).
-    Returns the number of image sets created.
+    Requires --source (uses generate_portrait from the Python repo).
     """
     from big_pig_farm.data.pig_portraits import generate_portrait
     from big_pig_farm.data.sprite_engine import PALETTES
@@ -246,7 +362,6 @@ def export_portraits(source_path: Path, output_dir: Path, portrait_scale: int) -
         for pattern in patterns:
             for intensity in intensities:
                 for roan in roan_states:
-                    # Fixed seed for deterministic Pigdex previews
                     pig_id = f"pigdex_{color}_{pattern}_{intensity}_{roan}"
                     grid = generate_portrait(color, pattern, intensity, roan, pig_id)
                     asset_name = f"portrait_{color.lower()}_{pattern}_{intensity}_{roan}"
@@ -260,8 +375,7 @@ def export_portraits(source_path: Path, output_dir: Path, portrait_scale: int) -
 def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int:
     """Export terrain tiles for each biome.
 
-    Each tile is 8x8 art pixels with subtle color variation for visual texture.
-    Returns the number of image sets created.
+    Requires --source (uses BIOMES data from the Python repo).
     """
     from big_pig_farm.data.sprites import WALL_GRAIN, WALL_PLANK, WALL_POST
     from big_pig_farm.entities.biomes import BIOMES, BiomeType
@@ -274,8 +388,6 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
     for biome_type, biome_info in BIOMES.items():
         biome_name = biome_type.value
 
-        # Floor tile: base floor_bg with 15% variation from floor_colors.
-        # Fixed seed ensures identical tiles across re-exports (deterministic asset pipeline).
         floor_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
         bg_rgba = hex_to_rgba(biome_info.floor_bg)
         rng = random.Random(f"terrain_{biome_name}_floor")
@@ -292,7 +404,6 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
         write_imageset(scaled_floor, terrain_dir, f"terrain_{biome_name}_floor")
         count += 1
 
-        # Wall tile: plank rows with 10% grain variation
         wall_planks = biome_info.wall_tint_plank or WALL_PLANK
         wall_grains = biome_info.wall_tint_grain or WALL_GRAIN
         wall_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
@@ -310,14 +421,11 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
         write_imageset(scaled_wall, terrain_dir, f"terrain_{biome_name}_wall")
         count += 1
 
-        # Post tile: solid WALL_POST color
         post_color = hex_to_rgba(WALL_POST)
         post_img = Image.new("RGBA", (tile_size * scale, tile_size * scale), post_color)
         write_imageset(post_img, terrain_dir, f"terrain_{biome_name}_post")
         count += 1
 
-    # Tunnel terrain — neutral grey stone, not tied to any biome.
-    # Colors from Python terrain_renderer.py: bgcolor="#3a3a3a", variation greys.
     tunnel_floor_bg = "#3a3a3a"
     tunnel_floor_colors = ["#808080", "#707070", "#909090", "#757575"]
     floor_img = Image.new("RGBA", (tile_size, tile_size), (0, 0, 0, 0))
@@ -362,103 +470,6 @@ def export_terrain_tiles(source_path: Path, output_dir: Path, scale: int) -> int
     return count
 
 
-def export_pattern_masks(source_path: Path, output_dir: Path, scale: int) -> int:
-    """Export pre-baked pattern mask PNGs for Dutch, Chinchilla, and Himalayan patterns.
-
-    Each mask is white where the pattern applies, transparent elsewhere.
-    Dalmatian and Roan masks are NOT pre-baked (they are seeded per pig UUID at runtime).
-    Returns the number of image sets created.
-    """
-    from big_pig_farm.data.pig_sprites import PIG_PIXELS_ADULT, PIG_PIXELS_BABY
-
-    patterns_dir = output_dir / "Patterns"
-    write_namespace_contents_json(patterns_dir)
-    count = 0
-
-    white_pixel = (255, 255, 255, 255)
-    transparent = (0, 0, 0, 0)
-
-    # Body pixel set — pixels that count as "inner body" for pattern analysis
-    body_keys = {"fur", "nose", "eye", "pupil", "belly", "paw", "tooth", "ear", "blush", "tear"}
-
-    for age_label, reference_grid in [
-        ("adult", PIG_PIXELS_ADULT["idle_right"]),
-        ("baby", PIG_PIXELS_BABY["idle_right"]),
-    ]:
-        height = len(reference_grid)
-        width = max(len(row) for row in reference_grid)
-
-        def at(row: int, col: int) -> str | None:
-            if 0 <= row < height and 0 <= col < len(reference_grid[row]):
-                return reference_grid[row][col]
-            return None
-
-        def is_body(key: str | None) -> bool:
-            return key is not None and key in body_keys
-
-        def is_inner_fur(row: int, col: int) -> bool:
-            """Fur pixel with all 4 cardinal neighbors being body pixels.
-
-            Edge pixels (neighbors out-of-bounds) return None from at(), which
-            fails is_body(), so edge fur is intentionally excluded from the mask.
-            This matches the Python source _apply_himalayan() which targets interior fur.
-            """
-            return (
-                at(row, col) == "fur"
-                and is_body(at(row - 1, col))
-                and is_body(at(row + 1, col))
-                and is_body(at(row, col - 1))
-                and is_body(at(row, col + 1))
-            )
-
-        # Dutch mask: forehead center (cols 3–10, rows 0–3) + chin/belly (rows 5–7)
-        dutch_img = Image.new("RGBA", (width, height), transparent)
-        for row in range(height):
-            for col in range(width):
-                key = at(row, col)
-                if key != "fur":
-                    continue
-                in_forehead = row <= 3 and 3 <= col <= 10
-                in_belly = row >= 5
-                if in_forehead or in_belly:
-                    dutch_img.putpixel((col, row), white_pixel)
-        dutch_scaled = dutch_img.resize(
-            (width * scale, height * scale), resample=Image.NEAREST
-        )
-        write_imageset(dutch_scaled, patterns_dir, f"pattern_dutch_{age_label}_mask")
-        count += 1
-
-        # Chinchilla mask: every fur pixel where (row + col) % 3 == 0
-        chinchilla_img = Image.new("RGBA", (width, height), transparent)
-        for row in range(height):
-            for col in range(width):
-                if at(row, col) == "fur" and (row + col) % 3 == 0:
-                    chinchilla_img.putpixel((col, row), white_pixel)
-        chinchilla_scaled = chinchilla_img.resize(
-            (width * scale, height * scale), resample=Image.NEAREST
-        )
-        write_imageset(
-            chinchilla_scaled, patterns_dir, f"pattern_chinchilla_{age_label}_mask"
-        )
-        count += 1
-
-        # Himalayan mask: all non-ear fur pixels (ears keep their color)
-        himalayan_img = Image.new("RGBA", (width, height), transparent)
-        for row in range(height):
-            for col in range(width):
-                if is_inner_fur(row, col):
-                    himalayan_img.putpixel((col, row), white_pixel)
-        himalayan_scaled = himalayan_img.resize(
-            (width * scale, height * scale), resample=Image.NEAREST
-        )
-        write_imageset(
-            himalayan_scaled, patterns_dir, f"pattern_himalayan_{age_label}_mask"
-        )
-        count += 1
-
-    return count
-
-
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
@@ -472,19 +483,15 @@ EXPECTED_COUNTS = {
     "patterns": 6,     # 3 patterns x 2 ages
 }
 
+PYTHON_REPO_CATEGORIES = {"portraits", "terrain"}
+
 
 def validate_export(
     output_dir: Path,
     counts: dict[str, int],
     categories: list[str] | None = None,
 ) -> bool:
-    """Count .imageset directories per category and verify expected counts.
-
-    Args:
-        output_dir: Root Sprites directory.
-        counts: Expected image-set counts keyed by category name.
-        categories: Which categories to validate. None means validate all.
-    """
+    """Count .imageset directories per category and verify expected counts."""
     subdirs = {
         "pigs": "Pigs",
         "facilities": "Facilities",
@@ -517,12 +524,12 @@ def validate_export(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Export Big Pig Farm sprites from Python pixel data to PNG files."
+        description="Export Big Pig Farm sprites to PNG image sets."
     )
     parser.add_argument(
         "--source",
-        required=True,
-        help="Path to the Python game repo root (e.g., ../big-pig-farm)",
+        default=None,
+        help="Path to the Python game repo root (only needed for portraits and terrain)",
     )
     parser.add_argument(
         "--output",
@@ -553,30 +560,49 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    source_path = Path(args.source).resolve()
-    if not source_path.exists():
-        print(f"ERROR: Source path does not exist: {source_path}")
+    requested = (
+        list(EXPECTED_COUNTS.keys()) if args.category == "all"
+        else [args.category]
+    )
+    needs_source = PYTHON_REPO_CATEGORIES & set(requested)
+
+    source_path = None
+    if args.source:
+        source_path = Path(args.source).resolve()
+        if not source_path.exists():
+            print(f"ERROR: Source path does not exist: {source_path}")
+            sys.exit(1)
+        sys.path.insert(0, str(source_path))
+    elif needs_source:
+        print(f"ERROR: --source is required for: {', '.join(sorted(needs_source))}")
+        print("These categories use algorithmic generation from the Python repo.")
+        print("Other categories (pigs, facilities, indicators, patterns) read from")
+        print(f"  {SPRITE_DATA_FILE}")
         sys.exit(1)
 
-    sys.path.insert(0, str(source_path))
+    needs_json = set(requested) - PYTHON_REPO_CATEGORIES
+    sprite_data = load_sprite_data() if needs_json else None
 
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
     write_namespace_contents_json(output_dir)
 
-    print(f"Source:   {source_path}")
-    print(f"Output:   {output_dir.resolve()}")
-    print(f"Scale:    {args.scale}x")
+    if source_path:
+        print(f"Source:    {source_path}")
+    if sprite_data:
+        print(f"Data:      {SPRITE_DATA_FILE}")
+    print(f"Output:    {output_dir.resolve()}")
+    print(f"Scale:     {args.scale}x")
     print(f"Portraits: {args.portrait_scale}x")
     print()
 
     category_funcs = {
-        "pigs": lambda: export_pig_sprites(source_path, output_dir, args.scale),
-        "facilities": lambda: export_facility_sprites(source_path, output_dir, args.scale),
-        "indicators": lambda: export_indicator_sprites(source_path, output_dir, args.scale),
+        "pigs": lambda: export_pig_sprites(sprite_data, output_dir, args.scale),
+        "facilities": lambda: export_facility_sprites(sprite_data, output_dir, args.scale),
+        "indicators": lambda: export_indicator_sprites(sprite_data, output_dir, args.scale),
         "portraits": lambda: export_portraits(source_path, output_dir, args.portrait_scale),
         "terrain": lambda: export_terrain_tiles(source_path, output_dir, args.scale),
-        "patterns": lambda: export_pattern_masks(source_path, output_dir, args.scale),
+        "patterns": lambda: export_pattern_masks(sprite_data, output_dir, args.scale),
     }
 
     total = 0

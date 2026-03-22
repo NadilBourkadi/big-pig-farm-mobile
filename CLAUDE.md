@@ -18,6 +18,7 @@
 - Build: `xcodebuild -scheme BigPigFarm -destination 'platform=iOS Simulator,name=iPhone 17' build`
 - Test: **always use a per-worktree simulator** — multiple agents run in parallel and share the machine. Never target a shared simulator name like `iPhone 16e` directly. Use the pre-approved script: `bash scripts/run-tests.sh` — it creates a private simulator, runs tests, and cleans up automatically. **Never use inline `$()` substitution in Bash tool calls** — it triggers an un-bypassable security prompt regardless of `settings.json` allow-lists. The script avoids this because `$()` is inside the file, not in the tool call argument.
 - Never run `xcodebuild` with `run_in_background: true` — simulators require exclusive access; background + retry causes two builds to fight over the same device.
+- **Never put `#` comments inside inline multi-line strings in Bash calls.** Claude Code has a non-overridable security heuristic that blocks commands containing "quoted newline followed by `#`-prefixed line". This applies to inline Python scripts (`python3 -c "...# comment..."`), heredocs, and any multi-line string. Instead: either remove the comments, or write the script to `.tmp/` first and run `python3 .tmp/script.py`.
 - Lint: `swiftlint lint`
 
 ## Tech Stack
