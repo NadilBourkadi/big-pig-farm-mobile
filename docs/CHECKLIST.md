@@ -130,6 +130,7 @@
 - [x] Render tunnel mouth walls with area biome texture instead of tunnel texture (bead 0q2)
 - [x] Centralize gender display logic with `displaySymbol`/`displayColor` on `Gender` enum (bead 4bj)
 - [x] Implement `NotificationManager` — toast queue, burst throttling, offline suppression (bead c2o)
+- [x] Clarify "LOW POP" HUD warning — display contextual threshold text with accessibility label (bead z5x)
 
 ---
 
