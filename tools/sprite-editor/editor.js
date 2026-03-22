@@ -88,15 +88,8 @@ function buildSpriteTree() {
     const groupLabels = {
         pig_adult: 'Pig Adult',
         pig_baby: 'Pig Baby',
-        pig_far_adult: 'Pig Far Adult',
-        pig_far_baby: 'Pig Far Baby',
-        pig_adult_close: 'Pig Adult Close',
-        pig_baby_close: 'Pig Baby Close',
-        facility_normal: 'Facility Normal',
-        facility_far: 'Facility Far',
-        facility_close: 'Facility Close',
-        indicator_normal: 'Indicator Normal',
-        indicator_close: 'Indicator Close',
+        facility_normal: 'Facility',
+        indicator_normal: 'Indicator',
     };
 
     for (const [group, label] of Object.entries(groupLabels)) {
