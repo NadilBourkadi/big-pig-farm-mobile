@@ -116,7 +116,7 @@ struct BigPigFarmApp: App {
             didEnterBackground = true
             lifecycleSave()
             #if DEBUG || INTERNAL
-            DebugLogger.shared.flush()
+            DebugLogger.shared.flushBlocking()
             DebugLogger.shared.syncToiCloud()
             #endif
         @unknown default:

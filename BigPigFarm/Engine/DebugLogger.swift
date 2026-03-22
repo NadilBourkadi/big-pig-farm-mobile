@@ -149,28 +149,12 @@ final class DebugLogger {
         guard isOpen, let db else { return }
         flushTimer?.invalidate()
         flushTimer = nil
-        // Synchronous drain: write any remaining buffer AND wait for any
+        // Synchronous drain: write any remaining buffer then wait for any
         // previously dispatched async blocks (from flush()) to complete.
-        // Must always sync even if buffer is empty — a prior flushSync()
-        // may have dispatched an async write that hasn't finished yet.
-        let remaining = buffer
-        buffer.removeAll()
-        let insertStmt = insertStatement
-        let countStmt = countStatement
-        let maxRows = maxRows
-        nonisolated(unsafe) let safeDB = db
-        nonisolated(unsafe) let safeInsert = insertStmt
-        nonisolated(unsafe) let safeCount = countStmt
-        flushQueue.sync {
-            if !remaining.isEmpty {
-                SQLiteHelpers.writeBatch(
-                    remaining, db: safeDB, insertStatement: safeInsert
-                )
-                SQLiteHelpers.rotateIfNeeded(
-                    db: safeDB, countStatement: safeCount, maxRows: maxRows
-                )
-            }
-        }
+        flushToQueue(blocking: true)
+        // Barrier sync ensures all prior async dispatches have finished
+        // before we finalize statements and close the database.
+        flushQueue.sync {}
         finalizeStatements()
         sqlite3_close(db)
         self.db = nil
@@ -212,9 +196,17 @@ final class DebugLogger {
         currentGameDay = day
     }
 
-    /// Force an immediate synchronous flush of the buffer to SQLite.
+    /// Force an immediate flush of the buffer to SQLite (async dispatch).
+    /// Use `flushBlocking()` when the write must complete before proceeding.
     func flush() {
         flushSync()
+    }
+
+    /// Flush the buffer to SQLite and block until the write completes.
+    /// Use on background transitions where `syncToiCloud()` must copy a
+    /// database that includes all buffered events.
+    func flushBlocking() {
+        flushToQueue(blocking: true)
     }
 
     /// Path to the SQLite database file, for direct access or export.
@@ -353,6 +345,12 @@ extension DebugLogger {
     }
 
     private func flushSync() {
+        flushToQueue(blocking: false)
+    }
+
+    /// Drain the buffer and dispatch the SQLite write to `flushQueue`.
+    /// `blocking: true` uses `.sync` (waits for completion), `false` uses `.async`.
+    private func flushToQueue(blocking: Bool) {
         guard !buffer.isEmpty, let db else { return }
         let batch = buffer
         buffer.removeAll(keepingCapacity: true)
@@ -362,13 +360,18 @@ extension DebugLogger {
         nonisolated(unsafe) let safeDB = db
         nonisolated(unsafe) let safeInsert = insertStmt
         nonisolated(unsafe) let safeCount = countStmt
-        flushQueue.async {
+        let work = {
             SQLiteHelpers.writeBatch(
                 batch, db: safeDB, insertStatement: safeInsert
             )
             SQLiteHelpers.rotateIfNeeded(
                 db: safeDB, countStatement: safeCount, maxRows: maxRows
             )
+        }
+        if blocking {
+            flushQueue.sync(execute: work)
+        } else {
+            flushQueue.async(execute: work)
         }
     }
 
