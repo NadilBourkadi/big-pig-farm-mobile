@@ -180,6 +180,30 @@ SELECT pig_name, json_extract(payload, '$.color'), json_extract(payload, '$.geno
 **Categories:** `behavior`, `breeding`, `birth`, `needs`, `culling`, `economy`, `simulation`, `facility`
 **Levels:** 0 = verbose, 1 = info, 2 = warning
 
+**Offline catch-up events — CRITICAL context for debug log analysis:**
+
+`OfflineProgressRunner` fast-forwards game state when the app reopens after being backgrounded. It processes births, breeding, culling, and economy but **intentionally skips behavior AI, spatial grid, and collision**. This means:
+
+- Offline events have `game_day=0` (setGameDay is not called during catch-up)
+- Zero `behavior` and `facility` events during offline periods
+- Many births/breeding/culling/economy events clustered at the same timestamp
+- The absence of behavior events does NOT indicate a logging bug
+
+**How to identify offline catch-up events:** Look for a cluster of birth/breeding/economy events all sharing the same `datetime(timestamp, 'unixepoch', 'localtime')` value. Compare against surrounding behavior events — a gap in behavior events bracketed by timestamped clusters is the offline catch-up.
+
+```sql
+-- Detect offline catch-up boundaries: clusters of events at identical timestamps
+SELECT datetime(timestamp, 'unixepoch', 'localtime') as ts, COUNT(*) as cnt,
+       GROUP_CONCAT(DISTINCT category) as cats
+  FROM debug_events GROUP BY ts HAVING cnt > 10 ORDER BY id DESC LIMIT 5;
+
+-- Find the last LIVE behavior event before a suspected offline gap
+SELECT id, datetime(timestamp, 'unixepoch', 'localtime'), message, game_day
+  FROM debug_events WHERE category='behavior' ORDER BY id DESC LIMIT 1;
+```
+
+**When investigating post-offline bugs:** Always check events AFTER the offline cluster. Pigs are reset to `.idle` with random positions after catch-up (`resetBehaviorStates` + `repositionPigs`). Issues observed after reopening may stem from the post-offline state (depleted facilities, overcrowded areas) rather than a code bug.
+
 When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths), **query the debug log first** before reading source code. The structured events often pinpoint the issue directly.
 
 **Extending the debug log:** If a query reveals that the information needed to diagnose an issue is missing from the log, **extend the instrumentation immediately** — add the missing payload fields to the relevant `DebugLogger.shared.log()` call in the simulation code. Common gaps: genotype/phenotype data on births, facility state on consumption events, grid positions on movement. Treat missing debug data the same as a missing test — fix it as part of the investigation, not as a separate task.
