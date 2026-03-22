@@ -229,6 +229,18 @@ final class FacilityManager {
         }
     }
 
+    /// Set arrival failure cooldown, using shorter cooldown for critical needs.
+    func setArrivalFailedCooldown(pig: GuineaPig) {
+        let isCritical = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
+            || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
+        setFailedCooldown(
+            pig.id,
+            isCritical
+                ? GameConfig.Behavior.criticalFailedCooldownCycles
+                : GameConfig.Behavior.arrivalFailedCooldownCycles
+        )
+    }
+
     // MARK: - Lifecycle
 
     func cleanupPig(_ pigId: UUID) {

@@ -64,6 +64,8 @@ enum BehaviorSeeking {
             ? GameConfig.Behavior.unreachableCriticalCycles
             : GameConfig.Behavior.unreachableBackoffCycles
         controller.setUnreachableBackoff(pig.id, need: need, cycles: cycles)
+        // Match cooldown to backoff duration so the failed set outlives the backoff
+        controller.facilityManager.setFailedCooldown(pig.id, cycles)
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logSeekFailure(pig: pig, need: need, isCritical: isCritical, cycles: cycles)
         #endif

@@ -32,6 +32,9 @@ extension GameConfig {
         static let blockedTimeAlternative: Double = 2.0
         static let blockedTimeGiveUp: Double = 5.0
         static let failedCooldownCycles: Int = 3
+        /// Cycles before a pig re-seeks a full/empty facility it just arrived at.
+        /// Separate from failedCooldownCycles (path-blocked) for independent tuning.
+        static let arrivalFailedCooldownCycles: Int = 3
 
         // MARK: - Decision thresholds
 

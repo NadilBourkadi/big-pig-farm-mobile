@@ -89,6 +89,11 @@ enum BehaviorDecision {
             pig.targetDescription = nil
         } else if controller.facilityManager.getFailedCooldown(pig.id) > 0 {
             controller.facilityManager.tickFailedCooldown(pig.id)
+        } else if !controller.facilityManager.getFailedFacilities(pig.id).isEmpty {
+            // Safety net: failed set exists but no cooldown was started (e.g. arrival
+            // failure before the cooldown fix). Bootstrap a cooldown to prevent the pig
+            // from immediately re-seeking the same failed facilities.
+            controller.facilityManager.setArrivalFailedCooldown(pig: pig)
         } else {
             controller.facilityManager.clearFailedFacilities(pig.id)
         }

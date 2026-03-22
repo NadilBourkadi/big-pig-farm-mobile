@@ -24,10 +24,11 @@ extension FacilityManager {
             }
         }
 
-        // No suitable facility — go idle (keep failed list to remember attempts)
+        // No suitable facility — go idle with cooldown to prevent re-seeking loop
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logArrivalFailed(pig: pig)
         #endif
+        setArrivalFailedCooldown(pig: pig)
         pig.behaviorState = .idle
         pig.targetPosition = nil
         pig.targetFacilityId = nil
@@ -63,6 +64,7 @@ extension FacilityManager {
             return true
         } else if facility.isEmpty {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
         }
         return false
     }
@@ -76,6 +78,7 @@ extension FacilityManager {
             return true
         } else if facility.isEmpty {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
         }
         return false
     }
@@ -98,6 +101,7 @@ extension FacilityManager {
     private func handleArrivalPlay(pig: inout GuineaPig, facility: Facility) -> Bool {
         if facility.facilityType == .therapyGarden && pig.needs.happiness >= 50 {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -112,6 +116,7 @@ extension FacilityManager {
             clearFailedFacilities(pig.id)
         } else {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -129,6 +134,7 @@ extension FacilityManager {
             clearFailedFacilities(pig.id)
         } else {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -147,6 +153,7 @@ extension FacilityManager {
             clearFailedFacilities(pig.id)
         } else {
             addFailedFacility(pig.id, facility.id)
+            setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
