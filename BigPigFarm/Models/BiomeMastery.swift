@@ -36,6 +36,16 @@ struct BiomeMastery: Codable, Sendable {
         return min(1.0, bred / threshold)
     }
 
+    /// Room cost multiplier for a biome (0.75 if mastered, 1.0 otherwise).
+    func roomCostMultiplier(for biome: BiomeType) -> Double {
+        isMastered(biome) ? (1.0 - GameConfig.Prestige.biomeMasteryCostReduction) : 1.0
+    }
+
+    /// Signature mutation boost for a mastered biome (0.02 if mastered, 0.0 otherwise).
+    func signatureMutationBoost(for biome: BiomeType) -> Double {
+        isMastered(biome) ? GameConfig.Prestige.biomeMasteryMutationBoost : 0.0
+    }
+
     // MARK: - CodingKeys
 
     enum CodingKeys: String, CodingKey {
