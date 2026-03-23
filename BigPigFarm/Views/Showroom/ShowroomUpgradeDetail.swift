@@ -83,8 +83,12 @@ private extension ShowroomUpgradeDetail {
                     .font(.headline)
                     .foregroundStyle(.green)
                     .frame(maxWidth: .infinity)
+                    .accessibilityLabel("Already purchased")
             case .affordable:
                 Button {
+                    // Purchase mutates prestigeState then dismiss closes
+                    // the sheet — must happen in this order so the parent
+                    // re-renders after the sheet is gone (stale snapshot).
                     onPurchase()
                     dismiss()
                 } label: {
@@ -97,6 +101,9 @@ private extension ShowroomUpgradeDetail {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
+                .accessibilityLabel(
+                    "Purchase \(upgrade.displayName) for \(upgrade.cost) Rosettes"
+                )
             case .unaffordable:
                 VStack(spacing: 4) {
                     Label(
@@ -105,6 +112,9 @@ private extension ShowroomUpgradeDetail {
                     )
                     .font(.headline)
                     .foregroundStyle(.secondary)
+                    .accessibilityLabel(
+                        "Requires \(upgrade.cost) Rosettes, you have \(prestigeState.rosetteBalance)"
+                    )
                     Text("You have \(prestigeState.rosetteBalance)")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
@@ -128,8 +138,8 @@ extension ShowroomUpgradeDetail {
             return "+\(cfg.expandedHutchCapacityBonus) pig capacity per room, "
                 + "permanently. Applies to all existing and future rooms."
         case .rapidRecovery:
-            return "Post-birth recovery time multiplied by "
-                + "\(cfg.rapidRecoveryMultiplier)x, halving the breeding cooldown."
+            return "Post-birth recovery halved to "
+                + "\(Int(cfg.rapidRecoveryMultiplier * 100))% of normal duration."
         case .earlyBloomer:
             return "Breeding eligibility at \(cfg.earlyBloomerMinBreedingAge) "
                 + "days old instead of the standard 3 days."
@@ -214,7 +224,10 @@ extension ShowroomUpgradeDetail {
     }
 
     private func formatPercent(_ value: Double) -> String {
-        "\(Int(value * 100))%"
+        let pct = value * 100
+        return pct == Double(Int(pct))
+            ? "\(Int(pct))%"
+            : "\(String(format: "%.1f", pct))%"
     }
 
     private func formatMultiplier(_ value: Double) -> String {
