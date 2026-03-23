@@ -111,15 +111,20 @@ The `xcodegen generate` step is mandatory after switching branches — `project.
    ```
    bd comments add <other-bead-id> "[HEADS UP from <my-bead-id>] Renamed FacilityManager.refill() → replenish(). Update your callsites."
    ```
-6. **Surface decisions inline** — if you encounter an architectural choice or design fork during implementation, do NOT silently pick one and move on. Instead:
-   1. **Pause implementation** and present the decision to the user directly in the conversation. Include: what the choice is, what options exist, and the trade-offs of each.
-   2. **Wait for the user's answer** before proceeding.
-   3. **Record the decision** — create an ADR in `docs/decisions/` using the template, and commit it as part of the PR.
-   4. **Optionally create a decision bead** if the decision affects other beads/agents:
-      ```
-      bd create "DECISION: <question>" -t decision -p P1 --parent <epic-id>
-      ```
-      Close it immediately after recording the ADR. This leaves an audit trail in Beads and unblocks any dependent tasks other agents are waiting on.
+6. **Surface architectural decisions** — if you encounter a design choice during implementation, do NOT silently pick one and move on. Two mechanisms, use whichever fits:
+
+   **Inline (same conversation):** Pause, present the options and trade-offs to the user, wait for their answer, then record an ADR in `docs/decisions/` and continue.
+
+   **Decision bead (cross-agent or user is busy):** Create a decision bead with full context:
+   ```
+   bd create "DECISION: <question>" -t decision -p P1
+   ```
+   Include in the description: the context, the options with trade-offs, and what it blocks. The user will see this when they run `/next`, which surfaces pending decisions with enough detail to resolve them on the spot. Add it as a blocker for dependent beads:
+   ```
+   bd dep add <blocked-bead> <decision-bead>
+   ```
+
+   **When to use which:** Inline if the user is actively in this conversation and the decision is small enough to resolve quickly. Decision bead if the user is busy, the decision needs thought, or it affects other agents' work.
 
    Examples of decisions that must be surfaced: choosing between two data structures, deciding an API shape that other code will depend on, picking a persistence strategy, trade-offs between performance and simplicity. When in doubt, ask.
 7. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
