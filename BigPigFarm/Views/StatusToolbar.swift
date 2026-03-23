@@ -39,7 +39,28 @@ struct StatusToolbar: View {
     }
 
     var body: some View {
-        HStack(spacing: 16) {
+        VStack(spacing: 0) {
+            gameActionRow
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+
+            Divider()
+                .opacity(0.3)
+
+            systemControlRow
+                .padding(.top, 4)
+                .padding(.bottom, 6)
+        }
+        .padding(.horizontal, 12)
+        .background(.ultraThinMaterial)
+    }
+}
+
+// MARK: - Sub-views
+
+private extension StatusToolbar {
+    var gameActionRow: some View {
+        HStack(spacing: 8) {
             HUDButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
             HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
             HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
@@ -53,9 +74,12 @@ struct StatusToolbar: View {
             if isPigShowEligible, let onPigShowTapped {
                 HUDButton(systemImage: "trophy.fill", label: "Show", action: onPigShowTapped)
             }
+        }
+    }
 
+    var systemControlRow: some View {
+        HStack(spacing: 12) {
             Spacer()
-
             HUDButton(
                 systemImage: isEditMode ? "pencil.slash" : "pencil",
                 label: "Edit",
@@ -74,15 +98,8 @@ struct StatusToolbar: View {
                 action: onSpeedTapped
             )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(.ultraThinMaterial)
     }
-}
 
-// MARK: - Sub-views
-
-private extension StatusToolbar {
     var refillButton: some View {
         Button(action: onRefillTapped) {
             VStack(spacing: 2) {

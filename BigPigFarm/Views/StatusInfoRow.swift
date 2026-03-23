@@ -12,20 +12,22 @@ struct StatusInfoRow: View {
     let gameState: GameState
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Text("Day \(gameState.gameTime.day)")
                 .font(.caption.bold())
+                .fixedSize()
             Text("Tier \(gameState.farmTier)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize()
             CurrencyLabel(amount: gameState.money)
-            Text("\(gameState.pigCount)/\(gameState.capacity)")
-                .font(.caption)
+            populationLabel
 
             if showLowPopulationWarning {
                 Text(lowPopulationWarningText)
                     .font(.caption2.bold())
                     .foregroundStyle(.red)
+                    .fixedSize()
                     .accessibilityLabel(lowPopulationAccessibilityLabel)
             }
 
@@ -34,9 +36,8 @@ struct StatusInfoRow: View {
             resourceIndicator(systemImage: "fork.knife", level: foodLevel)
             resourceIndicator(systemImage: "drop.fill", level: waterLevel)
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 4)
-        .padding(.bottom, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
         .background(.ultraThinMaterial)
     }
 }
@@ -87,13 +88,24 @@ private extension StatusInfoRow {
 // MARK: - Sub-views
 
 private extension StatusInfoRow {
-    func resourceIndicator(systemImage: String, level: Int) -> some View {
+    var populationLabel: some View {
         HStack(spacing: 2) {
-            Image(systemName: systemImage)
-                .font(.system(size: 10))
-            Text("\(level)%")
-                .font(.caption2)
+            Image(systemName: "pawprint.fill")
+                .font(.system(size: 9))
+            Text("\(gameState.pigCount)/\(gameState.capacity)")
+                .font(.caption)
         }
+        .fixedSize()
+    }
+
+    func resourceIndicator(systemImage: String, level: Int) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: systemImage)
+                .font(.system(size: 11))
+            Text("\(level)%")
+                .font(.caption)
+        }
+        .fixedSize()
         .foregroundStyle(level < 30 ? .red : .primary)
     }
 }
