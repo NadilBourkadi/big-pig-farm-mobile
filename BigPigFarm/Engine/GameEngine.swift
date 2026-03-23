@@ -259,6 +259,24 @@ final class GameEngine {
         )
     }
 
+    // MARK: - Prestige: Trigger
+
+    /// Evaluate the Pig Show, award Rosettes, and perform a farm reset.
+    /// Returns the breakdown for UI display (animation banner, etc.).
+    ///
+    /// Call this with the engine paused — `@MainActor` prevents tick interleaving,
+    /// but pausing avoids stat drift between evaluation and reset.
+    @discardableResult
+    func triggerPrestige() -> RosetteBreakdown {
+        let breakdown = PigShowCalculator.evaluate(
+            gameState: state,
+            prestigeState: state.prestigeState
+        )
+        state.prestigeState.addRosettes(breakdown.total)
+        farmReset()
+        return breakdown
+    }
+
     // MARK: - Properties
 
     var isRunning: Bool { timer != nil }
