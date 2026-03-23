@@ -244,6 +244,7 @@ enum Breeding {
         chance *= NewFarmerSpirit.breedingChanceMultiplier(
             prestige: prestige, gameTime: gameState.gameTime
         )
+        chance = min(chance, 1.0)
 
         guard Double.random(in: 0.0..<1.0) < chance else { return false }
 

@@ -251,6 +251,7 @@ extension OfflineProgressRunner {
         chance *= NewFarmerSpirit.breedingChanceMultiplier(
             prestige: prestige, gameTime: state.gameTime
         )
+        chance = min(chance, 1.0)
         return Double.random(in: 0.0..<1.0) < chance
     }
 

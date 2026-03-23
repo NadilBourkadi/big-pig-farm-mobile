@@ -80,8 +80,8 @@ extension CodableSnapshot {
         totalPigsBorn = try c.decode(Int.self, forKey: .totalPigsBorn)
         totalPigsSold = try c.decode(Int.self, forKey: .totalPigsSold)
         totalEarnings = try c.decode(Int.self, forKey: .totalEarnings)
-        boosterState = (try? c.decode(BoosterState.self, forKey: .boosterState)) ?? BoosterState()
-        completedMilestones = (try? c.decode(Set<MilestoneID>.self, forKey: .completedMilestones)) ?? []
+        boosterState = try c.decodeIfPresent(BoosterState.self, forKey: .boosterState) ?? BoosterState()
+        completedMilestones = try c.decodeIfPresent(Set<MilestoneID>.self, forKey: .completedMilestones) ?? []
     }
 }
 
