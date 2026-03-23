@@ -93,6 +93,7 @@ struct ContentView: View {
     // MARK: - Sheet Presentation State
 
     @State private var showShop = false
+    @State private var shopInitialTab: ShopTab = .facilities
     @State private var showPigList = false
     @State private var showBreeding = false
     @State private var showAlmanac = false
@@ -149,6 +150,13 @@ struct ContentView: View {
             // EditModeActionPanel appears above the toolbar while edit mode is active.
             VStack {
                 StatusInfoRow(gameState: gameState)
+                if EmergencyBailout.isSoftLocked(state: gameState) {
+                    EmergencyBailoutBanner {
+                        shopInitialTab = .pigs
+                        showShop = true
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
                 Spacer()
                 ToastOverlayView(notificationManager: notificationManager)
                 if isEditMode {
@@ -162,7 +170,10 @@ struct ContentView: View {
                 StatusToolbar(
                     gameState: gameState,
                     isEditMode: $isEditMode,
-                    onShopTapped: { showShop = true },
+                    onShopTapped: {
+                        shopInitialTab = .facilities
+                        showShop = true
+                    },
                     onPigListTapped: { showPigList = true },
                     onBreedingTapped: { showBreeding = true },
                     onAlmanacTapped: { showAlmanac = true },
@@ -174,7 +185,7 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: $showShop) {
-            ShopView(gameState: gameState)
+            ShopView(gameState: gameState, initialTab: shopInitialTab)
         }
         .sheet(isPresented: $showPigList) {
             PigListView(gameState: gameState, onFollowPig: handleFollowPig)

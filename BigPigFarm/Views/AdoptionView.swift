@@ -16,6 +16,9 @@ struct AdoptionView: View {
     /// The current batch of available pigs.
     @State private var availablePigs: [GuineaPig] = []
 
+    /// IDs of emergency bailout pigs (free adoption).
+    @State private var emergencyPigIDs: Set<UUID> = []
+
     /// The selected pig for the detail panel.
     @State private var selectedPig: GuineaPig?
 
@@ -25,11 +28,15 @@ struct AdoptionView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if !emergencyPigIDs.isEmpty {
+                emergencyBanners
+            }
             List(availablePigs, id: \.id) { pig in
-                let cost = Adoption.calculateAdoptionCost(pig, state: gameState)
-                let canAfford = gameState.money >= cost
+                let isEmergency = emergencyPigIDs.contains(pig.id)
+                let cost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: gameState)
+                let canAfford = isEmergency || gameState.money >= cost
 
-                AdoptionPigRow(pig: pig, cost: cost, canAfford: canAfford)
+                AdoptionPigRow(pig: pig, cost: cost, canAfford: canAfford, isFree: isEmergency)
                     .contentShape(Rectangle())
                     .onTapGesture { selectedPig = pig }
             }
@@ -88,6 +95,7 @@ private struct AdoptionPigRow: View {
     let pig: GuineaPig
     let cost: Int
     let canAfford: Bool
+    var isFree: Bool = false
 
     var body: some View {
         HStack {
@@ -102,6 +110,9 @@ private struct AdoptionPigRow: View {
                     Text(pig.gender.displaySymbol)
                         .font(.caption)
                         .foregroundStyle(pig.gender.displayColor)
+                    if isFree {
+                        StatusBadge(label: "Free", color: .green)
+                    }
                 }
                 HStack {
                     Text(pig.phenotype.displayName)
@@ -116,9 +127,50 @@ private struct AdoptionPigRow: View {
 
             Spacer()
 
-            CurrencyLabel(amount: cost)
-                .foregroundStyle(canAfford ? AnyShapeStyle(.yellow) : AnyShapeStyle(.red))
+            if isFree {
+                Text("Free")
+                    .font(.caption.bold())
+                    .foregroundStyle(.green)
+            } else {
+                CurrencyLabel(amount: cost)
+                    .foregroundStyle(canAfford ? AnyShapeStyle(.yellow) : AnyShapeStyle(.red))
+            }
         }
+    }
+}
+
+// MARK: - Emergency Banners
+
+extension AdoptionView {
+    /// Guidance banners shown when the player is in emergency bailout mode.
+    private var emergencyBanners: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text("Your farm is empty! Adopt the free pigs below to get started again.")
+                    .font(.caption)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.orange.opacity(0.12))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            if !gameState.breedingProgram.enabled {
+                HStack(spacing: 8) {
+                    Image(systemName: "heart.circle.fill")
+                        .foregroundStyle(.pink)
+                    Text("Enable the **Breeding Program** in the Breeding tab to grow your herd automatically.")
+                        .font(.caption)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.pink.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 }
 
@@ -129,14 +181,20 @@ extension AdoptionView {
     ///
     /// Maps from: shop.py _update_detail() adoption pig branch.
     private func adoptionDetail(pig: GuineaPig) -> some View {
-        let cost = Adoption.calculateAdoptionCost(pig, state: gameState)
-        let canAfford = gameState.money >= cost
+        let isEmergency = emergencyPigIDs.contains(pig.id)
+        let cost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: gameState)
+        let canAfford = isEmergency || gameState.money >= cost
 
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(pig.name).font(.headline)
+                if isEmergency {
+                    StatusBadge(label: "Free", color: .green)
+                }
                 Spacer()
-                CurrencyLabel(amount: cost)
+                if !isEmergency {
+                    CurrencyLabel(amount: cost)
+                }
             }
 
             HStack {
@@ -183,8 +241,10 @@ extension AdoptionView {
             return
         }
 
-        let cost = Adoption.calculateAdoptionCost(pig, state: gameState)
-        guard gameState.money >= cost else {
+        let isEmergency = emergencyPigIDs.contains(pig.id)
+        let cost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: gameState)
+
+        guard isEmergency || gameState.money >= cost else {
             errorMessage = "Not enough Squeaks!"
             showError = true
             HapticManager.error()
@@ -201,14 +261,18 @@ extension AdoptionView {
         var adoptedPig = pig
         adoptedPig.position = Position(x: Double(position.x), y: Double(position.y))
 
-        _ = gameState.spendMoney(cost)
+        if cost > 0 {
+            _ = gameState.spendMoney(cost)
+        }
         gameState.addGuineaPig(adoptedPig)
 
+        let costLabel = isEmergency ? "free (emergency)" : "\(cost) Squeaks"
         gameState.logEvent(
-            "Adopted \(pig.name) (\(pig.phenotype.displayName)) for \(cost) Squeaks",
+            "Adopted \(pig.name) (\(pig.phenotype.displayName)) for \(costLabel)",
             eventType: "adoption"
         )
 
+        emergencyPigIDs.remove(pig.id)
         availablePigs.removeAll { $0.id == pig.id }
         selectedPig = nil
         HapticManager.purchase()
@@ -221,11 +285,24 @@ extension AdoptionView {
         let existingNames = Set(gameState.getPigsList().map(\.name))
             .union(Set(availablePigs.map(\.name)))
 
-        availablePigs = Adoption.generateAdoptionBatch(
+        var batch = Adoption.generateAdoptionBatch(
             existingNames: existingNames,
             farmTier: gameState.farmTier,
             count: Int.random(in: 3...5)
         )
+
+        emergencyPigIDs = []
+        if EmergencyBailout.isSoftLocked(state: gameState) {
+            let batchNames = Set(batch.map(\.name))
+            let emergencyPigs = EmergencyBailout.generateEmergencyPigs(
+                existingNames: existingNames.union(batchNames),
+                farmTier: gameState.farmTier
+            )
+            emergencyPigIDs = Set(emergencyPigs.map(\.id))
+            batch = emergencyPigs + batch
+        }
+
+        availablePigs = batch
         selectedPig = nil
     }
 }

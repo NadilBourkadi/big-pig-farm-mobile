@@ -17,8 +17,13 @@ enum ShopTab: String, CaseIterable, Sendable {
 /// The main shop view with tabs for facilities, perks, farm upgrades, and pig adoption.
 struct ShopView: View {
     let gameState: GameState
-    @State private var selectedTab: ShopTab = .facilities
+    @State private var selectedTab: ShopTab
     @Environment(\.dismiss) private var dismiss
+
+    init(gameState: GameState, initialTab: ShopTab = .facilities) {
+        self.gameState = gameState
+        _selectedTab = State(initialValue: initialTab)
+    }
 
     var body: some View {
         NavigationStack {
