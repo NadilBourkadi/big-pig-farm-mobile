@@ -137,7 +137,7 @@
 ## Prestige & Progression ("New Pastures")
 
 - [x] Prestige data models: PrestigeState, ShowroomUpgrade, RosetteCalculator, VisitStreak, TreatType, ReunionBoost, BiomeMastery (bead s290)
-- [ ] Prestige core: persistence, farm reset, Pigdex carry-over, biome mastery (bead dkuq)
+- [x] Prestige core: persistence, farm reset, Pigdex carry-over, biome mastery (bead dkuq)
 - [ ] Rosette scoring: multi-dimensional Pig Show calculation (bead saiu)
 - [ ] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
