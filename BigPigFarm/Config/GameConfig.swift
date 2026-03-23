@@ -98,24 +98,24 @@ enum GameConfig {
         static let legendaryMultiplier: Double = 10.0
         // Adoption cost: intentionally 2× the common pig sale value (25) to prevent buy/sell exploits.
         static let adoptionBaseCost: Int = 50
-        // Facility costs (all 17)
-        static let foodBowlCost: Int = 20
-        static let waterBottleCost: Int = 20
-        static let hideoutCost: Int = 60
-        static let hayRackCost: Int = 80
-        static let exerciseWheelCost: Int = 150
-        static let tunnelCost: Int = 200
-        static let feastTableCost: Int = 350
-        static let groomingStationCost: Int = 500
-        static let playAreaCost: Int = 600
-        static let geneticsLabCost: Int = 1000
-        static let campfireCost: Int = 1200
-        static let therapyGardenCost: Int = 1500
-        static let breedingDenCost: Int = 3000
-        static let nurseryCost: Int = 5000
-        static let veggieGardenCost: Int = 5000
-        static let hotSpringCost: Int = 15000
-        static let stageCost: Int = 150000
+        // Facility costs (all 17) — retuned for prestige pacing (Section 7E)
+        static let foodBowlCost: Int = 50
+        static let waterBottleCost: Int = 50
+        static let hideoutCost: Int = 150
+        static let hayRackCost: Int = 250
+        static let exerciseWheelCost: Int = 500
+        static let tunnelCost: Int = 750
+        static let feastTableCost: Int = 1_500
+        static let groomingStationCost: Int = 2_000
+        static let playAreaCost: Int = 2_500
+        static let geneticsLabCost: Int = 5_000
+        static let campfireCost: Int = 6_000
+        static let therapyGardenCost: Int = 8_000
+        static let breedingDenCost: Int = 15_000
+        static let nurseryCost: Int = 25_000
+        static let veggieGardenCost: Int = 25_000
+        static let hotSpringCost: Int = 100_000
+        static let stageCost: Int = 1_000_000
     }
 
     enum Simulation {
@@ -142,15 +142,17 @@ enum GameConfig {
     }
 
     enum Pigdex {
-        static let commonReward: Int = 10
-        static let uncommonReward: Int = 20
-        static let rareReward: Int = 35
-        static let veryRareReward: Int = 50
-        static let legendaryReward: Int = 100
-        static let milestone25Reward: Int = 250
-        static let milestone50Reward: Int = 750
-        static let milestone75Reward: Int = 2000
-        static let milestone100Reward: Int = 10000
+        // Discovery rewards — retuned for prestige pacing (Section 7G)
+        static let commonReward: Int = 100
+        static let uncommonReward: Int = 300
+        static let rareReward: Int = 800
+        static let veryRareReward: Int = 2_000
+        static let legendaryReward: Int = 5_000
+        // Milestone rewards (% of total phenotypes discovered)
+        static let milestone25Reward: Int = 5_000
+        static let milestone50Reward: Int = 15_000
+        static let milestone75Reward: Int = 50_000
+        static let milestone100Reward: Int = 250_000
     }
 
     enum Contracts {

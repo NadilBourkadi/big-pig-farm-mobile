@@ -221,10 +221,10 @@ import Foundation
 
 @Test @MainActor func nextRoomCostForStarter() {
     let grid = FarmGrid.createStarter()
-    // Starter has 1 area, so next room is index 1 (Cozy Enclosure, 500)
+    // Starter has 1 area, so next room is index 1 (Cozy Enclosure, 1500)
     let cost = grid.nextRoomCost
     #expect(cost != nil)
-    #expect(cost?.cost == 500)
+    #expect(cost?.cost == 1500)
     #expect(cost?.name == "Cozy Enclosure")
 }
 

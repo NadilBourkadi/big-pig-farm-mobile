@@ -141,7 +141,7 @@
 - [ ] Rosette scoring: multi-dimensional Pig Show calculation (bead saiu)
 - [ ] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
-- [ ] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
+- [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
 
 ---
 

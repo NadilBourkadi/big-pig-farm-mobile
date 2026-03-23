@@ -161,7 +161,7 @@ import Foundation
         return
     }
     let reqs = Shop.checkTierRequirements(state: state, upgrade: tier)
-    // totalPigsBorn starts at 0, tier 2 requires 3
+    // totalPigsBorn starts at 0, tier 2 requires 8
     #expect(reqs["pigs_born"] == false)
 }
 
@@ -169,7 +169,7 @@ import Foundation
     let state = makeGameState()
     state.farmTier = 1
     state.money = 10_000
-    // pigs_born is 0, tier 2 requires 3 → should fail
+    // pigs_born is 0, tier 2 requires 8 → should fail
     let success = Shop.purchaseTierUpgrade(state: state)
     #expect(!success)
     #expect(state.farmTier == 1)
@@ -178,11 +178,14 @@ import Foundation
 @Test @MainActor func purchaseTierUpgradeFailsInsufficientFunds() {
     let state = makeGameState()
     state.farmTier = 1
-    // Tier 2 requires: 3 pigs born, 2 Pigdex, 0 contracts, cost 300
-    state.totalPigsBorn = 3
+    // Tier 2 requires: 8 pigs born, 5 Pigdex, 0 contracts, cost 1000
+    state.totalPigsBorn = 8
     _ = state.pigdex.registerPhenotype(key: "black_solid_normal_none", gameDay: 1)
     _ = state.pigdex.registerPhenotype(key: "chocolate_solid_normal_none", gameDay: 1)
-    state.money = 0  // Not enough for 300 Sq cost
+    _ = state.pigdex.registerPhenotype(key: "red_solid_normal_none", gameDay: 1)
+    _ = state.pigdex.registerPhenotype(key: "golden_solid_normal_none", gameDay: 1)
+    _ = state.pigdex.registerPhenotype(key: "cream_solid_normal_none", gameDay: 1)
+    state.money = 0  // Not enough for 1000 Sq cost
     let success = Shop.purchaseTierUpgrade(state: state)
     #expect(!success)
     #expect(state.farmTier == 1)

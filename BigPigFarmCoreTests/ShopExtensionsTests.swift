@@ -164,8 +164,8 @@ import Foundation
     let state = makeGameState()
     state.farmTier = 2
     let info = Shop.getFarmUpgradeInfo(state: state)
-    // Starter farm has 1 area, so nextRoomCost is roomCosts[1] = "Cozy Enclosure", cost 500
-    #expect(info?.cost == 500)
+    // Starter farm has 1 area, so nextRoomCost is roomCosts[1] = "Cozy Enclosure", cost 1500
+    #expect(info?.cost == 1500)
     #expect(info?.name == "Cozy Enclosure")
 }
 

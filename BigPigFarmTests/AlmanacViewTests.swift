@@ -99,10 +99,10 @@ import Foundation
 }
 
 @Test func milestoneRewardAmountsMatchConfig() {
-    #expect(getMilestoneReward(25) == 250)
-    #expect(getMilestoneReward(50) == 750)
-    #expect(getMilestoneReward(75) == 2000)
-    #expect(getMilestoneReward(100) == 10000)
+    #expect(getMilestoneReward(25) == 5000)
+    #expect(getMilestoneReward(50) == 15000)
+    #expect(getMilestoneReward(75) == 50000)
+    #expect(getMilestoneReward(100) == 250000)
     #expect(getMilestoneReward(99) == 0)
 }
 
@@ -115,8 +115,8 @@ import Foundation
     }
     state.pigdex.claimMilestone(25)
     state.addMoney(getMilestoneReward(25))
-    state.logEvent("Pigdex Milestone: 25% complete! +250 Squeaks", eventType: "pigdex")
-    #expect(state.money == initialMoney + 250)
+    state.logEvent("Pigdex Milestone: 25% complete! +\(getMilestoneReward(25)) Squeaks", eventType: "pigdex")
+    #expect(state.money == initialMoney + getMilestoneReward(25))
     #expect(state.pigdex.milestoneRewardsClaimed.contains(25))
     #expect(state.events.contains { $0.eventType == "pigdex" && $0.message.contains("Milestone") })
 }
