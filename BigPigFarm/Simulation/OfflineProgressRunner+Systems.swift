@@ -247,6 +247,10 @@ extension OfflineProgressRunner {
             Double(affinity) * GameConfig.Breeding.affinityChanceBonus,
             GameConfig.Breeding.maxAffinityChanceBonus
         )
+        // Beginner's Luck: 3× breeding chance on Farm #1 for first 48 game hours
+        chance *= NewFarmerSpirit.breedingChanceMultiplier(
+            prestige: prestige, gameTime: state.gameTime
+        )
         return Double.random(in: 0.0..<1.0) < chance
     }
 

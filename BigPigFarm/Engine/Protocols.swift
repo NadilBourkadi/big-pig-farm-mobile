@@ -110,6 +110,7 @@ protocol AdoptionContext: UpgradeQueryContext {
 /// Pig valuation, sale, and contract fulfillment.
 @MainActor
 protocol MarketContext: CurrencyContext, PigQueryContext, UpgradeQueryContext, EventLoggingContext {
+    var boosterState: BoosterState { get set }
     var contractBoard: ContractBoard { get set }
     var farm: FarmGrid { get }
     var prestigeState: PrestigeState { get }
@@ -124,6 +125,8 @@ protocol MarketContext: CurrencyContext, PigQueryContext, UpgradeQueryContext, E
 @MainActor
 protocol UpgradesContext: CurrencyContext, UpgradeQueryContext, EventLoggingContext {
     var farmTier: Int { get }
+    var gameTime: GameTime { get }
+    var prestigeState: PrestigeState { get }
     var purchasedUpgrades: Set<String> { get set }
     func getFacilitiesList() -> [Facility]
     func updateFacility(_ facility: Facility)

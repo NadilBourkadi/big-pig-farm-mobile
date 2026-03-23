@@ -139,6 +139,9 @@ final class SimulationRunner {
         // Phases 8/9/10: Culling + selling + breeding check
         state.withBatchUpdate { processEconomyPhase() }
 
+        // Phase 10b: Milestone checks (idempotent — skips already-completed)
+        MilestoneTracker.checkMilestones(state: state)
+
         // Phase 11: Contract refresh/expiry
         checkContractRefresh()
 
