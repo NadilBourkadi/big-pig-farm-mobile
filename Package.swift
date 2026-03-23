@@ -41,7 +41,8 @@ let package = Package(
                 "Engine/SaveManager.swift",
                 "Engine/SaveMigration.swift",
                 "Engine/Tunnels.swift",
-                // Models (18 of 19 — NotificationCategory+Color needs SwiftUI)
+                // Models (25 of 26 — NotificationCategory+Color needs SwiftUI)
+                "Models/BiomeMastery.swift",
                 "Models/BiomeType.swift",
                 "Models/Bloodline.swift",
                 "Models/BreedingPair.swift",
@@ -59,8 +60,14 @@ let package = Package(
                 "Models/NotificationPreset.swift",
                 "Models/Pigdex.swift",
                 "Models/PigPair.swift",
+                "Models/PrestigeState.swift",
+                "Models/ReunionBoost.swift",
+                "Models/RosetteCalculator.swift",
+                "Models/ShowroomUpgrade.swift",
                 "Models/SpriteTypes.swift",
                 "Models/ToastItem.swift",
+                "Models/TreatType.swift",
+                "Models/VisitStreak.swift",
                 // Scene (2 of 15 — only platform-agnostic data files)
                 "Scene/AnimationData.swift",
                 "Scene/SpriteFurMaps.swift",
