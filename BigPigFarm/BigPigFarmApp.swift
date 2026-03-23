@@ -182,6 +182,7 @@ struct BigPigFarmApp: App {
         setupNewGame(state: gameState)
         runner.rebuildAndSeparateAfterOffline()
         runner.resetAfterOffline()
+        notificationManager.isSuppressed = false
         notificationManager.dismissAll()
         engine.resume()
     }
