@@ -243,6 +243,9 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 | `bd create "title" -t task -p P2` | File a new task |
 | `bd close <id>` | Mark task complete |
 | `bd query "status=in_progress"` | See what all agents are working on |
+| `bd list -l <label> -t decision` | Decision beads for a feature (use `bd list`, not `bd query` for label filtering) |
+
+**`bd query` vs `bd list`:** Use `bd query` for simple filters without labels (e.g. `status=in_progress`). Use `bd list` with flags (`-l`, `-t`, `-s`) when filtering by label — `bd query` cannot parse colons in label values like `feature:X`.
 
 ### Priority levels
 - **P0:** Critical — blocks everything
