@@ -146,6 +146,7 @@
 - [x] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
+- [x] New Farmer Spirit: first-run boosters and milestone rewards (bead 6kys)
 
 ---
 
