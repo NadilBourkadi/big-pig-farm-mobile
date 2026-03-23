@@ -10,6 +10,16 @@ enum ShowroomTier: Int, Codable, CaseIterable, Sendable {
     case apprentice = 2
     case expert = 3
     case master = 4
+
+    /// Human-readable tier name for display in the Showroom UI.
+    var displayName: String {
+        switch self {
+        case .newcomer: "Newcomer"
+        case .apprentice: "Apprentice"
+        case .expert: "Expert"
+        case .master: "Master"
+        }
+    }
 }
 
 // MARK: - ShowroomUpgrade
