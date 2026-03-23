@@ -19,7 +19,8 @@ directly from this skill.
 bd ready -t task -l <label> -n 10
 
 # Open decision beads for this feature (need human input)
-bd query "label=<label> AND type=decision AND status!=closed" -n 0
+# NOTE: use bd list, NOT bd query — bd query chokes on colons in label values
+bd list -l <label> -t decision -n 0
 ```
 
 ### If no argument:
@@ -28,8 +29,8 @@ bd query "label=<label> AND type=decision AND status!=closed" -n 0
 # Top ready implementable beads across all features
 bd ready -t task -n 10
 
-# Any open decision beads anywhere
-bd query "type=decision AND status!=closed" -n 5
+# Any open decision beads anywhere (bd list excludes closed by default)
+bd list -t decision -n 5
 ```
 
 ## Step 2 — Present Pending Decisions FIRST

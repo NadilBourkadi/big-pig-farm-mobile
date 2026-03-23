@@ -22,16 +22,18 @@ Run these commands to collect the information (adapt based on input type):
 
 ### If a feature label was provided:
 
+NOTE: Always use `bd list` with flags for label filtering — `bd query` chokes on colons in label values like `feature:X`.
+
 ```bash
 # All beads with this label (tree view)
 bd list -l <label> --pretty -n 0
 
 # Decision beads that are still open (blocking work)
-bd query "label=<label> AND type=decision AND status!=closed" -n 0
+bd list -l <label> -t decision -n 0
 
 # Counts for progress summary
-bd query "label=<label> AND status=closed" -a -n 0
-bd query "label=<label> AND status!=closed" -n 0
+bd list -l <label> -s closed --all -n 0
+bd list -l <label> -n 0
 ```
 
 ### If an epic ID was provided:
@@ -41,11 +43,11 @@ bd query "label=<label> AND status!=closed" -n 0
 bd children <epic-id> --pretty
 
 # Decision children still open
-bd query "parent=<epic-id> AND type=decision AND status!=closed" -n 0
+bd list --parent <epic-id> -t decision -n 0
 
 # Counts
-bd query "parent=<epic-id> AND status=closed" -a -n 0
-bd query "parent=<epic-id> AND status!=closed" -n 0
+bd list --parent <epic-id> -s closed --all -n 0
+bd list --parent <epic-id> -n 0
 ```
 
 ### If no argument:
