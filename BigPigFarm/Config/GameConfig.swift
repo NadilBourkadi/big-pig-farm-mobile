@@ -211,4 +211,77 @@ enum GameConfig {
         static let neighborhoodUtilityFraction: Double = 0.2
         static let maxNeighborhoods: Int = 4
     }
+
+    enum Prestige {
+        // Rosette formula divisors
+        static let rosetteBaseDivisor: Int = 5000
+        static let rosettePigdexDivisor: Int = 5
+        static let rosetteDiversityDivisor: Int = 10
+        static let rosetteContractDivisor: Int = 3
+
+        // Pig Show threshold
+        static let pigShowLifetimeSqueaksThreshold: Int = 50_000
+
+        // Visit mechanics
+        static let visitCooldownSeconds: TimeInterval = 14_400    // 4 real hours
+        static let reunionMinOfflineSeconds: TimeInterval = 3600   // 1 real hour
+        static let streakWindowSeconds: TimeInterval = 86_400      // 24 hours
+
+        // Reunion boost (standard)
+        static let reunionDurationSeconds: TimeInterval = 1800     // 30 real minutes
+        static let reunionHappinessBoost: Double = 15.0
+        static let reunionBreedingBonus: Double = 0.10
+        static let reunionSaleBonus: Double = 0.10
+
+        // Reunion boost (enhanced — with Reunion Spirit upgrade)
+        static let reunionEnhancedDurationSeconds: TimeInterval = 3600
+        static let reunionEnhancedHappinessBoost: Double = 22.0
+        static let reunionEnhancedBreedingBonus: Double = 0.15
+        static let reunionEnhancedSaleBonus: Double = 0.15
+
+        // Streak bonuses
+        static let streakDay2BreedingBonus: Double = 0.05
+        static let streakDay5SaleBonus: Double = 0.10
+
+        // Treats
+        static let baseTreatsPerVisit: Int = 2
+        static let treatsPerScatter: Int = 4
+        static let treatPouchBonusTreats: Int = 2
+
+        // Biome mastery
+        static let biomeMasteryThreshold: Int = 10
+        static let biomeMasteryCostReduction: Double = 0.25
+        static let biomeMasteryMutationBoost: Double = 0.02
+
+        // Petting
+        static let petHappinessBoost: Double = 10.0
+        static let petSocialBoost: Double = 5.0
+        static let enhancedPetHappinessBoost: Double = 20.0
+        static let enhancedPetSocialBoost: Double = 10.0
+        static let handFeedFavoriteHappinessPerHour: Double = 5.0
+        static let handFeedFavoriteDurationHours: Double = 12.0
+
+        // Facility check bonus
+        static let visitRefillCapacityBonus: Double = 0.25
+
+        // Showroom upgrade effect values
+        static let expandedHutchCapacityBonus: Int = 2
+        static let rapidRecoveryMultiplier: Double = 0.5
+        static let earlyBloomerMinBreedingAge: Int = 2
+        static let pigdexMomentumPerEntry: Double = 0.005
+        static let pigdexMomentumCap: Double = 0.10
+        static let twinSparkChance: Double = 0.10
+        static let fertileGroundBreedingChance: Double = 0.10
+        static let mutationCatalystRate: Double = 0.05
+        static let enduringBondsMaxBreedingAge: Int = 40
+        static let enduringBondsMaxAge: Int = 60
+        static let phenotypeRecallChance: Double = 0.15
+        static let biomeIntuitionMultiplier: Double = 2.0
+        static let prolificLineMinLitter: Int = 2
+        static let premiumGeneticsRarityMultiplier: Double = 1.5
+        static let speedGestationDays: Double = 1.5
+        static let goldenTouchSaleBonus: Double = 0.25
+        static let legendaryLineageMultiplier: Double = 2.0
+        static let keepsakeMaxSlots: Int = 3
+    }
 }
