@@ -171,6 +171,9 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var acclimationTimer: Double = 0.0
     var acclimatingBiome: String?
 
+    // Genetic imprinting (Showroom upgrade)
+    var imprintedLocus: String?
+
     // MARK: - Computed Properties
 
     var ageGroup: AgeGroup {
@@ -189,21 +192,49 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var canBreed: Bool { breedingBlockReason == nil }
 
     var breedingBlockReason: String? {
+        breedingBlockReason(prestige: PrestigeState())
+    }
+
+    /// Prestige-aware breeding eligibility check.
+    func canBreed(prestige: PrestigeState) -> Bool {
+        breedingBlockReason(prestige: prestige) == nil
+    }
+
+    /// Prestige-aware breeding block reason.
+    /// Accounts for Early Bloomer, Enduring Bonds, Speed Gestation, and Rapid Recovery.
+    func breedingBlockReason(prestige: PrestigeState) -> String? {
         if breedingLocked { return "Breeding locked" }
-        if isBaby {
-            let daysLeft = Double(GameConfig.Simulation.adultAgeDays) - ageDays
-            return "Too young (\(String(format: "%.1f", daysLeft))d until adult)"
+
+        let minAge = prestige.hasUpgrade(.earlyBloomer)
+            ? Double(GameConfig.Prestige.earlyBloomerMinBreedingAge)
+            : Double(GameConfig.Breeding.minAgeDays)
+        if ageDays < minAge {
+            let daysLeft = minAge - ageDays
+            return "Too young (\(String(format: "%.1f", daysLeft))d until breedable)"
         }
-        if isSenior { return "Too old (senior)" }
+
+        let maxBreedAge = prestige.hasUpgrade(.enduringBonds)
+            ? Double(GameConfig.Prestige.enduringBondsMaxBreedingAge)
+            : Double(GameConfig.Breeding.maxAgeDays)
+        if ageDays >= maxBreedAge { return "Too old (senior)" }
+
         if needs.happiness < Double(GameConfig.Breeding.minHappinessToBreed) {
             return "Unhappy (\(Int(needs.happiness))/\(GameConfig.Breeding.minHappinessToBreed))"
         }
+
+        let gestationDays = prestige.hasUpgrade(.speedGestation)
+            ? GameConfig.Prestige.speedGestationDays
+            : Double(GameConfig.Breeding.gestationDays)
         if isPregnant {
-            let daysLeft = max(0, Double(GameConfig.Breeding.gestationDays) - pregnancyDays)
+            let daysLeft = max(0, gestationDays - pregnancyDays)
             return "Pregnant (\(String(format: "%.1f", daysLeft))d left)"
         }
+
         if gender == .female, let lastBirth = lastBirthAge {
-            let recoveryLeft = Double(GameConfig.Breeding.recoveryDays) - (ageDays - lastBirth)
+            let recoveryDays = prestige.hasUpgrade(.rapidRecovery)
+                ? Double(GameConfig.Breeding.recoveryDays) * GameConfig.Prestige.rapidRecoveryMultiplier
+                : Double(GameConfig.Breeding.recoveryDays)
+            let recoveryLeft = recoveryDays - (ageDays - lastBirth)
             if recoveryLeft > 0 {
                 return "Recovering from birth (\(String(format: "%.1f", recoveryLeft))d left)"
             }
@@ -316,5 +347,6 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         case preferredBiome = "preferred_biome"
         case acclimationTimer = "acclimation_timer"
         case acclimatingBiome = "acclimating_biome"
+        case imprintedLocus = "imprinted_locus"
     }
 }
