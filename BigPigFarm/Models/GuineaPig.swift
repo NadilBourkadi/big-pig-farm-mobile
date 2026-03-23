@@ -192,17 +192,17 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var canBreed: Bool { breedingBlockReason == nil }
 
     var breedingBlockReason: String? {
-        breedingBlockReason(prestige: PrestigeState())
+        checkBreedingBlock(prestige: PrestigeState())
     }
 
     /// Prestige-aware breeding eligibility check.
-    func canBreed(prestige: PrestigeState) -> Bool {
-        breedingBlockReason(prestige: prestige) == nil
+    func isBreedable(prestige: PrestigeState) -> Bool {
+        checkBreedingBlock(prestige: prestige) == nil
     }
 
     /// Prestige-aware breeding block reason.
     /// Accounts for Early Bloomer, Enduring Bonds, Speed Gestation, and Rapid Recovery.
-    func breedingBlockReason(prestige: PrestigeState) -> String? {
+    func checkBreedingBlock(prestige: PrestigeState) -> String? {
         if breedingLocked { return "Breeding locked" }
 
         let minAge = prestige.hasUpgrade(.earlyBloomer)
