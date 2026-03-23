@@ -240,6 +240,10 @@ enum Breeding {
 
         // Visit bonuses: reunion boost + streak day 2+
         chance += VisitManager.breedingBonus(prestige: gameState.prestigeState)
+        // Beginner's Luck: 3× breeding chance on Farm #1 for first 48 game hours
+        chance *= NewFarmerSpirit.breedingChanceMultiplier(
+            prestige: prestige, gameTime: gameState.gameTime
+        )
 
         guard Double.random(in: 0.0..<1.0) < chance else { return false }
 

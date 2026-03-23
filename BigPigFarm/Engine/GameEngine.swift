@@ -117,6 +117,8 @@ final class GameEngine {
         state.totalPigsBorn = 0
         state.totalPigsSold = 0
         state.totalEarnings = 0
+        state.boosterState = BoosterState()
+        state.completedMilestones = []
         state.simulationTick = 0
 
         // 5. Apply Showroom starting bonuses (modifies farmTier, farm)

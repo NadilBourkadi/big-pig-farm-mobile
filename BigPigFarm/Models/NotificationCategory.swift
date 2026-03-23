@@ -75,7 +75,7 @@ enum NotificationCategory: String, Codable, CaseIterable, Sendable {
         case "death": .deaths
         case "sale": .sales
         case "breeding", "filter": .breeding
-        case "pigdex", "mutation": .discoveries
+        case "pigdex", "mutation", "milestone": .discoveries
         case "purchase", "adoption": .purchases
         case "contract": .contracts
         case "info", "farm_bell", "acclimation": .system

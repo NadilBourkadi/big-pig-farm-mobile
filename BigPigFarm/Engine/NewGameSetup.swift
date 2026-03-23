@@ -26,6 +26,10 @@ func setupNewGame(state: GameState) {
         var pig = GuineaPig.create(name: name, gender: gender)
         pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
         pig.position = pos
+        // Eager Learners: starter pigs on Farm #1 begin happier
+        if NewFarmerSpirit.isFirstFarm(state.prestigeState) {
+            pig.needs.happiness = GameConfig.NewFarmer.eagerLearnersHappiness
+        }
         state.addGuineaPig(pig)
     }
 

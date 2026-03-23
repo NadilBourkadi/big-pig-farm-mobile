@@ -309,4 +309,21 @@ enum GameConfig {
         // Pigdex rediscovery
         static let rediscoveryRewardFraction: Double = 0.50
     }
+
+    enum NewFarmer {
+        // Boosters (Farm #1 only)
+        static let boosterDurationGameMinutes: Double = 2880.0  // 48 game hours
+        static let beginnersLuckMultiplier: Double = 3.0
+        static let welcomeGiftSaleMultiplier: Double = 3.0
+        static let eagerLearnersHappiness: Double = 85.0
+        static let naturalTalentDiscount: Double = 0.20
+
+        // Milestone rewards (all farms)
+        static let firstPigBornReward: Int = 100
+        static let firstPigSoldReward: Int = 50
+        static let firstFacilityPlacedReward: Int = 25
+        static let tier2ReachedReward: Int = 200
+        static let firstContractCompletedReward: Int = 150
+        static let fiftyPigsBornReward: Int = 500
+    }
 }

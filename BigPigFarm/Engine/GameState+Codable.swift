@@ -27,6 +27,8 @@ struct CodableSnapshot: Codable, Sendable {
     let totalPigsBorn: Int
     let totalPigsSold: Int
     let totalEarnings: Int
+    let boosterState: BoosterState
+    let completedMilestones: Set<MilestoneID>
 
     enum CodingKeys: String, CodingKey {
         case guineaPigs = "guinea_pigs"
@@ -49,6 +51,37 @@ struct CodableSnapshot: Codable, Sendable {
         case totalPigsBorn = "total_pigs_born"
         case totalPigsSold = "total_pigs_sold"
         case totalEarnings = "total_earnings"
+        case boosterState = "booster_state"
+        case completedMilestones = "completed_milestones"
+    }
+}
+
+// Backward-compatible decoding: existing saves lack boosterState and completedMilestones.
+extension CodableSnapshot {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guineaPigs = try c.decode([UUID: GuineaPig].self, forKey: .guineaPigs)
+        facilities = try c.decode([UUID: Facility].self, forKey: .facilities)
+        farm = try c.decode(FarmGrid.self, forKey: .farm)
+        money = try c.decode(Int.self, forKey: .money)
+        gameTime = try c.decode(GameTime.self, forKey: .gameTime)
+        speed = try c.decode(GameSpeed.self, forKey: .speed)
+        isPaused = try c.decode(Bool.self, forKey: .isPaused)
+        sessionStart = try c.decode(Date.self, forKey: .sessionStart)
+        lastSave = try c.decodeIfPresent(Date.self, forKey: .lastSave)
+        events = try c.decode([EventLog].self, forKey: .events)
+        pigdex = try c.decode(Pigdex.self, forKey: .pigdex)
+        contractBoard = try c.decode(ContractBoard.self, forKey: .contractBoard)
+        breedingProgram = try c.decode(BreedingProgram.self, forKey: .breedingProgram)
+        breedingPair = try c.decodeIfPresent(BreedingPair.self, forKey: .breedingPair)
+        socialAffinity = try c.decode([String: Int].self, forKey: .socialAffinity)
+        farmTier = try c.decode(Int.self, forKey: .farmTier)
+        purchasedUpgrades = try c.decode(Set<String>.self, forKey: .purchasedUpgrades)
+        totalPigsBorn = try c.decode(Int.self, forKey: .totalPigsBorn)
+        totalPigsSold = try c.decode(Int.self, forKey: .totalPigsSold)
+        totalEarnings = try c.decode(Int.self, forKey: .totalEarnings)
+        boosterState = (try? c.decode(BoosterState.self, forKey: .boosterState)) ?? BoosterState()
+        completedMilestones = (try? c.decode(Set<MilestoneID>.self, forKey: .completedMilestones)) ?? []
     }
 }
 
@@ -91,7 +124,9 @@ extension GameState {
             purchasedUpgrades: purchasedUpgrades,
             totalPigsBorn: totalPigsBorn,
             totalPigsSold: totalPigsSold,
-            totalEarnings: totalEarnings
+            totalEarnings: totalEarnings,
+            boosterState: boosterState,
+            completedMilestones: completedMilestones
         )
         let envelope = SaveEnvelope(schemaVersion: SaveManager.schemaVersion, snapshot: snapshot)
         let encoder = JSONEncoder()
@@ -124,6 +159,8 @@ extension GameState {
         state.totalPigsBorn = snapshot.totalPigsBorn
         state.totalPigsSold = snapshot.totalPigsSold
         state.totalEarnings = snapshot.totalEarnings
+        state.boosterState = snapshot.boosterState
+        state.completedMilestones = snapshot.completedMilestones
         return state
     }
 }

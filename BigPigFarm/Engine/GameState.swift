@@ -100,6 +100,11 @@ final class GameState: @unchecked Sendable {
     var totalPigsSold: Int = 0
     var totalEarnings: Int = 0
 
+    // MARK: - New Farmer Spirit
+
+    var boosterState = BoosterState()
+    var completedMilestones: Set<MilestoneID> = []
+
     // MARK: - Prestige (cross-farm, separate persistence)
 
     /// Cross-farm prestige state. NOT included in CodableSnapshot (has its own save file).

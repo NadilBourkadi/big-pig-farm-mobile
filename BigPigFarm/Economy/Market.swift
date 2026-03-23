@@ -110,7 +110,14 @@ enum Market {
     @discardableResult
     @MainActor
     static func sellPig(state: any MarketContext, pig: GuineaPig) -> SaleResult {
-        let value = calculatePigValue(pig: pig, state: state)
+        var value = calculatePigValue(pig: pig, state: state)
+        // Welcome Gift: 3× first pig sale on Farm #1 (one-shot)
+        if NewFarmerSpirit.isWelcomeGiftAvailable(
+            prestige: state.prestigeState, boosterState: state.boosterState
+        ) {
+            value = Int(Double(value) * GameConfig.NewFarmer.welcomeGiftSaleMultiplier)
+            state.boosterState.welcomeGiftUsed = true
+        }
 
         var contractBonus = 0
         var matchedContract: BreedingContract?
