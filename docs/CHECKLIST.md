@@ -132,6 +132,7 @@
 - [x] Implement `NotificationManager` — toast queue, burst throttling, offline suppression (bead c2o)
 - [x] Clarify "LOW POP" HUD warning — display contextual threshold text with accessibility label (bead z5x)
 - [x] Add Reset Farm option with two-step confirmation in Settings (bead hncu)
+- [x] Use farm capacity as stock limit max and add explainer text in breeding program (bead waqh)
 
 ---
 
