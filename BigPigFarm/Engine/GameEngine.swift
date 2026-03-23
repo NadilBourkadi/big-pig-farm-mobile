@@ -177,8 +177,10 @@ final class GameEngine {
         }
     }
 
-    /// Grant Bulk Feeders and Drip System perks from Auto-Pilot, then apply their immediate effects.
+    /// Grant Bulk Feeders and Drip System perks from Auto-Pilot.
     /// Called after setupNewGame so facilities exist for bulk_feeders to double.
+    /// Note: bulk_feeders has an immediate effect (doubles facility capacity);
+    /// drip_system has no immediate effect (its regen activates each tick via hasUpgrade).
     private func applyAutoPilotPerks() {
         let autoPilotPerks = ["bulk_feeders", "drip_system"]
         for perkId in autoPilotPerks where !state.purchasedUpgrades.contains(perkId) {
