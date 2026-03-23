@@ -105,7 +105,7 @@ final class GameState: @unchecked Sendable {
     /// Cross-farm prestige state. NOT included in CodableSnapshot (has its own save file).
     /// Loaded once at app boot; mutated during gameplay; saved separately.
     @ObservationIgnored
-    var prestigeState: PrestigeState = PrestigeState()
+    var prestigeState = PrestigeState()
 
     // MARK: - Visit Tracking (transient)
 
