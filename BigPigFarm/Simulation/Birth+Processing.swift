@@ -25,9 +25,17 @@ extension Birth {
             return false
         }
 
+        let prestige = gameState.prestigeState
         var maxLitter = GameConfig.Breeding.maxLitterSize
         if gameState.hasUpgrade("litter_boost") { maxLitter += 1 }
-        var litterSize = Int.random(in: GameConfig.Breeding.minLitterSize...maxLitter)
+        let minLitter = prestige.hasUpgrade(.prolificLine)
+            ? GameConfig.Prestige.prolificLineMinLitter
+            : GameConfig.Breeding.minLitterSize
+        var litterSize = Int.random(in: minLitter...maxLitter)
+        if prestige.hasUpgrade(.twinSpark),
+           Double.random(in: 0.0..<1.0) < GameConfig.Prestige.twinSparkChance {
+            litterSize += 1
+        }
         litterSize = min(litterSize, gameState.capacity - gameState.pigCount)
         if litterSize <= 0 {
             cancelPregnancy(mother: mother, gameState: gameState, reason: "farm is at capacity")
