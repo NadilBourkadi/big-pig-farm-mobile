@@ -306,6 +306,7 @@ enum GameConfig {
         static let speedGestationDays: Double = 1.5
         static let goldenTouchSaleBonus: Double = 0.25
         static let legendaryLineageMultiplier: Double = 2.0
+        static let selectiveAdvantageBias: Double = 0.80
         static let keepsakeMaxSlots: Int = 3
         static let quickStudyThresholdMultiplier: Double = 0.75
         static let treatBasketBonusTreats: Int = 1

@@ -21,6 +21,57 @@ struct LifetimeStats: Codable, Sendable {
     }
 }
 
+// MARK: - AllelePreference
+
+/// Per-locus allele preference for the Selective Advantage upgrade.
+enum AllelePreference: String, Codable, CaseIterable, Sendable {
+    case dominant
+    case recessive
+    case noPreference = "no_preference"
+}
+
+// MARK: - AllelePreferences
+
+/// Player-configured allele biases for all 6 genetic loci.
+/// Part of PrestigeState (cross-farm, survives New Pastures reset).
+struct AllelePreferences: Codable, Sendable, Equatable {
+    var eLocus: AllelePreference = .noPreference
+    var bLocus: AllelePreference = .noPreference
+    var sLocus: AllelePreference = .noPreference
+    var cLocus: AllelePreference = .noPreference
+    var rLocus: AllelePreference = .noPreference
+    var dLocus: AllelePreference = .noPreference
+
+    /// Return the preference for a named locus.
+    func preference(forLocus name: String) -> AllelePreference {
+        switch name {
+        case "eLocus": eLocus
+        case "bLocus": bLocus
+        case "sLocus": sLocus
+        case "cLocus": cLocus
+        case "rLocus": rLocus
+        case "dLocus": dLocus
+        default: .noPreference
+        }
+    }
+
+    /// True if any locus has a non-default preference set.
+    var hasAnyPreference: Bool {
+        eLocus != .noPreference || bLocus != .noPreference
+            || sLocus != .noPreference || cLocus != .noPreference
+            || rLocus != .noPreference || dLocus != .noPreference
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case eLocus = "e_locus"
+        case bLocus = "b_locus"
+        case sLocus = "s_locus"
+        case cLocus = "c_locus"
+        case rLocus = "r_locus"
+        case dLocus = "d_locus"
+    }
+}
+
 // MARK: - PrestigeState
 
 /// Top-level prestige state that survives farm resets.
@@ -52,6 +103,28 @@ struct PrestigeState: Codable, Sendable {
 
     /// Active reunion boost (nil when expired or not triggered).
     var activeReunionBoost: ReunionBoost?
+
+    /// Per-locus allele preferences for the Selective Advantage upgrade.
+    var allelePreferences: AllelePreferences = AllelePreferences()
+
+    // MARK: - Codable
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        rosetteBalance = try c.decode(Int.self, forKey: .rosetteBalance)
+        purchasedUpgrades = try c.decode(Set<ShowroomUpgrade>.self, forKey: .purchasedUpgrades)
+        farmCount = try c.decode(Int.self, forKey: .farmCount)
+        previousPigdexEntries = try c.decode(Set<String>.self, forKey: .previousPigdexEntries)
+        lifetimeStats = try c.decode(LifetimeStats.self, forKey: .lifetimeStats)
+        visitStreak = try c.decode(VisitStreak.self, forKey: .visitStreak)
+        biomeMastery = try c.decode(BiomeMastery.self, forKey: .biomeMastery)
+        keepsakePerks = try c.decode([String].self, forKey: .keepsakePerks)
+        activeReunionBoost = try c.decodeIfPresent(ReunionBoost.self, forKey: .activeReunionBoost)
+        allelePreferences = try c.decodeIfPresent(AllelePreferences.self, forKey: .allelePreferences)
+            ?? AllelePreferences()
+    }
 
     // MARK: - Upgrade Helpers
 
@@ -108,5 +181,6 @@ struct PrestigeState: Codable, Sendable {
         case biomeMastery = "biome_mastery"
         case keepsakePerks = "keepsake_perks"
         case activeReunionBoost = "active_reunion_boost"
+        case allelePreferences = "allele_preferences"
     }
 }
