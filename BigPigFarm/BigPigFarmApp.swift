@@ -177,7 +177,7 @@ struct BigPigFarmApp: App {
     @MainActor
     private func performFullReset() {
         engine.pause()
-        saveManager.deleteSave()
+        saveManager.deleteAllSaves()
         gameState.resetToNewGame()
         setupNewGame(state: gameState)
         runner.rebuildAndSeparateAfterOffline()

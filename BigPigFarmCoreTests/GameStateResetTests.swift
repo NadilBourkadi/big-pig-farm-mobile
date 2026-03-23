@@ -136,3 +136,14 @@ import Foundation
     state.resetToNewGame()
     #expect(state.simulationTick == 0)
 }
+
+@Test @MainActor func resetToNewGameResetsPrestigeState() {
+    let state = GameState()
+    state.prestigeState.rosetteBalance = 500
+    state.prestigeState.farmCount = 3
+    state.prestigeState.previousPigdexEntries.insert("black_solid_full_none")
+    state.resetToNewGame()
+    #expect(state.prestigeState.rosetteBalance == 0)
+    #expect(state.prestigeState.farmCount == 1)
+    #expect(state.prestigeState.previousPigdexEntries.isEmpty)
+}

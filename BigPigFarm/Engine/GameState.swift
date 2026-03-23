@@ -371,6 +371,9 @@ extension GameState {
         totalPigsBorn = 0
         totalPigsSold = 0
         totalEarnings = 0
+
+        // Prestige (full wipe — distinct from prestige farm reset which preserves this)
+        prestigeState = PrestigeState()
     }
 }
 
