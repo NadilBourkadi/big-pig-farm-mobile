@@ -110,6 +110,12 @@ struct BigPigFarmApp: App {
                 return
             }
             didEnterBackground = false
+
+            // Visit detection runs independently of offline catch-up.
+            // A 1-hour absence qualifies as a visit even if the offline
+            // catch-up threshold (shorter) is not met.
+            VisitManager.processVisit(state: gameState)
+
             let duration = computeOfflineDuration()
             if duration >= GameConfig.Offline.minThresholdSeconds {
                 runOfflineCatchUp(wallClockSeconds: duration)
@@ -120,6 +126,7 @@ struct BigPigFarmApp: App {
             engine.pause()
         case .background:
             didEnterBackground = true
+            gameState.lastBackgroundDate = Date()
             lifecycleSave()
             #if DEBUG || INTERNAL
             DebugLogger.shared.flushBlocking()
