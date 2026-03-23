@@ -51,7 +51,7 @@ struct StatusToolbar: View {
             TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
 
             if isPigShowEligible, let onPigShowTapped {
-                HUDButton(systemImage: "rosette", label: "Show", action: onPigShowTapped)
+                HUDButton(systemImage: "trophy.fill", label: "Show", action: onPigShowTapped)
             }
 
             Spacer()
