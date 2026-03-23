@@ -146,6 +146,7 @@
 - [x] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [x] Visit UI: treat HUD button, scatter animation, streak indicator, reunion boost HUD (bead a685)
 - [x] Showroom UI: prestige shop with tier-grouped upgrades, purchase flow, Rosette balance display (bead dnk2)
+- [x] Selective Advantage: allele preferences panel + biased inheritance (bead h6wu)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
 - [x] Cap offline breeding frequency to prevent baby-heavy population after long absences (bead amvy)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
