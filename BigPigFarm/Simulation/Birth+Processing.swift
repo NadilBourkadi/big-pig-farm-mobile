@@ -53,14 +53,44 @@ extension Birth {
         var existingNames = Set(gameState.getPigsList().map(\.name))
         var babiesBorn: [GuineaPig] = []
 
+        // Genetic Imprinting: collect locked loci from parents
+        var lockedLoci: [(locusName: String, parentGenotype: Genotype)]?
+        if prestige.hasUpgrade(.geneticImprinting) {
+            var locked: [(locusName: String, parentGenotype: Genotype)] = []
+            if let locus = mother.imprintedLocus {
+                locked.append((locus, mother.genotype))
+            }
+            if let father, let locus = father.imprintedLocus {
+                locked.append((locus, father.genotype))
+            }
+            if !locked.isEmpty { lockedLoci = locked }
+        }
+
+        // Phenotype Recall: collect all known phenotype keys for potential override
+        let phenotypeRecallActive = prestige.hasUpgrade(.phenotypeRecall)
+        let allPigdexKeys: [String] = phenotypeRecallActive
+            ? Array(gameState.pigdex.discovered.keys)
+                + Array(gameState.prestigeState.previousPigdexEntries)
+            : []
+
         for _ in 0..<litterSize {
-            let breedResult = breed(
+            var breedResult = breed(
                 mother.genotype, fatherGenotype,
                 mutationRate: params.mutationRate,
                 locusRates: params.locusRates,
                 directionalTargets: params.directionalTargets,
-                directionalRate: params.directionalRate
+                directionalRate: params.directionalRate,
+                lockedLoci: lockedLoci
             )
+
+            // Phenotype Recall: 15% chance to override genotype with a Pigdex phenotype
+            if phenotypeRecallActive,
+               !allPigdexKeys.isEmpty,
+               Double.random(in: 0.0..<1.0) < GameConfig.Prestige.phenotypeRecallChance,
+               let targetKey = allPigdexKeys.randomElement(),
+               let recalledGenotype = canonicalGenotype(forPhenotypeKey: targetKey) {
+                breedResult = BreedResult(genotype: recalledGenotype, mutations: breedResult.mutations)
+            }
             let gender: Gender = Bool.random() ? .male : .female
             let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
             let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
@@ -148,8 +178,24 @@ extension Birth {
         hasAccelerator: Bool,
         gameState: GameState
     ) -> MutationParameters {
+        let prestige = gameState.prestigeState
         var rate = hasLab ? GameConfig.Genetics.mutationRateWithLab : GameConfig.Genetics.mutationRate
         if hasAccelerator { rate *= 2.0 }
+
+        // Mutation Catalyst: base mutation rate -> 5%
+        if prestige.hasUpgrade(.mutationCatalyst) {
+            rate = max(rate, GameConfig.Prestige.mutationCatalystRate)
+        }
+
+        // Premium Genetics: rare+ phenotypes 1.5x more likely (via mutation rate boost)
+        if prestige.hasUpgrade(.premiumGenetics) {
+            rate *= GameConfig.Prestige.premiumGeneticsRarityMultiplier
+        }
+
+        // Legendary Lineage: legendary phenotypes 2x more likely (stacks with Premium)
+        if prestige.hasUpgrade(.legendaryLineage) {
+            rate *= GameConfig.Prestige.legendaryLineageMultiplier
+        }
 
         let motherBiome = gameState.farm.getBiomeAt(Int(mother.position.x), Int(mother.position.y))
         var locusRates: [String: Double]?
@@ -162,6 +208,12 @@ extension Birth {
                 for (locus, boost) in biomeInfo.mutationBoostLoci where boost > 0 {
                     rates[locus] = rate + boost
                 }
+                // Biome Intuition: double biome-specific mutation boosts
+                if prestige.hasUpgrade(.biomeIntuition) {
+                    for (locus, locusRate) in rates {
+                        rates[locus] = rate + (locusRate - rate) * GameConfig.Prestige.biomeIntuitionMultiplier
+                    }
+                }
                 if !rates.isEmpty { locusRates = rates }
             }
             if !biomeInfo.directionalAlleles.isEmpty {
@@ -170,6 +222,10 @@ extension Birth {
                     ? GameConfig.Genetics.directionalMutationRateWithLab
                     : GameConfig.Genetics.directionalMutationRate
                 if hasAccelerator { directionalRate *= 2.0 }
+                // Biome Intuition: double directional mutation rate
+                if prestige.hasUpgrade(.biomeIntuition) {
+                    directionalRate *= GameConfig.Prestige.biomeIntuitionMultiplier
+                }
             }
         }
 
