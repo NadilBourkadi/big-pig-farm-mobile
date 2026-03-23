@@ -228,74 +228,161 @@ When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths
 - The CHECKLIST at `docs/CHECKLIST.md` tracks implementation progress
 - When implementing, follow the spec — if the spec is wrong, update the spec first
 
-## Beads Task Tracking — CRITICAL
+## Beads Task Tracking
 
-This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` (local only, not git-tracked).
+This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` (local only, not git-tracked). The Dolt DB is shared across all agents on this machine — bead state changes are visible instantly.
 
-### Session workflow
-1. **Start:** Run `bd ready -t task` to see unblocked implementable tasks (checks dependency satisfaction, excludes in_progress/decision/epic)
-2. **Claim:** Run `bd update <id> --claim` before starting work (atomic — fails if already claimed)
-3. **Discover:** File new issues with `bd create "title" -t task -p <priority>`
-4. **Close:** Run `bd close <id>` when done
-5. **Sync:** No git sync needed — Beads state lives in a local Dolt DB only.
+### Key commands
+| Command | Purpose |
+|---------|---------|
+| `bd ready -t task -n 30` | List implementable tasks (dependency-satisfied, excludes in_progress/decision/epic) |
+| `bd update <id> --claim` | Atomically claim a task (fails if already claimed by another agent) |
+| `bd show <id>` | View bead details, description, dependencies |
+| `bd comments <id>` | View comments (including `[HEADS UP]` warnings from other agents) |
+| `bd comments add <id> "msg"` | Post a comment visible to all agents |
+| `bd create "title" -t task -p P2` | File a new task |
+| `bd close <id>` | Mark task complete |
+| `bd query "status=in_progress"` | See what all agents are working on |
+
+### Priority levels
+- **P0:** Critical — blocks everything
+- **P1:** High — significant impact
+- **P2:** Medium — normal priority
+- **P3:** Low — nice to have / polish
 
 ### Rules
-- Always check `bd ready` before starting a new task
-- **`in_progress` is an absolute blocker — no exceptions, no judgment calls.** If a task shows `◐ in_progress` or `IN_PROGRESS`, another agent is actively working on it right now. Do NOT pick it up, do NOT rationalize it as "probably orphaned" or "likely abandoned". The only person who can reassign an in-progress task is the user via explicit instruction (e.g. "take over xtr"). `bd ready` shows all unblocked tasks regardless of status; **always filter to `○ open` only** when selecting work.
-- Never work on a task that has open blockers — use `bd show <id>` to check
-- Create discovered issues as you find them (bugs, tech debt, follow-ups)
+- **`in_progress` is an absolute blocker.** If a task shows `◐ in_progress`, another agent owns it. Do NOT pick it up or assume it's abandoned. Only the user can reassign it.
+- Never work on a task with open blockers — check with `bd show <id>`
 - Keep tasks granular — anything over ~2 files should be its own bead
-- Priority levels: P0 (critical — blocks everything), P1 (high — significant impact), P2 (medium — normal priority), P3 (low — nice to have / polish)
+- Create discovered issues as you find them (bugs, tech debt, follow-ups)
 
-## Feature Workstreams
+---
 
-When working on a multi-bead feature, use epics, decision beads, and feature labels to coordinate work across parallel agents.
+## Agent Workflow — CRITICAL
 
-### Epic beads
-Create an epic bead as the parent for all tasks in a feature:
+This section describes how multiple Claude Code agents coordinate work on this project. The user typically runs 3–4 instances in parallel, each in its own worktree.
+
+### Overview
+
+```
+User (orchestrator)
+  ├── Agent 1 (worktree A) ──► /implement or /triage
+  ├── Agent 2 (worktree B) ──► /implement or /triage
+  ├── Agent 3 (worktree C) ──► /implement or /triage
+  └── Any agent ─────────────► /next (see what's available + pending decisions)
+                                /status (feature progress overview)
+
+Shared state:
+  • Beads DB (Dolt) ─── real-time, all agents see updates instantly
+  • Git remote ──────── visible after merge only
+  • CLAUDE.md / skills ─ static, read at session start
+```
+
+**Human-in-the-loop gates:**
+- **Code review:** Every PR requires explicit user approval before merge. Push is automatic; merge is gated.
+- **Architectural decisions:** Agents surface design choices to the user (inline or via decision beads). Agents never silently pick an approach when alternatives exist.
+- **Task assignment:** The user decides which features to work on. Agents pick individual beads but respect dependency ordering and priorities.
+
+### Skills reference
+
+| Skill | Purpose | When to use |
+|-------|---------|-------------|
+| `/triage` | Investigate a bug/feature, create a bead, auto-implement if simple | Starting new work from a user report |
+| `/implement [id]` | Pick up and implement the next unblocked task | Main implementation workflow |
+| `/next [feature-label]` | Show ready tasks + pending decisions needing user input | Deciding what to work on, resolving decisions |
+| `/status [feature-label]` | Feature workstream overview (progress, blockers, in-flight) | Tracking progress across agents |
+| `/test [--fast\|--full\|--all]` | Run tests in a subagent (preserves context) | After writing code, before pushing |
+| `/code-review swift` | Pre-push code quality review | Before pushing a PR |
+| `/sim` | Build and launch in iOS Simulator | Visual verification |
+
+### Starting a session
+
+1. Run `bd ready -t task -n 30` to see available work
+2. Pick a task (or use `/implement` which selects automatically)
+3. Claim atomically: `bd update <id> --claim` (fails if another agent already claimed it)
+4. Check for warnings: `bd comments <id>` (read any `[HEADS UP]` from other agents)
+5. Check for overlap: `bd query "status=in_progress"` (see what other agents are working on)
+
+**Never use `bd list --ready`** as a substitute for `bd ready` — it does NOT check dependency satisfaction (only filters by status). `bd ready --help` explicitly warns about this.
+
+### Task claiming — race protection
+
+Two agents can see the same task as open in the same instant. The `--claim` flag provides atomic protection:
+
+```
+bd show <id>                        # 1. Pre-check: verify status is open
+bd update <id> --claim              # 2. Atomic claim (sets status + assignee)
+bd show <id>                        # 3. Post-check: verify you own it
+```
+
+If `--claim` fails (another agent claimed it first), pick the next task. **Never use `bd update <id> --status in_progress` directly** — it has no race protection.
+
+### Inter-agent communication
+
+Agents communicate through **bead comments**. The Dolt DB is shared, so comments are visible to all agents instantly.
+
+**Check-in (before starting work):**
+- `bd comments <my-bead-id>` — read warnings from other agents
+- `bd query "status=in_progress"` — see what's being worked on
+- If another in-progress bead touches the same files, plan for rebase conflicts
+
+**Broadcast (during implementation):**
+When you change a public API, rename a type, or alter a protocol — notify affected beads:
+```
+bd comments add <other-bead-id> "[HEADS UP from <my-bead-id>] Renamed Foo.bar() → baz(). Update callsites."
+```
+
+### Architectural decisions
+
+Agents must **never silently choose** when a design fork exists. Two mechanisms:
+
+**Inline (user is in this conversation):** Pause, present the options and trade-offs, wait for the user's answer, then record an ADR in `docs/decisions/` and continue.
+
+**Decision bead (user is busy or decision affects other agents):** Create a decision bead with full context — the problem, options, trade-offs, and what it blocks:
+```
+bd create "DECISION: <question>" -t decision -p P1
+```
+The user sees pending decisions when they run `/next` (which surfaces them before the task list with enough context to decide on the spot). After the user decides:
+1. Record an ADR in `docs/decisions/` (template at `docs/decisions/TEMPLATE.md`)
+2. Close the decision bead — this unblocks dependent tasks for other agents
+
+**When to use which:** Inline for quick choices in an active conversation. Decision bead when the user is in another session, the choice needs thought, or it blocks other agents.
+
+### Feature workstreams
+
+For multi-bead features, use **epics** and **labels** to organize and track work across agents.
+
+**Epic beads** — parent container for a feature:
 ```
 bd create "iCloud Sync" -t epic -p P1
-```
-Then create child tasks with `--parent <epic-id>`:
-```
 bd create "CloudKit container setup" -t task -p P2 --parent <epic-id>
 ```
 
-### Feature labels
-Label all beads in a feature for easy filtering:
+**Feature labels** — cross-cutting filter (works regardless of parent structure):
 ```
 bd label add <id> feature:icloud-sync
 ```
-Use a consistent `feature:<slug>` naming convention. The label lets `/status` and `/next` filter across the feature regardless of parent-child structure.
 
-### Architectural decisions — inline-first
-When an agent encounters a design choice during implementation, it **prompts the user directly in the conversation** — presents the options, trade-offs, and waits for an answer. This is the primary mechanism; decisions should not be silently deferred to an async queue.
+Use `/status feature:X` for a progress overview, `/next feature:X` to see available work within a feature. Agents pick up work via `/implement <bead-id>`, not by feature label — labels are for visibility, not routing.
 
-After the user decides, the agent:
-1. Records an ADR in `docs/decisions/` (using the template at `docs/decisions/TEMPLATE.md`)
-2. Commits the ADR as part of the PR
-3. Optionally creates a decision bead if the decision affects other agents/beads
+### Preventing state drift
 
-### Decision beads (cross-agent coordination)
-Decision beads are for decisions that **block other agents' work**, not for decisions within a single agent's task. Create one when the choice affects beads owned by other agents:
-```
-bd create "Choose sync conflict resolution strategy" -t decision -p P1 --parent <epic-id>
-```
-Add it as a dependency for blocked implementation beads:
-```
-bd dep add <impl-bead> <decision-bead>
-```
-Close the decision bead immediately after recording the ADR — it's a workflow gate, not a to-do item.
+Multiple agents working in parallel causes state drift: one agent can close a bead while another is unaware, and neither has merged to main yet.
 
-### Workflow skills
-- **`/status <feature-label>`** — overview of all beads for a feature, grouped by status, with blocking decisions highlighted
-- **`/next [feature-label]`** — highest-priority unblocked tasks, optionally filtered by feature
+**Rules:**
+- **Do NOT close a bead or update `docs/CHECKLIST.md` until the PR is merged to main.** The checklist is main-branch truth. Bead closure + checklist update go in the feature PR commit, applied just before merge.
+- **At the start of every task**, run `git fetch origin main` then `git log origin/main..HEAD` — must show zero commits. If stale, create a fresh branch: `git checkout -b feature/<id>-<slug> origin/main`.
+- **If a bead is closed but its code is not on main**, reopen it, find the branch, push it, and open a PR. Don't start duplicate work.
+- **Beads state is shared** (Dolt DB), but checklist and code are per-branch until merged. Treat the checklist as write-once per merge.
 
-### Rules
-- **One feature label per workstream.** Don't mix unrelated work under the same label.
-- **Decision beads block dependents via deps, not status.** A decision bead with `open` status but no dependents doesn't block anything.
-- **Close decision beads after recording the ADR.** The ADR is the durable record; the bead is the workflow gate.
-- **Agents pick up work via `/implement <bead-id>`**, not by feature label. The feature label is for visibility, not routing.
+### Worktrees
+
+**ALL implementation work happens in a worktree — no exceptions.** Running `/implement` in the main repo directory strands it on a feature branch.
+
+- Worktrees live in `.claude/worktrees/`. Each gets its own isolated repo copy.
+- Worktrees are **reusable across tasks** — after merging a PR, create a fresh branch in the same worktree instead of creating a new one.
+- After switching branches in a worktree, always run `xcodegen generate` (project.yml may have changed on main).
+- All file paths in tool calls must use the **worktree absolute path**, never the main repo path.
 
 ## Working Style
 
@@ -304,49 +391,6 @@ Close the decision bead immediately after recording the ADR — it's a workflow 
 - **Suggest improvements** proactively
 - **Flag contradictions and ambiguity** immediately
 - **Use subagents** aggressively to preserve context window
-
-## Parallel Agents — CRITICAL
-
-Multiple Claude agents may run simultaneously on this project. This causes state drift: one agent can close a bead and check off a checklist item while another agent is unaware of that work — and neither has merged to main yet.
-
-**Rules to prevent state drift:**
-
-- **Do NOT close a bead until its PR is merged to main.** Closing the bead while the branch is still unmerged marks the work as done when it isn't yet reflected in main. Close the bead in the same commit that updates the checklist, just before or after the merge.
-- **Do NOT update `docs/CHECKLIST.md` until the PR is merged to main.** Same reason: the checklist is main-branch truth, not worktree truth.
-- **Commit checklist + bead snapshot on the feature branch, not on main directly.** Both `docs/CHECKLIST.md` and `.beads/issues.jsonl` updates belong in the feature PR commit, applied just before the merge.
-- **At the start of any task (not just any session), run `git fetch origin main` then `git log origin/main..HEAD`** to check whether the current branch has already-merged commits. If any appear, the branch is stale — create a fresh branch off `origin/main` within the current worktree (`git checkout -b feature/<id>-<slug> origin/main`). A new session is NOT required.
-- **If you discover that a bead is closed but its code is not in main,** reopen the task on main (via `bd update <id> --status in_progress`), find the worktree branch, push it, and open a PR. Do not start duplicate work.
-- **Beads state is shared** (Dolt DB is local, not git-tracked), so two agents CAN see each other's bead updates. But checklist and code state is per-branch until merged. Treat the checklist as write-once per merge.
-
-### Task claiming — race protection
-
-**Use `bd ready -t task`** to list candidates. It checks dependency satisfaction and excludes in_progress/blocked/deferred beads. The `-t task` filter prevents decision and epic beads from appearing.
-
-**Never use `bd list --ready`** — it does NOT check dependency satisfaction (only filters by status). The `bd ready` help explicitly warns about this.
-
-**Always claim atomically** with `bd update <id> --claim` (not `--status in_progress`). The `--claim` flag fails if another agent already claimed the bead. Verify the claim with `bd show <id>` immediately after.
-
-### Inter-agent communication
-
-Agents communicate through **bead comments** — the Dolt DB is shared and updates are visible instantly.
-
-**Check-in (before starting work):**
-- `bd comments <my-bead-id>` — read any `[HEADS UP]` warnings from other agents
-- `bd query "status=in_progress"` — see what other agents are working on
-- If another in-progress bead touches the same files, plan for rebase conflicts
-
-**Broadcast (during implementation):**
-- When you change a public API, rename a type, or alter a protocol: notify beads that depend on it
-  ```
-  bd comments add <affected-bead-id> "[HEADS UP from <my-bead-id>] Changed X to Y. Reason: ..."
-  ```
-- When you discover something that affects another task: comment on that bead
-- When you need a human decision mid-implementation: create a P0 decision bead
-
-**Decisions (need user input):**
-- **Inline-first:** prompt the user directly in the conversation, record the ADR, continue
-- **Cross-agent:** if the decision blocks other agents' beads, also create a decision bead and close it after recording the ADR — this unblocks dependents
-- Decision beads surface in `/next` and `/status` so the user can see what's pending across agents
 
 ## Mistakes Are Configuration Gaps — CRITICAL
 
