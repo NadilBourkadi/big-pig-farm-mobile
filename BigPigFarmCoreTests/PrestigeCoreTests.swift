@@ -163,6 +163,7 @@ import Foundation
 
 @Test @MainActor func farmResetIncrementsFarmCount() {
     let state = makeGameState()
+    state.prestigeState.farmCount = 1
     #expect(state.prestigeState.farmCount == 1)
 
     let engine = GameEngine(state: state)
