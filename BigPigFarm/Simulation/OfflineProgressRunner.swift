@@ -130,7 +130,9 @@ enum OfflineProgressRunner {
         // 7. Acclimation
         advanceAcclimation(state: state, hours: hours)
 
-        // 8. Offline breeding (gated to reduce baby-heavy population after long absences)
+        // 8. Offline breeding — fires on checkpoint 0 (guaranteeing at least one
+        //    attempt per session), then every Nth checkpoint to reduce the flood of
+        //    babies that can never age to adulthood within the offline window.
         if checkpointIndex % GameConfig.Offline.breedingCheckpointInterval == 0 {
             runOfflineBreeding(state: state, summary: &summary)
         }

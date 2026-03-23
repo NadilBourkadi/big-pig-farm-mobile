@@ -90,9 +90,10 @@ struct OfflineBreedingTests {
                 pig.needs.happiness = 90.0
                 state.updateGuineaPig(pig)
             }
-            // ~8.7 game-hours via tier 1+2: 2h×3.0 + 1.33h×2.0 = 12000 wall seconds
+            // ~24 game-hours via all tiers: 46800 wall seconds (13h real).
+            // Gives 4 breeding attempts (indices 0,6,12,18) per run.
             let summary = OfflineProgressRunner.runCatchUp(
-                state: state, wallClockSeconds: 12_000
+                state: state, wallClockSeconds: 46_800
             )
             if !summary.pregnanciesStarted.isEmpty {
                 pregnancyOccurred = true
@@ -122,7 +123,7 @@ struct OfflineBreedingTests {
         let interval = GameConfig.Offline.breedingCheckpointInterval
         let gameHours = OfflineProgressRunner.computeGameHours(wallClockSeconds: 86_400)
         let checkpoints = Int(gameHours / GameConfig.Offline.checkpointGameHours)
-        let maxAttempts = (checkpoints / interval) + 1
+        let maxAttempts = (checkpoints + interval - 1) / interval  // ceil division
 
         #expect(summary.pregnanciesStarted.count <= maxAttempts)
     }
