@@ -9,22 +9,14 @@ import SwiftUI
 struct NotificationSettingsView: View {
     /// App-wide notification preferences (not per-save). Uses UserDefaults.standard.
     @State private var preferences = NotificationPreferences.load()
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            Form {
-                presetSection
-                categoriesSection
-            }
-            .navigationTitle("Notifications")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
+        Form {
+            presetSection
+            categoriesSection
         }
+        .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

@@ -89,7 +89,8 @@ struct BigPigFarmApp: App {
                 gameState: gameState,
                 engine: engine,
                 notificationManager: notificationManager,
-                offlineSummary: $offlineSummary
+                offlineSummary: $offlineSummary,
+                onResetFarm: { performFullReset() }
             )
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -169,6 +170,20 @@ struct BigPigFarmApp: App {
         } else {
             engine.resume()
         }
+    }
+
+    // MARK: - Full Reset
+
+    @MainActor
+    private func performFullReset() {
+        engine.pause()
+        saveManager.deleteSave()
+        gameState.resetToNewGame()
+        setupNewGame(state: gameState)
+        runner.rebuildAndSeparateAfterOffline()
+        runner.resetAfterOffline()
+        notificationManager.dismissAll()
+        engine.resume()
     }
 
     // MARK: - Persistence

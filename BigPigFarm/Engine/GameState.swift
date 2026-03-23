@@ -318,6 +318,60 @@ extension GameState {
     func hasUpgrade(_ upgradeID: String) -> Bool {
         purchasedUpgrades.contains(upgradeID)
     }
+
+    // MARK: - Full Reset
+
+    /// Reset all game state to fresh defaults, as if starting a new game.
+    /// The instance is reused (not replaced) to preserve @Observable references
+    /// held by SwiftUI views and SpriteKit scene.
+    func resetToNewGame() {
+        // Collections
+        guineaPigs = [:]
+        facilities = [:]
+        pigsListCache = nil
+        facilitiesListCache = nil
+        facilitiesByTypeCache = nil
+        batchUpdateDepth = 0
+
+        // World
+        farm = FarmGrid.createStarter()
+
+        // Economy
+        money = GameConfig.Economy.startingMoney
+
+        // Time
+        gameTime = GameTime()
+        speed = .normal
+        isPaused = false
+        simulationTick = 0
+
+        // Session
+        sessionStart = Date()
+        lastSave = nil
+
+        // Events
+        events = []
+
+        // Collections
+        pigdex = Pigdex()
+        contractBoard = ContractBoard()
+
+        // Breeding
+        breedingProgram = BreedingProgram()
+        breedingPair = nil
+
+        // Social
+        socialAffinity = [:]
+
+        // Progression
+        farmTier = 1
+        purchasedUpgrades = []
+
+        // Statistics
+        totalPigsBorn = 0
+        totalPigsSold = 0
+        totalEarnings = 0
+    }
 }
 
 // MARK: - Manual Refill
