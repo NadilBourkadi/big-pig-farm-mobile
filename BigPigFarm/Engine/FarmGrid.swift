@@ -215,8 +215,15 @@ extension FarmGrid {
 extension FarmGrid {
     /// Create a starter farm grid with a single MEADOW area.
     static func createStarter() -> FarmGrid {
-        let tierInfo = getTierUpgrade(tier: 1)
+        createStarter(tier: 1)
+    }
+
+    /// Create a starter farm grid at the given tier.
+    /// Used by prestige bonuses (Established Farm = tier 2, Grand Farm = tier 3).
+    static func createStarter(tier: Int) -> FarmGrid {
+        let tierInfo = getTierUpgrade(tier: tier)
         var grid = FarmGrid(width: tierInfo.roomWidth, height: tierInfo.roomHeight)
+        grid.tier = tier
         grid.createLegacyStarterArea()
         return grid
     }

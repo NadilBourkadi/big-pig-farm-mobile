@@ -15,7 +15,7 @@ import Foundation
     #expect(manager.load() == nil)
 }
 
-@Test @MainActor func deleteSaveRemovesBothFiles() throws {
+@Test @MainActor func deleteGameSaveRemovesBothFiles() throws {
     let manager = makeTempSaveManager()
     let state = makeGameState()
     try manager.save(state)
@@ -23,7 +23,7 @@ import Foundation
     try manager.save(state)
     #expect(manager.hasSave() == true)
     #expect(FileManager.default.fileExists(atPath: manager.backupFileURL.path) == true)
-    manager.deleteSave()
+    manager.deleteGameSave()
     #expect(manager.hasSave() == false)
     #expect(FileManager.default.fileExists(atPath: manager.backupFileURL.path) == false)
 }

@@ -73,6 +73,146 @@ final class GameEngine {
         return state.speed
     }
 
+    // MARK: - Prestige: Farm Reset
+
+    /// Reset the farm for a New Pastures prestige. Preserves PrestigeState, clears everything else,
+    /// and applies any purchased Showroom starting bonuses.
+    func farmReset() {
+        // 1. Carry over current Pigdex entries into prestige state
+        state.prestigeState.carryOverPigdex(state.pigdex)
+
+        // 2. Accumulate lifetime stats
+        state.prestigeState.lifetimeStats.totalPigsBred += state.totalPigsBorn
+        state.prestigeState.lifetimeStats.totalSqueaksEarned += state.totalEarnings
+        state.prestigeState.lifetimeStats.totalPigsSold += state.totalPigsSold
+
+        // 3. Increment farm count
+        state.prestigeState.farmCount += 1
+
+        // 4. Clear all per-farm state
+        state.guineaPigs = [:]
+        state.facilities = [:]
+        state.money = GameConfig.Economy.startingMoney
+        state.gameTime = GameTime()
+        state.speed = .normal
+        state.isPaused = false
+        state.sessionStart = Date()
+        state.lastSave = nil
+        state.events = []
+        state.pigdex = Pigdex()
+        state.contractBoard = ContractBoard()
+        state.breedingProgram = BreedingProgram()
+        state.breedingPair = nil
+        state.socialAffinity = [:]
+        state.farmTier = 1
+        state.purchasedUpgrades = []
+        state.totalPigsBorn = 0
+        state.totalPigsSold = 0
+        state.totalEarnings = 0
+        state.simulationTick = 0
+
+        // 5. Apply Showroom starting bonuses (modifies farmTier, farm)
+        applyShowroomBonuses()
+
+        // 6. Set up starter pigs and facilities
+        setupNewGame(state: state)
+
+        // 7. If Heritage Herd: add bonus pigs
+        if state.prestigeState.hasUpgrade(.heritageHerd) {
+            spawnHeritageHerdPigs()
+        }
+
+        state.logEvent(
+            "Welcome to Farm #\(state.prestigeState.farmCount) — New Pastures!",
+            eventType: "prestige"
+        )
+    }
+
+    /// Apply Showroom starting bonuses that affect farm setup.
+    private func applyShowroomBonuses() {
+        let upgrades = state.prestigeState.purchasedUpgrades
+
+        // Grand Farm supersedes Established Farm
+        if upgrades.contains(.grandFarm) {
+            state.farmTier = 3
+            state.farm = FarmGrid.createStarter(tier: 3)
+            addBonusRooms(count: 2)
+        } else if upgrades.contains(.establishedFarm) {
+            state.farmTier = 2
+            state.farm = FarmGrid.createStarter(tier: 2)
+            addBonusRooms(count: 1)
+        } else {
+            state.farm = FarmGrid.createStarter()
+        }
+    }
+
+    /// Add bonus rooms with random biomes (excluding meadow, which is the starter).
+    private func addBonusRooms(count: Int) {
+        let nonMeadowBiomes = BiomeType.allCases.filter { $0 != .meadow }
+        for _ in 0..<count {
+            guard let biome = nonMeadowBiomes.randomElement() else { continue }
+            _ = GridExpansion.addRoom(&state.farm, biome: biome)
+        }
+    }
+
+    /// Spawn Heritage Herd bonus pigs: 3 extra pigs (2 uncommon+, 1 with bloodline allele).
+    /// The base 2 pigs from setupNewGame are already present.
+    private func spawnHeritageHerdPigs() {
+        var existingNames = Set(state.getPigsList().map(\.name))
+
+        // 2 uncommon+ pigs
+        for _ in 0..<2 {
+            let genotype = generateUncommonGenotype()
+            let gender: Gender = Bool.random() ? .male : .female
+            let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
+            let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
+            existingNames.insert(name)
+            var pig = GuineaPig.create(name: name, gender: gender, genotype: genotype)
+            pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+            if let walkable = state.farm.findRandomWalkable() {
+                pig.position = Position(x: Double(walkable.x), y: Double(walkable.y))
+            }
+            state.addGuineaPig(pig)
+        }
+
+        // 1 bloodline pig
+        let availableBloodlines = getAvailableBloodlines(farmTier: state.farmTier)
+        if let bloodline = availableBloodlines.randomElement() {
+            let baseGenotype = Genotype.random()
+            let genotype = bloodline.applyToGenotype(baseGenotype)
+            let gender: Gender = Bool.random() ? .male : .female
+            let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
+            let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
+            existingNames.insert(name)
+            var pig = GuineaPig.create(name: name, gender: gender, genotype: genotype)
+            pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+            if let walkable = state.farm.findRandomWalkable() {
+                pig.position = Position(x: Double(walkable.x), y: Double(walkable.y))
+            }
+            state.addGuineaPig(pig)
+        }
+    }
+
+    /// Generate a genotype that produces at least an uncommon phenotype.
+    private func generateUncommonGenotype() -> Genotype {
+        for _ in 0..<100 {
+            let genotype = Genotype.random()
+            let phenotype = calculatePhenotype(genotype)
+            if phenotype.rarity != .common {
+                return genotype
+            }
+        }
+        // Fallback: force a non-common genotype by using chocolate (bb)
+        return Genotype(
+            eLocus: AllelePair(first: "E", second: "e"),
+            bLocus: AllelePair(first: "b", second: "b"),
+            sLocus: AllelePair(first: "S", second: "S"),
+            cLocus: AllelePair(first: "C", second: "C"),
+            rLocus: AllelePair(first: "R", second: "R"),
+            dLocus: AllelePair(first: "D", second: "D")
+        )
+    }
+
     // MARK: - Properties
 
     var isRunning: Bool { timer != nil }
