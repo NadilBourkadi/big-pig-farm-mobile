@@ -35,8 +35,8 @@ enum OfflineProgressRunner {
         let moneyBefore = state.money
         let emptyBefore = state.getFacilitiesList().filter(\.isEmpty).count
 
-        for _ in 0..<checkpointCount {
-            runCheckpoint(state: state, summary: &summary)
+        for i in 0..<checkpointCount {
+            runCheckpoint(state: state, checkpointIndex: i, summary: &summary)
         }
 
         repositionPigs(state: state)
@@ -91,6 +91,7 @@ enum OfflineProgressRunner {
     @MainActor
     private static func runCheckpoint(
         state: GameState,
+        checkpointIndex: Int,
         summary: inout OfflineProgressSummary
     ) {
         let hours: Double = GameConfig.Offline.checkpointGameHours
@@ -129,8 +130,10 @@ enum OfflineProgressRunner {
         // 7. Acclimation
         advanceAcclimation(state: state, hours: hours)
 
-        // 8. Offline breeding
-        runOfflineBreeding(state: state, summary: &summary)
+        // 8. Offline breeding (gated to reduce baby-heavy population after long absences)
+        if checkpointIndex % GameConfig.Offline.breedingCheckpointInterval == 0 {
+            runOfflineBreeding(state: state, summary: &summary)
+        }
 
         // 9. Culling + selling
         Culling.cullSurplusBreeders(gameState: state)

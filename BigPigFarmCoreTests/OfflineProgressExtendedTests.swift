@@ -78,9 +78,10 @@ struct OfflineAgingTests {
 @Suite("Offline Breeding")
 struct OfflineBreedingTests {
     @Test @MainActor func breedingCanProducePregnancies() {
-        // Run enough checkpoints that at least one breeding roll should succeed
+        // Breeding fires every breedingCheckpointInterval checkpoints, so use
+        // enough retries to account for the reduced attempt count.
         var pregnancyOccurred = false
-        for _ in 0..<5 {
+        for _ in 0..<10 {
             let state = makeOfflineState(pigCount: 2)
             // Add breeding den for higher chance
             _ = state.addFacility(Facility.create(type: .breedingDen, x: 3, y: 8))
@@ -99,6 +100,31 @@ struct OfflineBreedingTests {
             }
         }
         #expect(pregnancyOccurred)
+    }
+
+    @Test @MainActor func breedingGatedByCheckpointInterval() {
+        // With 10 pigs, breeding den, and high happiness, breeding should
+        // succeed on most attempts. Verify the interval cap limits total
+        // pregnancies to ceil(checkpoints / interval).
+        let state = makeOfflineState(pigCount: 10)
+        _ = state.addFacility(Facility.create(type: .breedingDen, x: 3, y: 8))
+        for var pig in state.getPigsList() {
+            pig.needs.happiness = 95.0
+            state.updateGuineaPig(pig)
+        }
+
+        // 24h offline = 86400 wall seconds → ~35 game-hours → 35 checkpoints.
+        // With interval=6, breeding fires at indices 0,6,12,18,24,30 → max 6.
+        let summary = OfflineProgressRunner.runCatchUp(
+            state: state, wallClockSeconds: 86_400
+        )
+
+        let interval = GameConfig.Offline.breedingCheckpointInterval
+        let gameHours = OfflineProgressRunner.computeGameHours(wallClockSeconds: 86_400)
+        let checkpoints = Int(gameHours / GameConfig.Offline.checkpointGameHours)
+        let maxAttempts = (checkpoints / interval) + 1
+
+        #expect(summary.pregnanciesStarted.count <= maxAttempts)
     }
 
     @Test @MainActor func breedingCappedToOnePerCheckpoint() {

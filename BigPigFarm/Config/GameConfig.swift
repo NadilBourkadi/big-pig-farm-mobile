@@ -198,6 +198,11 @@ enum GameConfig {
         static let consumptionRateMultiplier: Double = 0.40
         /// Health floor when facilities are empty. Pigs suffer but survive.
         static let healthMercyFloor: Double = 10.0
+        /// Breed only once every N checkpoints during offline catch-up.
+        /// Prevents baby-heavy population after long absences — with only
+        /// ~35 game-hours in a 24h session, babies born late can never reach
+        /// adultAgeDays (3 days = 72 game-hours) before catch-up ends.
+        static let breedingCheckpointInterval: Int = 6
 
         /// A single tier in the diminishing-returns offline speed curve.
         struct SpeedTier: Sendable {
