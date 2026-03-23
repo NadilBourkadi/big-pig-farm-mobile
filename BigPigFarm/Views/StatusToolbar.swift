@@ -23,6 +23,7 @@ struct StatusToolbar: View {
     var onPigListTapped: () -> Void
     var onBreedingTapped: () -> Void
     var onAlmanacTapped: () -> Void
+    var onShowroomTapped: () -> Void
     var onRefillTapped: () -> Void
     var onEditTapped: () -> Void
     var onPauseTapped: () -> Void
@@ -34,6 +35,7 @@ struct StatusToolbar: View {
             HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
             HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
             HUDButton(systemImage: "books.vertical.fill", label: "Almanac", action: onAlmanacTapped)
+            HUDButton(systemImage: "rosette", label: "Showroom", action: onShowroomTapped)
 
             refillButton
             TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
@@ -109,6 +111,7 @@ private struct StatusToolbarPreview: View {
             onPigListTapped: {},
             onBreedingTapped: {},
             onAlmanacTapped: {},
+            onShowroomTapped: {},
             onRefillTapped: {},
             onEditTapped: { editMode.toggle() },
             onPauseTapped: {},
