@@ -24,6 +24,7 @@ struct StatusToolbar: View {
     var onBreedingTapped: () -> Void
     var onAlmanacTapped: () -> Void
     var onShowroomTapped: () -> Void
+    var onAtlasTapped: () -> Void
     var onRefillTapped: () -> Void
     var onEditTapped: () -> Void
     var onPauseTapped: () -> Void
@@ -36,6 +37,7 @@ struct StatusToolbar: View {
             HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
             HUDButton(systemImage: "books.vertical.fill", label: "Almanac", action: onAlmanacTapped)
             HUDButton(systemImage: "rosette", label: "Showroom", action: onShowroomTapped)
+            HUDButton(systemImage: "map.fill", label: "Atlas", action: onAtlasTapped)
 
             refillButton
             TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
@@ -112,6 +114,7 @@ private struct StatusToolbarPreview: View {
             onBreedingTapped: {},
             onAlmanacTapped: {},
             onShowroomTapped: {},
+            onAtlasTapped: {},
             onRefillTapped: {},
             onEditTapped: { editMode.toggle() },
             onPauseTapped: {},

@@ -101,6 +101,7 @@ struct ContentView: View {
     @State private var showBreeding = false
     @State private var showAlmanac = false
     @State private var showShowroom = false
+    @State private var showAtlas = false
     /// The pig currently selected for detail view. Non-nil while the detail sheet is presented.
     @State private var selectedPig: GuineaPig?
 
@@ -194,6 +195,7 @@ struct ContentView: View {
                     onBreedingTapped: { showBreeding = true },
                     onAlmanacTapped: { showAlmanac = true },
                     onShowroomTapped: { showShowroom = true },
+                    onAtlasTapped: { showAtlas = true },
                     onRefillTapped: { gameState.manualRefillAll() },
                     onEditTapped: { toggleEditMode() },
                     onPauseTapped: { togglePause() },
@@ -215,6 +217,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showShowroom) {
             ShowroomView(gameState: gameState)
+        }
+        .sheet(isPresented: $showAtlas) {
+            BiomeAtlasView(prestigeState: gameState.prestigeState)
         }
         .sheet(item: $selectedPig) { pig in
             NavigationStack {
@@ -305,6 +310,7 @@ extension ContentView {
     private func handleResetFarm() {
         showAlmanac = false
         showShowroom = false
+        showAtlas = false
         showShop = false
         showPigList = false
         showBreeding = false
