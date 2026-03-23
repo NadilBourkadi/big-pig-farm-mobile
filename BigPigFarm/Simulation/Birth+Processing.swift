@@ -67,6 +67,10 @@ extension Birth {
             if !locked.isEmpty { lockedLoci = locked }
         }
 
+        // Selective Advantage: collect allele preferences
+        let allelePreferences: AllelePreferences? = prestige.hasUpgrade(.selectiveAdvantage)
+            ? prestige.allelePreferences : nil
+
         // Phenotype Recall: collect all known phenotype keys for potential override
         let phenotypeRecallActive = prestige.hasUpgrade(.phenotypeRecall)
         let allPigdexKeys: [String] = phenotypeRecallActive
@@ -81,7 +85,8 @@ extension Birth {
                 locusRates: params.locusRates,
                 directionalTargets: params.directionalTargets,
                 directionalRate: params.directionalRate,
-                lockedLoci: lockedLoci
+                lockedLoci: lockedLoci,
+                allelePreferences: allelePreferences
             )
 
             // Phenotype Recall: 15% chance to override genotype with a Pigdex phenotype

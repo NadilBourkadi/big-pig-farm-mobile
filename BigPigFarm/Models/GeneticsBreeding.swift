@@ -20,6 +20,39 @@ func inheritAllele(_ parent1Locus: AllelePair, _ parent2Locus: AllelePair) -> Al
     return AllelePair(first: allele1, second: allele2)
 }
 
+// MARK: - Biased Inheritance (Selective Advantage)
+
+/// Inherit one allele from each parent with optional preference bias.
+/// When a preference is set and the parent carries the target allele,
+/// there is an 80% chance the inherited allele matches the preferred direction.
+func inheritAlleleWithPreference(
+    _ parent1Locus: AllelePair,
+    _ parent2Locus: AllelePair,
+    preference: AllelePreference,
+    dominant: String,
+    recessive: String
+) -> AllelePair {
+    guard preference != .noPreference else {
+        return inheritAllele(parent1Locus, parent2Locus)
+    }
+    let target = preference == .dominant ? dominant : recessive
+    let allele1 = biasedAlleleChoice(parent1Locus, target: target)
+    let allele2 = biasedAlleleChoice(parent2Locus, target: target)
+    return AllelePair(first: allele1, second: allele2)
+}
+
+/// Pick one allele from a parent pair, biased toward the target allele.
+/// If the parent does not carry the target allele, falls back to random (50/50).
+private func biasedAlleleChoice(_ parentPair: AllelePair, target: String) -> String {
+    guard parentPair.contains(target) else {
+        return Bool.random() ? parentPair.first : parentPair.second
+    }
+    if Double.random(in: 0.0..<1.0) < GameConfig.Prestige.selectiveAdvantageBias {
+        return target
+    }
+    return Bool.random() ? parentPair.first : parentPair.second
+}
+
 // MARK: - Mutations
 
 /// Attempt to mutate one allele in a locus (random direction).
@@ -89,15 +122,23 @@ func breed(
     locusRates: [String: Double]? = nil,
     directionalTargets: [String: String]? = nil,
     directionalRate: Double = 0.0,
-    lockedLoci: [(locusName: String, parentGenotype: Genotype)]? = nil
+    lockedLoci: [(locusName: String, parentGenotype: Genotype)]? = nil,
+    allelePreferences: AllelePreferences? = nil
 ) -> BreedResult {
-    // Normal Mendelian inheritance
-    var eLocus = inheritAllele(parent1.eLocus, parent2.eLocus)
-    var bLocus = inheritAllele(parent1.bLocus, parent2.bLocus)
-    var sLocus = inheritAllele(parent1.sLocus, parent2.sLocus)
-    var cLocus = inheritAllele(parent1.cLocus, parent2.cLocus)
-    var rLocus = inheritAllele(parent1.rLocus, parent2.rLocus)
-    var dLocus = inheritAllele(parent1.dLocus, parent2.dLocus)
+    // Mendelian inheritance with optional Selective Advantage bias
+    let prefs = allelePreferences ?? AllelePreferences()
+    var eLocus = inheritAlleleWithPreference(parent1.eLocus, parent2.eLocus,
+        preference: prefs.eLocus, dominant: "E", recessive: "e")
+    var bLocus = inheritAlleleWithPreference(parent1.bLocus, parent2.bLocus,
+        preference: prefs.bLocus, dominant: "B", recessive: "b")
+    var sLocus = inheritAlleleWithPreference(parent1.sLocus, parent2.sLocus,
+        preference: prefs.sLocus, dominant: "S", recessive: "s")
+    var cLocus = inheritAlleleWithPreference(parent1.cLocus, parent2.cLocus,
+        preference: prefs.cLocus, dominant: "C", recessive: "ch")
+    var rLocus = inheritAlleleWithPreference(parent1.rLocus, parent2.rLocus,
+        preference: prefs.rLocus, dominant: "R", recessive: "r")
+    var dLocus = inheritAlleleWithPreference(parent1.dLocus, parent2.dLocus,
+        preference: prefs.dLocus, dominant: "D", recessive: "d")
 
     // Check for lethal roan combination (RR) -- reroll until non-lethal
     while rLocus.isHomozygous("R") {
