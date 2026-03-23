@@ -56,6 +56,9 @@ struct BigPigFarmApp: App {
         eng.registerTickCallback { [weak sim] minutes in
             sim?.tick(gameMinutes: minutes)
         }
+        eng.onPrestigeReset = { [sm] in
+            try? sm.savePrestigeState(state.prestigeState)
+        }
         if isNewGame {
             setupNewGame(state: state)
         }

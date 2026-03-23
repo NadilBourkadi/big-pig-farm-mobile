@@ -15,6 +15,11 @@ final class GameEngine {
     private var tickCallbacks: [(Double) -> Void] = []
     private var lastTickTime: CFTimeInterval = 0
 
+    /// Called at the end of farmReset() so the UI layer can persist prestige state
+    /// immediately. Without this, a crash between reset and the next lifecycleSave
+    /// would silently lose the carried-over Pigdex and lifetime stats.
+    var onPrestigeReset: (() -> Void)?
+
     init(state: GameState) {
         self.state = state
     }
@@ -77,6 +82,9 @@ final class GameEngine {
 
     /// Reset the farm for a New Pastures prestige. Preserves PrestigeState, clears everything else,
     /// and applies any purchased Showroom starting bonuses.
+    ///
+    /// @MainActor isolation guarantees the timer callback cannot fire mid-reset.
+    /// Do not introduce async suspension points inside this method.
     func farmReset() {
         // 1. Carry over current Pigdex entries into prestige state
         state.prestigeState.carryOverPigdex(state.pigdex)
@@ -126,6 +134,9 @@ final class GameEngine {
             "Welcome to Farm #\(state.prestigeState.farmCount) — New Pastures!",
             eventType: "prestige"
         )
+
+        // Persist prestige state immediately to prevent data loss on crash
+        onPrestigeReset?()
     }
 
     /// Apply Showroom starting bonuses that affect farm setup.
@@ -151,7 +162,8 @@ final class GameEngine {
         let nonMeadowBiomes = BiomeType.allCases.filter { $0 != .meadow }
         for _ in 0..<count {
             guard let biome = nonMeadowBiomes.randomElement() else { continue }
-            _ = GridExpansion.addRoom(&state.farm, biome: biome)
+            let result = GridExpansion.addRoom(&state.farm, biome: biome)
+            assert(result != nil, "farmReset: bonus room creation failed unexpectedly")
         }
     }
 
@@ -194,6 +206,8 @@ final class GameEngine {
     }
 
     /// Generate a genotype that produces at least an uncommon phenotype.
+    /// Common phenotypes are ~60-70% of random genotypes, so 100 attempts
+    /// gives negligible miss probability; the fallback is a safety net.
     private func generateUncommonGenotype() -> Genotype {
         for _ in 0..<100 {
             let genotype = Genotype.random()
