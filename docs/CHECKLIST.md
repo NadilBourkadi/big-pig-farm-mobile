@@ -151,6 +151,7 @@
 - [x] Cap offline breeding frequency to prevent baby-heavy population after long absences (bead amvy)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
 - [x] New Farmer Spirit: first-run boosters and milestone rewards (bead 6kys)
+- [x] Pig Show UI: judging screen, Showroom preview, confirmation, SpriteKit transition (bead i2jf)
 
 ---
 
