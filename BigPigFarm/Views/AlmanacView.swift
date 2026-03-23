@@ -17,8 +17,9 @@ enum AlmanacTab: String, Sendable {
 /// Maps from: almanac.py JournalScreen class.
 struct AlmanacView: View {
     let gameState: GameState
+    var onResetFarm: () -> Void
     @State private var selectedTab: AlmanacTab = .pigdex
-    @State private var showingNotificationSettings = false
+    @State private var showingSettings = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -39,19 +40,19 @@ struct AlmanacView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        showingNotificationSettings = true
+                        showingSettings = true
                     } label: {
                         Image(systemName: "gearshape")
                     }
-                    .accessibilityLabel("Notification Settings")
-                    .accessibilityIdentifier("notificationSettingsButton")
+                    .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("settingsButton")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(isPresented: $showingNotificationSettings) {
-                NotificationSettingsView()
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(onResetFarm: onResetFarm)
             }
         }
     }

@@ -84,6 +84,9 @@ struct ContentView: View {
     /// Non-nil while the offline progress summary popup is presented.
     @Binding var offlineSummary: OfflineProgressSummary?
 
+    /// Called when the user confirms a full farm reset from Settings.
+    let onResetFarm: () -> Void
+
     /// The farm scene displayed in SpriteView.
     @State private var farmScene: FarmScene
 
@@ -120,13 +123,15 @@ struct ContentView: View {
         gameState: GameState,
         engine: GameEngine,
         notificationManager: NotificationManager,
-        offlineSummary: Binding<OfflineProgressSummary?>
+        offlineSummary: Binding<OfflineProgressSummary?>,
+        onResetFarm: @escaping () -> Void
     ) {
         let gs = gameState
         _gameState = State(initialValue: gs)
         _engine = State(initialValue: engine)
         self.notificationManager = notificationManager
         _offlineSummary = offlineSummary
+        self.onResetFarm = onResetFarm
         _farmScene = State(initialValue: FarmScene(gameState: gs))
         _coordinator = State(initialValue: FarmSceneCoordinator(gameState: gs))
     }
@@ -194,7 +199,7 @@ struct ContentView: View {
             BreedingView(gameState: gameState)
         }
         .sheet(isPresented: $showAlmanac) {
-            AlmanacView(gameState: gameState)
+            AlmanacView(gameState: gameState, onResetFarm: handleResetFarm)
         }
         .sheet(item: $selectedPig) { pig in
             NavigationStack {
@@ -270,6 +275,22 @@ struct ContentView: View {
 // MARK: - ContentView Actions
 
 extension ContentView {
+
+    /// Dismiss all sheets, reset UI state, and perform the full farm reset.
+    private func handleResetFarm() {
+        showAlmanac = false
+        showShop = false
+        showPigList = false
+        showBreeding = false
+        selectedPig = nil
+        isEditMode = false
+        farmScene.isEditMode = false
+        farmScene.selectedFacilityID = nil
+        farmScene.draggedFacilityID = nil
+        editModeSelectedFacilityID = nil
+        isDraggingFacility = false
+        onResetFarm()
+    }
 
     /// Toggle the game pause state.
     ///
