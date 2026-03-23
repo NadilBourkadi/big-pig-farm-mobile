@@ -20,6 +20,10 @@ func makeGameState(withArea: Bool = true) -> GameState {
     if withArea {
         state.farm = FarmGrid.createStarter()
     }
+    // Disable New Farmer Spirit boosters by default so tests aren't affected
+    // by first-farm bonuses (3× breeding, 3× first sale, -20% perk costs).
+    // Tests that exercise booster behavior set farmCount = 1 explicitly.
+    state.prestigeState.farmCount = 2
     return state
 }
 
@@ -106,6 +110,7 @@ func makeIntegrationState(
     let state = GameState()
     state.farm = FarmGrid.createStarter()
     state.money = money
+    state.prestigeState.farmCount = 2
 
     if addFood {
         let food = Facility.create(type: .foodBowl, x: 5, y: 5)
@@ -161,6 +166,7 @@ func runTicks(
 @MainActor
 func makeLargeIntegrationState(pigCount: Int) -> (GameState, SimulationRunner) {
     let state = GameState()
+    state.prestigeState.farmCount = 2
     var grid = FarmGrid(width: 96, height: 56)
     grid.createLegacyStarterArea()
     state.farm = grid
