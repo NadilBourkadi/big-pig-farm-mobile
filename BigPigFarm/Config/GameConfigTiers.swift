@@ -49,22 +49,22 @@ struct TierUpgrade: Codable, Sendable {
     let capacityPerRoom: Int
 }
 
-/// All 5 tier upgrade definitions.
+/// All 5 tier upgrade definitions — retuned for prestige pacing (Section 7B).
 let tierUpgrades: [TierUpgrade] = [
     TierUpgrade(name: "Starter", tier: 1, cost: 0,
                 requiredPigsBorn: 0, requiredPigdex: 0, requiredContracts: 0,
                 maxRooms: 1, roomWidth: 18, roomHeight: 18, capacityPerRoom: 8),
-    TierUpgrade(name: "Apprentice", tier: 2, cost: 300,
-                requiredPigsBorn: 3, requiredPigdex: 2, requiredContracts: 0,
+    TierUpgrade(name: "Apprentice", tier: 2, cost: 1_000,
+                requiredPigsBorn: 8, requiredPigdex: 5, requiredContracts: 0,
                 maxRooms: 2, roomWidth: 21, roomHeight: 21, capacityPerRoom: 10),
-    TierUpgrade(name: "Expert", tier: 3, cost: 1500,
-                requiredPigsBorn: 10, requiredPigdex: 8, requiredContracts: 2,
+    TierUpgrade(name: "Expert", tier: 3, cost: 8_000,
+                requiredPigsBorn: 30, requiredPigdex: 18, requiredContracts: 5,
                 maxRooms: 3, roomWidth: 24, roomHeight: 24, capacityPerRoom: 14),
-    TierUpgrade(name: "Master", tier: 4, cost: 5000,
-                requiredPigsBorn: 25, requiredPigdex: 18, requiredContracts: 5,
+    TierUpgrade(name: "Master", tier: 4, cost: 30_000,
+                requiredPigsBorn: 75, requiredPigdex: 40, requiredContracts: 12,
                 maxRooms: 6, roomWidth: 27, roomHeight: 27, capacityPerRoom: 18),
-    TierUpgrade(name: "Grand Master", tier: 5, cost: 15000,
-                requiredPigsBorn: 50, requiredPigdex: 30, requiredContracts: 10,
+    TierUpgrade(name: "Grand Master", tier: 5, cost: 100_000,
+                requiredPigsBorn: 150, requiredPigdex: 70, requiredContracts: 25,
                 maxRooms: 8, roomWidth: 30, roomHeight: 30, capacityPerRoom: 24),
 ]
 
@@ -81,14 +81,14 @@ struct RoomCost: Codable, Sendable {
     let cost: Int
 }
 
-/// Room costs in order of purchase.
+/// Room costs in order of purchase — retuned for prestige pacing (Section 7A).
 let roomCosts: [RoomCost] = [
     RoomCost(name: "Starter Hutch", cost: 0),
-    RoomCost(name: "Cozy Enclosure", cost: 500),
-    RoomCost(name: "Family Pen", cost: 2000),
-    RoomCost(name: "Guinea Grove", cost: 8000),
-    RoomCost(name: "Piggy Paradise", cost: 25000),
-    RoomCost(name: "Ultimate Farm", cost: 100000),
-    RoomCost(name: "Grand Estate", cost: 300000),
-    RoomCost(name: "Pig Empire", cost: 800000),
+    RoomCost(name: "Cozy Enclosure", cost: 1_500),
+    RoomCost(name: "Family Pen", cost: 8_000),
+    RoomCost(name: "Guinea Grove", cost: 40_000),
+    RoomCost(name: "Piggy Paradise", cost: 150_000),
+    RoomCost(name: "Ultimate Farm", cost: 750_000),
+    RoomCost(name: "Grand Estate", cost: 4_000_000),
+    RoomCost(name: "Pig Empire", cost: 25_000_000),
 ]
