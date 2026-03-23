@@ -18,8 +18,11 @@ enum SceneConstants {
     /// 200 × 32 pt = 6400 pt — covers the 96×56 max farm plus worst-case viewport margin at minCameraScale (0.5).
     static let outOfBoundsTileMapDimension = 200
     /// Intrinsic height of the StatusInfoRow HUD bar, excluding safe area inset.
+    /// Derivation: caption line height (~14pt) + vertical padding (12pt) = ~26pt.
     static let hudTopHeight: CGFloat = 26.0
-    /// Intrinsic height of the StatusToolbar HUD bar, excluding safe area inset.
+    /// Intrinsic height of the two-row StatusToolbar, excluding safe area inset.
+    /// Derivation: 2 × HUDButton (~27pt) + row padding (10pt + 10pt) + divider (~1pt) ≈ 75pt;
+    /// measured at 68pt on iPhone 16 simulator. Update if HUDButton font or padding changes.
     static let hudBottomHeight: CGFloat = 68.0
 }
 
