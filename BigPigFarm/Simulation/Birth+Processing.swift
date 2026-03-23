@@ -233,7 +233,7 @@ extension Birth {
                 if prestige.hasUpgrade(.biomeIntuition) {
                     directionalRate *= GameConfig.Prestige.biomeIntuitionMultiplier
                 }
-                // Biome mastery: +2% signature mutation rate for mastered biomes
+                // Biome mastery: flat +2% added AFTER biomeIntuition (does not compound with intuition)
                 directionalRate += prestige.biomeMastery.signatureMutationBoost(for: biomeType)
             }
         }

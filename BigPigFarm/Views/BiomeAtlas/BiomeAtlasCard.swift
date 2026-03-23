@@ -63,11 +63,13 @@ private extension BiomeAtlasCard {
     }
 
     var rewardsRow: some View {
-        HStack(spacing: 16) {
-            Label("25% room discount", systemImage: "tag.fill")
+        let discountPct = Int(GameConfig.Prestige.biomeMasteryCostReduction * 100)
+        let mutationPct = Int(GameConfig.Prestige.biomeMasteryMutationBoost * 100)
+        return HStack(spacing: 16) {
+            Label("\(discountPct)% room discount", systemImage: "tag.fill")
                 .font(.caption)
                 .foregroundStyle(.orange)
-            Label("+2% signature mutation", systemImage: "sparkles")
+            Label("+\(mutationPct)% signature mutation", systemImage: "sparkles")
                 .font(.caption)
                 .foregroundStyle(.purple)
         }

@@ -2,10 +2,10 @@
 import SwiftUI
 
 struct BiomeAtlasView: View {
-    let prestigeState: PrestigeState
+    let gameState: GameState
     @Environment(\.dismiss) private var dismiss
 
-    private var mastery: BiomeMastery { prestigeState.biomeMastery }
+    private var mastery: BiomeMastery { gameState.prestigeState.biomeMastery }
     private var masteredCount: Int { mastery.masteredBiomes.count }
 
     var body: some View {
@@ -54,5 +54,5 @@ private extension BiomeAtlasView {
 // MARK: - Preview
 
 #Preview {
-    BiomeAtlasView(prestigeState: PrestigeState())
+    BiomeAtlasView(gameState: GameState())
 }

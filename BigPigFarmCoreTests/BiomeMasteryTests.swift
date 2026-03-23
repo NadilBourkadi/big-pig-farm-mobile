@@ -14,11 +14,12 @@ import Foundation
 
 @Test func biomeMasteryNotMasteredBelowThreshold() {
     var mastery = BiomeMastery()
-    for _ in 0..<9 {
+    let below = GameConfig.Prestige.biomeMasteryThreshold - 1
+    for _ in 0..<below {
         mastery.recordBirth(in: .alpine)
     }
     #expect(!mastery.isMastered(.alpine))
-    #expect(mastery.pigsBred(in: .alpine) == 9)
+    #expect(mastery.pigsBred(in: .alpine) == below)
 }
 
 @Test func biomeMasteryMasteredAtExactThreshold() {
@@ -51,12 +52,6 @@ import Foundation
 @Test func roomCostMultiplierReturns1WhenNotMastered() {
     let mastery = BiomeMastery()
     #expect(mastery.roomCostMultiplier(for: .alpine) == 1.0)
-}
-
-@Test func roomCostMultiplierReturns075WhenMastered() {
-    var mastery = BiomeMastery()
-    for _ in 0..<10 { mastery.recordBirth(in: .alpine) }
-    #expect(mastery.roomCostMultiplier(for: .alpine) == 0.75)
 }
 
 @Test func roomCostMultiplierMatchesConfig() {

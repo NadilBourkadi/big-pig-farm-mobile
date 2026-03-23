@@ -219,7 +219,7 @@ struct ContentView: View {
             ShowroomView(gameState: gameState)
         }
         .sheet(isPresented: $showAtlas) {
-            BiomeAtlasView(prestigeState: gameState.prestigeState)
+            BiomeAtlasView(gameState: gameState)
         }
         .sheet(item: $selectedPig) { pig in
             NavigationStack {
