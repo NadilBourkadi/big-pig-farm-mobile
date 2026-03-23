@@ -23,6 +23,7 @@ struct PigValueBreakdown: Sendable {
     let healthMultiplier: Double
     let groomingMultiplier: Double
     let perkMultiplier: Double
+    let prestigeMultiplier: Double
     let total: Int
 }
 
@@ -69,7 +70,10 @@ enum Market {
         let groomingMult: Double = state.getFacilitiesByType(.groomingStation).isEmpty ? 1.0 : 1.15
 
         let perkMult = perkMultiplier(pig: pig, state: state)
-        let total = max(1, Int(Double(base) * rarityMult * ageMult * healthMult * groomingMult * perkMult))
+        let prestigeMult = VisitManager.saleMultiplier(prestige: state.prestigeState)
+        let total = max(1, Int(
+            Double(base) * rarityMult * ageMult * healthMult * groomingMult * perkMult * prestigeMult
+        ))
 
         return PigValueBreakdown(
             base: base,
@@ -78,6 +82,7 @@ enum Market {
             healthMultiplier: healthMult,
             groomingMultiplier: groomingMult,
             perkMultiplier: perkMult,
+            prestigeMultiplier: prestigeMult,
             total: total
         )
     }
