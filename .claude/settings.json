@@ -72,7 +72,9 @@
       "Bash(xcrun:*)",
       "Bash(bash scripts/run-tests.sh:*)",
       "Bash(bash */scripts/run-tests.sh:*)",
-      "Skill(test)"
+      "Skill(test)",
+      "Skill(status)",
+      "Skill(next)"
     ]
   },
   "outputStyle": "Explanatory",
