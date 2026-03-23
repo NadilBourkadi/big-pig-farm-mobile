@@ -233,8 +233,8 @@ When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths
 This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` (local only, not git-tracked).
 
 ### Session workflow
-1. **Start:** Run `bd ready` to see unblocked tasks
-2. **Claim:** Run `bd update <id> --status in_progress` before starting work
+1. **Start:** Run `bd list --ready -s open --sort priority` to see unblocked tasks (never use `bd ready` — it includes in_progress tasks)
+2. **Claim:** Run `bd update <id> --claim` before starting work (atomic — fails if already claimed)
 3. **Discover:** File new issues with `bd create "title" -t task -p <priority>`
 4. **Close:** Run `bd close <id>` when done
 5. **Sync:** No git sync needed — Beads state lives in a local Dolt DB only.
@@ -311,6 +311,36 @@ Multiple Claude agents may run simultaneously on this project. This causes state
 - **At the start of any task (not just any session), run `git fetch origin main` then `git log origin/main..HEAD`** to check whether the current branch has already-merged commits. If any appear, the branch is stale — create a fresh branch off `origin/main` within the current worktree (`git checkout -b feature/<id>-<slug> origin/main`). A new session is NOT required.
 - **If you discover that a bead is closed but its code is not in main,** reopen the task on main (via `bd update <id> --status in_progress`), find the worktree branch, push it, and open a PR. Do not start duplicate work.
 - **Beads state is shared** (Dolt DB is local, not git-tracked), so two agents CAN see each other's bead updates. But checklist and code state is per-branch until merged. Treat the checklist as write-once per merge.
+
+### Task claiming — race protection
+
+**Never use `bd ready` to select tasks** — it shows all statuses including `in_progress`. Always use:
+```
+bd list --ready -s open --sort priority -n 30
+```
+
+**Always claim atomically** with `bd update <id> --claim` (not `--status in_progress`). The `--claim` flag fails if another agent already claimed the bead. Verify the claim with `bd show <id>` immediately after.
+
+### Inter-agent communication
+
+Agents communicate through **bead comments** — the Dolt DB is shared and updates are visible instantly.
+
+**Check-in (before starting work):**
+- `bd comments <my-bead-id>` — read any `[HEADS UP]` warnings from other agents
+- `bd query "status=in_progress"` — see what other agents are working on
+- If another in-progress bead touches the same files, plan for rebase conflicts
+
+**Broadcast (during implementation):**
+- When you change a public API, rename a type, or alter a protocol: notify beads that depend on it
+  ```
+  bd comments add <affected-bead-id> "[HEADS UP from <my-bead-id>] Changed X to Y. Reason: ..."
+  ```
+- When you discover something that affects another task: comment on that bead
+- When you need a human decision mid-implementation: create a P0 decision bead
+
+**Signal (need user attention):**
+- P0 decision beads surface at the top of `/next` and `/status`
+- For urgent issues, create with `-p P0` — the user will see it on their next check
 
 ## Mistakes Are Configuration Gaps — CRITICAL
 
