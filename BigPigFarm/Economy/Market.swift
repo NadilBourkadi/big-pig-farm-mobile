@@ -24,6 +24,7 @@ struct PigValueBreakdown: Sendable {
     let groomingMultiplier: Double
     let perkMultiplier: Double
     let prestigeMultiplier: Double
+    let showroomMultiplier: Double
     let total: Int
 }
 
@@ -71,8 +72,11 @@ enum Market {
 
         let perkMult = perkMultiplier(pig: pig, state: state)
         let prestigeMult = VisitManager.saleMultiplier(prestige: state.prestigeState)
+        let showroomMult = state.hasShowroomUpgrade(.goldenTouch)
+            ? (1.0 + GameConfig.Prestige.goldenTouchSaleBonus) : 1.0
         let total = max(1, Int(
-            Double(base) * rarityMult * ageMult * healthMult * groomingMult * perkMult * prestigeMult
+            Double(base) * rarityMult * ageMult * healthMult
+                * groomingMult * perkMult * prestigeMult * showroomMult
         ))
 
         return PigValueBreakdown(
@@ -83,6 +87,7 @@ enum Market {
             groomingMultiplier: groomingMult,
             perkMultiplier: perkMult,
             prestigeMultiplier: prestigeMult,
+            showroomMultiplier: showroomMult,
             total: total
         )
     }

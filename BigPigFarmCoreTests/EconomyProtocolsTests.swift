@@ -43,6 +43,8 @@ final class StubAdoptionContext: AdoptionContext {
     func hasUpgrade(_ upgradeID: String) -> Bool {
         upgrades.contains(upgradeID)
     }
+
+    func hasShowroomUpgrade(_ upgrade: ShowroomUpgrade) -> Bool { false }
 }
 
 /// Minimal ContractGeneratorContext stub.
@@ -57,6 +59,8 @@ final class StubContractGeneratorContext: ContractGeneratorContext {
     func hasUpgrade(_ upgradeID: String) -> Bool {
         upgrades.contains(upgradeID)
     }
+
+    func hasShowroomUpgrade(_ upgrade: ShowroomUpgrade) -> Bool { false }
 }
 
 // MARK: - CurrencyContext Conformance
