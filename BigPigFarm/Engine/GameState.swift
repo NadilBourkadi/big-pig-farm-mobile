@@ -120,7 +120,8 @@ final class GameState: @unchecked Sendable {
     var lastBackgroundDate: Date?
 
     /// Remaining treats available this visit session. Resets to full on each visit.
-    @ObservationIgnored
+    /// NOT @ObservationIgnored — SwiftUI TreatHUDButton observes this for count display.
+    /// Changes infrequently (only on treat placement and visit detection).
     var remainingTreatsThisVisit: Int = 0
 }
 

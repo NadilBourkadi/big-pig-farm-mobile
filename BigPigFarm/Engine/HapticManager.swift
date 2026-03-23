@@ -67,4 +67,16 @@ enum HapticManager {
     static func error() {
         notification.notificationOccurred(.error)
     }
+
+    /// Treat placed on the farm during visit.
+    @MainActor
+    static func treatPlaced() {
+        lightImpact.impactOccurred()
+    }
+
+    /// Pig consumed a treat (hearts particle).
+    @MainActor
+    static func treatConsumed() {
+        mediumImpact.impactOccurred()
+    }
 }
