@@ -13,18 +13,16 @@ enum OfflineProgressRunner {
 
     /// Fast-forward game state by the given wall-clock seconds of offline time.
     ///
-    /// Converts wall-clock seconds to game-hours at the offline speed multiplier,
-    /// then runs checkpoint-based simulation. Returns a summary of events for
-    /// the summary popup.
+    /// Converts wall-clock seconds to game-hours using a diminishing returns
+    /// curve (see `computeGameHours`), then runs checkpoint-based simulation.
+    /// Returns a summary of events for the summary popup.
     @MainActor
     static func runCatchUp(
         state: GameState,
         wallClockSeconds: TimeInterval
     ) -> OfflineProgressSummary {
         let clampedSeconds = min(wallClockSeconds, GameConfig.Offline.maxDurationSeconds)
-        let gameMinutesTotal = clampedSeconds * Double(GameConfig.Offline.speedMultiplier)
-            / GameConfig.Time.realSecondsPerGameMinute
-        let gameHoursTotal = gameMinutesTotal / 60.0
+        let gameHoursTotal = computeGameHours(wallClockSeconds: clampedSeconds)
         let checkpointCount = Int(gameHoursTotal / GameConfig.Offline.checkpointGameHours)
 
         var summary = OfflineProgressSummary(
@@ -49,6 +47,36 @@ enum OfflineProgressRunner {
         summary.facilitiesEmptied = max(0, emptyAfter - emptyBefore)
 
         return summary
+    }
+
+    // MARK: - Time Conversion
+
+    /// Convert wall-clock seconds to game-hours using the diminishing returns
+    /// tier curve defined in `GameConfig.Offline.speedTiers`.
+    ///
+    /// Each tier applies its multiplier to the real hours that fall within
+    /// that bracket, then advances to the next tier for any remaining time.
+    /// Time beyond all defined tiers runs at 1x (no bonus).
+    static func computeGameHours(wallClockSeconds: TimeInterval) -> Double {
+        let realHoursTotal = wallClockSeconds / 3600.0
+        var remaining = realHoursTotal
+        var gameHours = 0.0
+        var previousCeiling = 0.0
+
+        for tier in GameConfig.Offline.speedTiers {
+            let tierWidth = tier.realHoursCeiling - previousCeiling
+            let hoursInTier = min(remaining, tierWidth)
+            gameHours += hoursInTier * tier.multiplier
+            remaining -= hoursInTier
+            previousCeiling = tier.realHoursCeiling
+            if remaining <= 0 { break }
+        }
+
+        if remaining > 0 {
+            gameHours += remaining
+        }
+
+        return gameHours
     }
 
     // MARK: - Checkpoint

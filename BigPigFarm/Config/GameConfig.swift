@@ -189,15 +189,32 @@ enum GameConfig {
         static let minThresholdSeconds: Double = 60
         /// Maximum wall-clock seconds of offline time to simulate.
         static let maxDurationSeconds: Double = 86_400  // 24 real hours
-        /// Game-time multiplier for offline progress (matches GameSpeed.normal.rawValue).
-        static let speedMultiplier: Int = 3
         /// Game-hours per checkpoint in the fast-forward loop.
         static let checkpointGameHours: Double = 1.0
         /// Fraction of real-time consumption applied to facilities offline.
-        /// 0.25 = pigs consume at 25% of normal rate (they eat sometimes, not constantly).
-        static let consumptionRateMultiplier: Double = 0.25
+        /// 0.40 = pigs consume at 40% of normal rate.
+        static let consumptionRateMultiplier: Double = 0.40
         /// Health floor when facilities are empty. Pigs suffer but survive.
         static let healthMercyFloor: Double = 10.0
+
+        /// A single tier in the diminishing-returns offline speed curve.
+        struct SpeedTier: Sendable {
+            /// Upper bound of this tier in real-time hours (exclusive).
+            let realHoursCeiling: Double
+            /// Multiplier: 1 real hour in this tier produces `multiplier` game hours.
+            let multiplier: Double
+        }
+
+        /// Diminishing returns curve. Ordered by ascending realHoursCeiling.
+        /// - Invariant: entries must be sorted ascending by `realHoursCeiling`;
+        ///   `computeGameHours` produces incorrect results for unsorted input.
+        /// 24h offline produces 35 game-hours instead of the old flat 4,320.
+        static let speedTiers: [SpeedTier] = [
+            SpeedTier(realHoursCeiling: 2, multiplier: 3.0),
+            SpeedTier(realHoursCeiling: 6, multiplier: 2.0),
+            SpeedTier(realHoursCeiling: 12, multiplier: 1.5),
+            SpeedTier(realHoursCeiling: 24, multiplier: 1.0),
+        ]
     }
 
     enum AutoArrange {

@@ -14,7 +14,7 @@ struct OfflineProgressRepositionTests {
         let state = makeOfflineState(pigCount: 20)
         state.lastSave = Date(timeIntervalSinceNow: -300)
 
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 300)
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         var positions = Set<GridPosition>()
         for pig in state.getPigsList() {
@@ -50,7 +50,7 @@ struct OfflineProgressRepositionTests {
         }
 
         state.lastSave = Date(timeIntervalSinceNow: -300)
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 300)
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         // All pigs should be at distinct positions
         var positions = Set<GridPosition>()
@@ -72,7 +72,7 @@ struct OfflineProgressRepositionTests {
         let state = makeOfflineState(pigCount: 15)
         state.lastSave = Date(timeIntervalSinceNow: -300)
 
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 300)
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         for pig in state.getPigsList() {
             let gp = pig.position.gridPosition
@@ -147,7 +147,7 @@ struct OfflineProgressRepositionTests {
         let state = makeOfflineState(pigCount: 20)
         state.lastSave = Date(timeIntervalSinceNow: -300)
 
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 300)
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         let controller = makeController(state: state)
         let runner = SimulationRunner(
