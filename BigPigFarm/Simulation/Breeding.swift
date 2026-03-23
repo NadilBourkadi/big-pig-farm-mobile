@@ -238,6 +238,9 @@ enum Breeding {
         chance += min(Double(affinity) * GameConfig.Breeding.affinityChanceBonus,
                       GameConfig.Breeding.maxAffinityChanceBonus)
 
+        // Visit bonuses: reunion boost + streak day 2+
+        chance += VisitManager.breedingBonus(prestige: gameState.prestigeState)
+
         guard Double.random(in: 0.0..<1.0) < chance else { return false }
 
         initiateCourtship(male: male, female: female, gameState: gameState)
