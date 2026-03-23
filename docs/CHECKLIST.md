@@ -144,6 +144,7 @@
 - [x] Showroom breeding+genetics effects: 14 upgrade effects wired into simulation (bead 0bx3)
 - [x] Showroom economy+QoL effects: Golden Touch, Expanded Hutch, Quick Study, Auto-Pilot, Keepsake Slot, treat perks (bead 66ap)
 - [x] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
+- [x] Visit UI: treat HUD button, scatter animation, streak indicator, reunion boost HUD (bead a685)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
 - [x] New Farmer Spirit: first-run boosters and milestone rewards (bead 6kys)
