@@ -185,15 +185,21 @@ enum Shop {
     }
 
     /// Check which requirements for the given tier upgrade are currently satisfied.
+    /// Quick Study (Showroom upgrade) reduces pig/pigdex/contract thresholds by 25%.
     @MainActor
     static func checkTierRequirements(
         state: any ShopContext,
         upgrade: TierUpgrade
     ) -> [String: Bool] {
-        [
-            "pigs_born": state.totalPigsBorn >= upgrade.requiredPigsBorn,
-            "pigdex": state.pigdex.discoveredCount >= upgrade.requiredPigdex,
-            "contracts": state.contractBoard.completedContracts >= upgrade.requiredContracts,
+        let mult = state.hasShowroomUpgrade(.quickStudy)
+            ? GameConfig.Prestige.quickStudyThresholdMultiplier : 1.0
+        let adjPigsBorn = Int(floor(Double(upgrade.requiredPigsBorn) * mult))
+        let adjPigdex = Int(floor(Double(upgrade.requiredPigdex) * mult))
+        let adjContracts = Int(floor(Double(upgrade.requiredContracts) * mult))
+        return [
+            "pigs_born": state.totalPigsBorn >= adjPigsBorn,
+            "pigdex": state.pigdex.discoveredCount >= adjPigdex,
+            "contracts": state.contractBoard.completedContracts >= adjContracts,
             "money": state.money >= upgrade.cost,
         ]
     }

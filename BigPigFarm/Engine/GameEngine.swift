@@ -130,6 +130,16 @@ final class GameEngine {
             spawnHeritageHerdPigs()
         }
 
+        // 8. Auto-Pilot: grant Bulk Feeders + Drip System on reset
+        if state.prestigeState.hasUpgrade(.autoPilot) {
+            applyAutoPilotPerks()
+        }
+
+        // 9. Keepsake Slot: restore carried-over perks
+        if state.prestigeState.hasUpgrade(.keepsakeSlot) {
+            applyKeepsakePerks()
+        }
+
         state.logEvent(
             "Welcome to Farm #\(state.prestigeState.farmCount) — New Pastures!",
             eventType: "prestige"
@@ -164,6 +174,24 @@ final class GameEngine {
             guard let biome = nonMeadowBiomes.randomElement() else { continue }
             let result = GridExpansion.addRoom(&state.farm, biome: biome)
             assert(result != nil, "farmReset: bonus room creation failed unexpectedly")
+        }
+    }
+
+    /// Grant Bulk Feeders and Drip System perks from Auto-Pilot, then apply their immediate effects.
+    /// Called after setupNewGame so facilities exist for bulk_feeders to double.
+    private func applyAutoPilotPerks() {
+        let autoPilotPerks = ["bulk_feeders", "drip_system"]
+        for perkId in autoPilotPerks where !state.purchasedUpgrades.contains(perkId) {
+            state.purchasedUpgrades.insert(perkId)
+            Upgrades.applyImmediateEffect(state: state, upgradeId: perkId)
+        }
+    }
+
+    /// Restore perks stored in the Keepsake Slot across farm resets.
+    private func applyKeepsakePerks() {
+        for perkId in state.prestigeState.keepsakePerks where !state.purchasedUpgrades.contains(perkId) {
+            state.purchasedUpgrades.insert(perkId)
+            Upgrades.applyImmediateEffect(state: state, upgradeId: perkId)
         }
     }
 

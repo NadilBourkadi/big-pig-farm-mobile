@@ -294,7 +294,13 @@ extension GameState {
     // MARK: - Computed Properties
 
     var pigCount: Int { guineaPigs.count }
-    var capacity: Int { farm.capacity }
+
+    var capacity: Int {
+        let perRoomBonus = prestigeState.hasUpgrade(.expandedHutch)
+            ? GameConfig.Prestige.expandedHutchCapacityBonus : 0
+        return farm.areas.count * (getTierUpgrade(tier: farm.tier).capacityPerRoom + perRoomBonus)
+    }
+
     var isAtCapacity: Bool { pigCount >= capacity }
 
     // MARK: - Breeding Pair
@@ -328,6 +334,10 @@ extension GameState {
 
     func hasUpgrade(_ upgradeID: String) -> Bool {
         purchasedUpgrades.contains(upgradeID)
+    }
+
+    func hasShowroomUpgrade(_ upgrade: ShowroomUpgrade) -> Bool {
+        prestigeState.hasUpgrade(upgrade)
     }
 
     // MARK: - Full Reset

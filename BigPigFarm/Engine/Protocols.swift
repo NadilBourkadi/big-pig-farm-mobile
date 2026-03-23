@@ -8,6 +8,7 @@ import Foundation
 @MainActor
 protocol UpgradeQueryContext: AnyObject {
     func hasUpgrade(_ upgradeID: String) -> Bool
+    func hasShowroomUpgrade(_ upgrade: ShowroomUpgrade) -> Bool
 }
 
 /// Read-only pig queries: list all pigs and look up by ID.

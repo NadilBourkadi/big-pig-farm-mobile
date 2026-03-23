@@ -17,7 +17,7 @@ struct UpgradeDefinition: Sendable {
 
 // MARK: - Upgrades Lookup Table
 
-/// All 24 upgrade definitions, keyed by ID — retuned for prestige pacing (Section 7C).
+/// All 26 upgrade definitions, keyed by ID — retuned for prestige pacing (Section 7C).
 let upgrades: [String: UpgradeDefinition] = [
     // Automation (3)
     "bulk_feeders": UpgradeDefinition(
@@ -126,6 +126,16 @@ let upgrades: [String: UpgradeDefinition] = [
         id: "talent_scout", name: "Talent Scout",
         description: "Enables the Pig Talents system.",
         cost: 8_000, requiredTier: 3, category: "Quality of Life", implemented: false),
+
+    // Treats (2)
+    "treat_basket": UpgradeDefinition(
+        id: "treat_basket", name: "Treat Basket",
+        description: "+1 treat per visit.",
+        cost: 800, requiredTier: 3, category: "Treats", implemented: true),
+    "treat_wagon": UpgradeDefinition(
+        id: "treat_wagon", name: "Treat Wagon",
+        description: "+2 treats per visit.",
+        cost: 3_000, requiredTier: 4, category: "Treats", implemented: true),
 ]
 
 // MARK: - Upgrades Logic
@@ -161,10 +171,10 @@ enum Upgrades {
         return true
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Immediate Effects
 
     @MainActor
-    private static func applyImmediateEffect(state: any UpgradesContext, upgradeId: String) {
+    static func applyImmediateEffect(state: any UpgradesContext, upgradeId: String) {
         if upgradeId == "bulk_feeders" {
             applyBulkFeeders(state: state)
         }
