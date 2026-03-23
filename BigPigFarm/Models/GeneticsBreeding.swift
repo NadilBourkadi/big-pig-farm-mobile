@@ -88,7 +88,8 @@ func breed(
     mutationRate: Double = 0.0,
     locusRates: [String: Double]? = nil,
     directionalTargets: [String: String]? = nil,
-    directionalRate: Double = 0.0
+    directionalRate: Double = 0.0,
+    lockedLoci: [(locusName: String, parentGenotype: Genotype)]? = nil
 ) -> BreedResult {
     // Normal Mendelian inheritance
     var eLocus = inheritAllele(parent1.eLocus, parent2.eLocus)
@@ -101,6 +102,25 @@ func breed(
     // Check for lethal roan combination (RR) -- reroll until non-lethal
     while rLocus.isHomozygous("R") {
         rLocus = inheritAllele(parent1.rLocus, parent2.rLocus)
+    }
+
+    // Genetic Imprinting: force one allele from the locked parent's genotype
+    if let locked = lockedLoci {
+        for (locusName, parentGeno) in locked {
+            let parentPair = parentGeno.allelePair(forLocus: locusName)
+            let forcedAllele = Bool.random() ? parentPair.first : parentPair.second
+            switch locusName {
+            case "eLocus": eLocus = AllelePair(first: forcedAllele, second: eLocus.second)
+            case "bLocus": bLocus = AllelePair(first: forcedAllele, second: bLocus.second)
+            case "sLocus": sLocus = AllelePair(first: forcedAllele, second: sLocus.second)
+            case "cLocus": cLocus = AllelePair(first: forcedAllele, second: cLocus.second)
+            case "rLocus":
+                let candidate = AllelePair(first: forcedAllele, second: rLocus.second)
+                if !candidate.isHomozygous("R") { rLocus = candidate }
+            case "dLocus": dLocus = AllelePair(first: forcedAllele, second: dLocus.second)
+            default: break
+            }
+        }
     }
 
     // Apply mutations
