@@ -248,8 +248,22 @@ private func adultMale(ageDays: Double = 5.0) -> GuineaPig {
 // MARK: - Genetic Imprinting
 
 @Test func geneticImprintingForcesAlleleFromParent() {
-    // Parent 1 is homozygous dominant at E locus (E/E)
+    // Both parents are homozygous dominant at B locus (B/B).
+    // Parent 1 is e/e (recessive) at E locus.
+    // Parent 2 is E/E (dominant) at E locus.
+    // Without imprinting: child always gets e from parent1 and E from parent2 → E/e.
+    // With imprinting locking parent1's E locus: the forced allele is always "e",
+    // which replaces the child's first E-locus allele → e/e or e/E.
+    // The key test: first allele in the child's E locus must always be "e".
     let parent1 = Genotype(
+        eLocus: AllelePair(first: "e", second: "e"),
+        bLocus: AllelePair(first: "B", second: "B"),
+        sLocus: AllelePair(first: "S", second: "S"),
+        cLocus: AllelePair(first: "C", second: "C"),
+        rLocus: AllelePair(first: "r", second: "r"),
+        dLocus: AllelePair(first: "D", second: "D")
+    )
+    let parent2 = Genotype(
         eLocus: AllelePair(first: "E", second: "E"),
         bLocus: AllelePair(first: "B", second: "B"),
         sLocus: AllelePair(first: "S", second: "S"),
@@ -257,32 +271,17 @@ private func adultMale(ageDays: Double = 5.0) -> GuineaPig {
         rLocus: AllelePair(first: "r", second: "r"),
         dLocus: AllelePair(first: "D", second: "D")
     )
-    // Parent 2 is homozygous recessive at E locus (e/e)
-    let parent2 = Genotype(
-        eLocus: AllelePair(first: "e", second: "e"),
-        bLocus: AllelePair(first: "b", second: "b"),
-        sLocus: AllelePair(first: "S", second: "S"),
-        cLocus: AllelePair(first: "C", second: "C"),
-        rLocus: AllelePair(first: "r", second: "r"),
-        dLocus: AllelePair(first: "D", second: "D")
-    )
 
-    // Lock parent1's E locus: child must have at least one "E"
+    // Lock parent1's E locus: forced allele is always "e" (both alleles are e)
     let locked: [(locusName: String, parentGenotype: Genotype)] = [("eLocus", parent1)]
 
-    var forcedECount = 0
     let trials = 200
     for _ in 0..<trials {
         let result = breed(parent1, parent2, lockedLoci: locked)
-        if result.genotype.eLocus.contains("E") {
-            forcedECount += 1
-        }
+        // The first allele is forced from parent1 (always "e")
+        #expect(result.genotype.eLocus.first == "e",
+                "Imprinted first allele must be 'e' from locked parent")
     }
-
-    // Without locking, ~75% would have E (since parent1 always gives E, parent2 always gives e,
-    // so child is always E/e normally). But with imprinting, the first allele is forced from
-    // parent1 (always E), so child should always have E. Allow small tolerance.
-    #expect(forcedECount == trials, "All children should have at least one E allele")
 }
 
 @Test func geneticImprintingLockedLocusField() {

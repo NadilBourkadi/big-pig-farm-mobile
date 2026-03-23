@@ -137,7 +137,8 @@ extension BreedingPairTab {
     }
 
     private func canSetPair(male: GuineaPig, female: GuineaPig) -> Bool {
-        male.canBreed && female.canBreed
+        let prestige = gameState.prestigeState
+        return male.isBreedable(prestige: prestige) && female.isBreedable(prestige: prestige)
             && !male.breedingLocked && !female.breedingLocked
             && !female.isPregnant
     }
@@ -195,7 +196,7 @@ struct BreedingPigRow: View {
             Text("LOCKED").font(.caption2).foregroundStyle(.red)
         } else if pig.isPregnant {
             Text("Pregnant").font(.caption2).foregroundStyle(.orange)
-        } else if !pig.canBreed {
+        } else if !pig.isBreedable(prestige: gameState.prestigeState) {
             Text("Can't breed").font(.caption2).foregroundStyle(.secondary)
         }
     }

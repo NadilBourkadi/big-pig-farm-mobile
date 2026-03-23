@@ -162,6 +162,10 @@ enum Breeding {
     // MARK: - Breeding Eligibility
 
     /// True if a pig is permanently unable to breed (past max breeding age or manually locked).
+    /// NOTE: the max-breed-age threshold is intentionally duplicated from
+    /// `GuineaPig.checkBreedingBlock(prestige:)` because this predicate checks only
+    /// *permanent* blocks (cancel the pair), while `checkBreedingBlock` also checks
+    /// *temporary* blocks (wait for the pig to become ready).
     private static func isPermanentlyUnbreedable(_ pig: GuineaPig, prestige: PrestigeState) -> Bool {
         let maxBreedAge = prestige.hasUpgrade(.enduringBonds)
             ? Double(GameConfig.Prestige.enduringBondsMaxBreedingAge)

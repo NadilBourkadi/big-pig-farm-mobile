@@ -13,8 +13,7 @@ func formatBreedingStatus(_ pig: GuineaPig, verbose: Bool = false, prestige: Pre
         return verbose ? "Marked for auto-sell at adulthood" : "Sell@Adult"
     }
     let blockReason = prestige.map { pig.checkBreedingBlock(prestige: $0) } ?? pig.breedingBlockReason
-    if blockReason == nil { return "Ready" }
-    guard let reason = blockReason else { return "Not ready" }
+    guard let reason = blockReason else { return "Ready" }
     if verbose { return reason }
     if reason.hasPrefix("Breeding locked") { return "LOCKED" }
     if reason.hasPrefix("Too young") { return "Baby" }
