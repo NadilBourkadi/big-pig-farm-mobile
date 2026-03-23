@@ -14,21 +14,21 @@ feature label. Does NOT claim or modify any beads.
 ### If a feature label was provided (`$ARGUMENTS`):
 
 ```bash
-# Ready beads for this feature, sorted by priority
-bd list -l <label> --ready --sort priority -n 5
+# Ready implementable beads for this feature, sorted by priority
+bd ready -t task -l <label> -n 10
 
-# Open decision beads blocking progress
+# Open decision beads blocking progress (shown separately)
 bd query "label=<label> AND type=decision AND status!=closed" -n 0
 ```
 
 ### If no argument:
 
 ```bash
-# Top ready beads across all features, sorted by priority
-bd ready -n 10
+# Top ready implementable beads across all features
+bd ready -t task -n 10
 
-# Any open decision beads anywhere
-bd list -t decision -s open -n 5
+# Any open decision beads anywhere (shown separately)
+bd query "type=decision AND status!=closed" -n 5
 ```
 
 ## Present Results

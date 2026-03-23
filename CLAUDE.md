@@ -233,7 +233,7 @@ When investigating simulation bugs (stuck AI, breeding issues, unexpected deaths
 This project uses [Beads](https://github.com/steveyegge/beads) for task management. Tasks live in `.beads/` (local only, not git-tracked).
 
 ### Session workflow
-1. **Start:** Run `bd list --ready -s open --sort priority` to see unblocked tasks (never use `bd ready` — it includes in_progress tasks)
+1. **Start:** Run `bd ready -t task` to see unblocked implementable tasks (checks dependency satisfaction, excludes in_progress/decision/epic)
 2. **Claim:** Run `bd update <id> --claim` before starting work (atomic — fails if already claimed)
 3. **Discover:** File new issues with `bd create "title" -t task -p <priority>`
 4. **Close:** Run `bd close <id>` when done
@@ -268,18 +268,24 @@ bd label add <id> feature:icloud-sync
 ```
 Use a consistent `feature:<slug>` naming convention. The label lets `/status` and `/next` filter across the feature regardless of parent-child structure.
 
-### Decision beads
-For architectural choices that need human input, create a decision bead:
+### Architectural decisions — inline-first
+When an agent encounters a design choice during implementation, it **prompts the user directly in the conversation** — presents the options, trade-offs, and waits for an answer. This is the primary mechanism; decisions should not be silently deferred to an async queue.
+
+After the user decides, the agent:
+1. Records an ADR in `docs/decisions/` (using the template at `docs/decisions/TEMPLATE.md`)
+2. Commits the ADR as part of the PR
+3. Optionally creates a decision bead if the decision affects other agents/beads
+
+### Decision beads (cross-agent coordination)
+Decision beads are for decisions that **block other agents' work**, not for decisions within a single agent's task. Create one when the choice affects beads owned by other agents:
 ```
 bd create "Choose sync conflict resolution strategy" -t decision -p P1 --parent <epic-id>
 ```
-Add it as a dependency for implementation beads that depend on the decision:
+Add it as a dependency for blocked implementation beads:
 ```
 bd dep add <impl-bead> <decision-bead>
 ```
-The implementation bead stays blocked until the decision bead is closed. Include context and options in the decision bead's description so the user can make an informed choice.
-
-When resolving a decision, create an Architecture Decision Record in `docs/decisions/` using the template at `docs/decisions/TEMPLATE.md`. Link the ADR from the decision bead.
+Close the decision bead immediately after recording the ADR — it's a workflow gate, not a to-do item.
 
 ### Workflow skills
 - **`/status <feature-label>`** — overview of all beads for a feature, grouped by status, with blocking decisions highlighted
@@ -314,10 +320,9 @@ Multiple Claude agents may run simultaneously on this project. This causes state
 
 ### Task claiming — race protection
 
-**Never use `bd ready` to select tasks** — it shows all statuses including `in_progress`. Always use:
-```
-bd list --ready -s open --sort priority -n 30
-```
+**Use `bd ready -t task`** to list candidates. It checks dependency satisfaction and excludes in_progress/blocked/deferred beads. The `-t task` filter prevents decision and epic beads from appearing.
+
+**Never use `bd list --ready`** — it does NOT check dependency satisfaction (only filters by status). The `bd ready` help explicitly warns about this.
 
 **Always claim atomically** with `bd update <id> --claim` (not `--status in_progress`). The `--claim` flag fails if another agent already claimed the bead. Verify the claim with `bd show <id>` immediately after.
 
@@ -338,9 +343,10 @@ Agents communicate through **bead comments** — the Dolt DB is shared and updat
 - When you discover something that affects another task: comment on that bead
 - When you need a human decision mid-implementation: create a P0 decision bead
 
-**Signal (need user attention):**
-- P0 decision beads surface at the top of `/next` and `/status`
-- For urgent issues, create with `-p P0` — the user will see it on their next check
+**Decisions (need user input):**
+- **Inline-first:** prompt the user directly in the conversation, record the ADR, continue
+- **Cross-agent:** if the decision blocks other agents' beads, also create a decision bead and close it after recording the ADR — this unblocks dependents
+- Decision beads surface in `/next` and `/status` so the user can see what's pending across agents
 
 ## Mistakes Are Configuration Gaps — CRITICAL
 
