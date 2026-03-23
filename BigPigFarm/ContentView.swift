@@ -110,6 +110,13 @@ struct ContentView: View {
     /// Whether treat placement mode is currently active.
     @State private var isTreatMode = false
 
+    /// Whether the Pig Show flow is presented.
+    @State private var showPigShow = false
+
+    /// Breakdown from the Pig Show flow, set when the player confirms prestige.
+    /// Consumed by `onDismiss` of the fullScreenCover to trigger the SpriteKit transition.
+    @State private var pendingPrestigeBreakdown: RosetteBreakdown?
+
     // MARK: - Edit Mode Panel State
 
     /// The facility currently selected in edit mode, mirrored from scene delegate callbacks.
@@ -195,6 +202,7 @@ struct ContentView: View {
                     onAlmanacTapped: { showAlmanac = true },
                     onShowroomTapped: { showShowroom = true },
                     onRefillTapped: { gameState.manualRefillAll() },
+                    onPigShowTapped: { showPigShow = true },
                     onEditTapped: { toggleEditMode() },
                     onPauseTapped: { togglePause() },
                     onSpeedTapped: { cycleSpeed() }
@@ -245,6 +253,20 @@ struct ContentView: View {
                 offlineSummary = nil
                 engine.resume()
             })
+        }
+        .fullScreenCover(isPresented: $showPigShow, onDismiss: {
+            if let breakdown = pendingPrestigeBreakdown {
+                pendingPrestigeBreakdown = nil
+                executePrestige(breakdown)
+            }
+        }) {
+            PigShowView(
+                gameState: gameState,
+                onPrestigeConfirmed: { breakdown in
+                    pendingPrestigeBreakdown = breakdown
+                    showPigShow = false
+                }
+            )
         }
         .confirmationDialog(
             "Remove Facility",
@@ -376,5 +398,20 @@ extension ContentView {
         selectedPig = nil
         showPigList = false
         farmScene.centerOnPig(pigID)
+    }
+
+    /// Execute the prestige reset with a SpriteKit transition animation.
+    ///
+    /// Called after the PigShow fullScreenCover is dismissed with a confirmed breakdown.
+    /// Flow: pause engine → play parade animation → award Rosettes + farmReset → sunrise → resume.
+    private func executePrestige(_ breakdown: RosetteBreakdown) {
+        engine.pause()
+        let newFarmNumber = gameState.prestigeState.farmCount + 1
+
+        farmScene.playPrestigeTransition(farmNumber: newFarmNumber) { [self] in
+            gameState.prestigeState.addRosettes(breakdown.total)
+            engine.farmReset()
+            engine.resume()
+        }
     }
 }

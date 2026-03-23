@@ -25,9 +25,17 @@ struct StatusToolbar: View {
     var onAlmanacTapped: () -> Void
     var onShowroomTapped: () -> Void
     var onRefillTapped: () -> Void
+    var onPigShowTapped: (() -> Void)?
     var onEditTapped: () -> Void
     var onPauseTapped: () -> Void
     var onSpeedTapped: () -> Void
+
+    /// Whether the Pig Show button should be visible (lifetime + current run Squeaks >= threshold).
+    private var isPigShowEligible: Bool {
+        let lifetime = gameState.prestigeState.lifetimeStats.totalSqueaksEarned
+        let current = gameState.totalEarnings
+        return lifetime + current >= GameConfig.Prestige.pigShowLifetimeSqueaksThreshold
+    }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -39,6 +47,10 @@ struct StatusToolbar: View {
 
             refillButton
             TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
+
+            if isPigShowEligible, let onPigShowTapped {
+                HUDButton(systemImage: "rosette", label: "Show", action: onPigShowTapped)
+            }
 
             Spacer()
 
@@ -113,6 +125,7 @@ private struct StatusToolbarPreview: View {
             onAlmanacTapped: {},
             onShowroomTapped: {},
             onRefillTapped: {},
+            onPigShowTapped: nil,
             onEditTapped: { editMode.toggle() },
             onPauseTapped: {},
             onSpeedTapped: {}
