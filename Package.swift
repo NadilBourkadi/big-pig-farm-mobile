@@ -38,6 +38,7 @@ let package = Package(
                 "Engine/GridExpansion.swift",
                 "Engine/NotificationManager.swift",
                 "Engine/Pathfinding.swift",
+                "Engine/PigShowCalculator.swift",
                 "Engine/Protocols.swift",
                 "Engine/SaveManager.swift",
                 "Engine/SaveMigration.swift",
