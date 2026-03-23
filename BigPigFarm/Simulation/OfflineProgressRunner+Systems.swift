@@ -187,12 +187,13 @@ extension OfflineProgressRunner {
         guard !state.isAtCapacity else { return }
 
         let pigs = state.getPigsList()
+        let prestige = state.prestigeState
         var eligibleFemales = pigs.filter {
-            $0.gender == .female && $0.canBreed && !$0.isPregnant
+            $0.gender == .female && $0.isBreedable(prestige: prestige) && !$0.isPregnant
                 && $0.behaviorState != .courting
         }
         let eligibleMales = pigs.filter {
-            $0.gender == .male && $0.canBreed && $0.behaviorState != .courting
+            $0.gender == .male && $0.isBreedable(prestige: prestige) && $0.behaviorState != .courting
         }
 
         guard !eligibleFemales.isEmpty, !eligibleMales.isEmpty else { return }
@@ -222,10 +223,20 @@ extension OfflineProgressRunner {
     private static func rollBreedingChance(
         male: GuineaPig, female: GuineaPig, state: GameState
     ) -> Bool {
-        var chance = GameConfig.Breeding.baseBreedingChance
+        let prestige = state.prestigeState
+        var chance = prestige.hasUpgrade(.fertileGround)
+            ? GameConfig.Prestige.fertileGroundBreedingChance
+            : GameConfig.Breeding.baseBreedingChance
         if state.hasUpgrade("fertility_herbs") { chance += 0.05 }
         if !state.getFacilitiesByType(.breedingDen).isEmpty {
             chance += GameConfig.Breeding.breedingDenBonus
+        }
+        if prestige.hasUpgrade(.pigdexMomentum) {
+            let pigdexBonus = min(
+                Double(state.pigdex.discoveredCount) * GameConfig.Prestige.pigdexMomentumPerEntry,
+                GameConfig.Prestige.pigdexMomentumCap
+            )
+            chance += pigdexBonus
         }
         let avgHappiness = (male.needs.happiness + female.needs.happiness) / 2.0
         if avgHappiness > Double(GameConfig.Breeding.highHappinessThreshold) {
