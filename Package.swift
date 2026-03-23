@@ -34,6 +34,7 @@ let package = Package(
                 "Engine/GameEngine.swift",
                 "Engine/GameState.swift",
                 "Engine/GameState+Codable.swift",
+                "Engine/NewGameSetup.swift",
                 "Engine/GridExpansion.swift",
                 "Engine/NotificationManager.swift",
                 "Engine/Pathfinding.swift",
