@@ -60,7 +60,7 @@ struct StatusToolbar: View {
 
 private extension StatusToolbar {
     var gameActionRow: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             HUDButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
             HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
             HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
@@ -75,6 +75,7 @@ private extension StatusToolbar {
                 HUDButton(systemImage: "trophy.fill", label: "Show", action: onPigShowTapped)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 
     var systemControlRow: some View {
