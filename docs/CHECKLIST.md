@@ -131,6 +131,7 @@
 - [x] Centralize gender display logic with `displaySymbol`/`displayColor` on `Gender` enum (bead 4bj)
 - [x] Implement `NotificationManager` — toast queue, burst throttling, offline suppression (bead c2o)
 - [x] Clarify "LOW POP" HUD warning — display contextual threshold text with accessibility label (bead z5x)
+- [x] Add Reset Farm option with two-step confirmation in Settings (bead hncu)
 
 ---
 
