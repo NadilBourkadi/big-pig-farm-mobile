@@ -126,7 +126,7 @@ struct BigPigFarmApp: App {
             engine.pause()
         case .background:
             didEnterBackground = true
-            gameState.lastBackgroundDate = Date()
+            gameState.lastBackgroundDate = Date() // transient; crash fallback is lastSave
             lifecycleSave()
             #if DEBUG || INTERNAL
             DebugLogger.shared.flushBlocking()
