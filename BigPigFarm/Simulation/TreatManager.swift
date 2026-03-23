@@ -71,6 +71,8 @@ enum TreatManager {
     // MARK: - Treat Effects
 
     /// Apply a treat's instant effects to a pig's needs.
+    /// Note: timed buffs (fruitSlices breedingChanceBoost, herbBundle needDecayReduction)
+    /// require per-pig timer fields and are deferred to a follow-up task.
     private static func applyTreatEffects(type: TreatType, pig: inout GuineaPig) {
         let info = type.info
         pig.needs.hunger = min(100, pig.needs.hunger + info.hungerBoost)

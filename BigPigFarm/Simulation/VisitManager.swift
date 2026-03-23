@@ -10,14 +10,25 @@ enum VisitManager {
     /// Full visit pipeline: detect → boost → streak → treats.
     /// Called from BigPigFarmApp when the app returns from background.
     /// Returns true if a visit was detected and processed.
+    ///
+    /// Note: the 4-hour cooldown (`visitCooldownSeconds`) gates treat refills only,
+    /// not the reunion boost or streak. A player returning after 1 hour always gets
+    /// the boost and streak increment, but treats only refill if the cooldown has elapsed.
     @MainActor
     @discardableResult
     static func processVisit(state: GameState, now: Date = Date()) -> Bool {
         guard detectVisit(state: state, now: now) else { return false }
 
         applyReunionBoost(state: state, now: now)
+
+        // Check cooldown BEFORE recordVisit, which overwrites lastVisitDate with now.
+        let treatsAllowed = !TreatManager.isOnCooldown(prestige: state.prestigeState, now: now)
+
         recordVisit(state: state, now: now)
-        resetTreatCapacity(state: state)
+
+        if treatsAllowed {
+            resetTreatCapacity(state: state)
+        }
 
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         DebugLogger.shared.log(
@@ -103,7 +114,8 @@ enum VisitManager {
     }
 
     /// Total sale value multiplier from active reunion boost + visit streak.
-    /// Returns 1.0 when no bonuses are active (multiplicative identity).
+    /// Bonuses stack additively: base 1.0 + reunion bonus + streak bonus.
+    /// Returns 1.0 when no bonuses are active.
     static func saleMultiplier(prestige: PrestigeState, now: Date = Date()) -> Double {
         var mult = 1.0
         if let boost = prestige.activeReunionBoost, boost.isActive(at: now) {

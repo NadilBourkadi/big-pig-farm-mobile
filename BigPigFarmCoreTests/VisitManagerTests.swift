@@ -300,3 +300,31 @@ import Foundation
     let mult = VisitManager.saleMultiplier(prestige: prestige)
     #expect(mult == 1.0)
 }
+
+// MARK: - Cooldown Gating
+
+@Test @MainActor func processVisitSkipsTreatRefillWhenOnCooldown() {
+    let state = GameState()
+    let now = Date()
+    // First visit: 2 hours ago (sets lastVisitDate)
+    state.lastBackgroundDate = now.addingTimeInterval(-7200)
+    VisitManager.processVisit(state: state, now: now.addingTimeInterval(-7200 + 3601))
+
+    // Second visit: now, only 1h since last visit (under 4h cooldown)
+    state.lastBackgroundDate = now.addingTimeInterval(-3700)
+    state.remainingTreatsThisVisit = 0
+    let result = VisitManager.processVisit(state: state, now: now)
+    #expect(result) // visit still processes (boost + streak)
+    #expect(state.remainingTreatsThisVisit == 0) // treats NOT refilled (cooldown)
+}
+
+@Test @MainActor func processVisitRefillsTreatsAfterCooldownExpires() {
+    let state = GameState()
+    let now = Date()
+    // Last visit was 5 hours ago (cooldown expired)
+    state.prestigeState.visitStreak.lastVisitDate = now.addingTimeInterval(-18000)
+    state.lastBackgroundDate = now.addingTimeInterval(-7200)
+    state.remainingTreatsThisVisit = 0
+    VisitManager.processVisit(state: state, now: now)
+    #expect(state.remainingTreatsThisVisit == state.prestigeState.treatsPerVisit)
+}
