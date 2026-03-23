@@ -47,6 +47,7 @@ protocol BreedingContext: PigQueryContext, UpgradeQueryContext, EventLoggingCont
     var contractBoard: ContractBoard { get set }
     var gameTime: GameTime { get }
     var isAtCapacity: Bool { get }
+    var prestigeState: PrestigeState { get }
     func clearBreedingPair()
     func getAffinity(_ id1: UUID, _ id2: UUID) -> Int
     func getFacilitiesByType(_ type: FacilityType) -> [Facility]
@@ -110,6 +111,7 @@ protocol AdoptionContext: UpgradeQueryContext {
 protocol MarketContext: CurrencyContext, PigQueryContext, UpgradeQueryContext, EventLoggingContext {
     var contractBoard: ContractBoard { get set }
     var farm: FarmGrid { get }
+    var prestigeState: PrestigeState { get }
     var totalPigsSold: Int { get set }
     func getFacilitiesByType(_ type: FacilityType) -> [Facility]
     func removeGuineaPig(_ pigID: UUID) -> GuineaPig?

@@ -106,6 +106,17 @@ final class GameState: @unchecked Sendable {
     /// Loaded once at app boot; mutated during gameplay; saved separately.
     @ObservationIgnored
     var prestigeState: PrestigeState = PrestigeState()
+
+    // MARK: - Visit Tracking (transient)
+
+    /// Timestamp when app last entered background. Transient — not persisted.
+    /// Used by VisitManager to detect visit-qualifying absences (>= 1 hour).
+    @ObservationIgnored
+    var lastBackgroundDate: Date?
+
+    /// Remaining treats available this visit session. Resets to full on each visit.
+    @ObservationIgnored
+    var remainingTreatsThisVisit: Int = 0
 }
 
 // MARK: - GameState Mutation Methods
