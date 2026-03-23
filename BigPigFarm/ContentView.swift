@@ -263,6 +263,9 @@ struct ContentView: View {
             if let breakdown = pendingPrestigeBreakdown {
                 pendingPrestigeBreakdown = nil
                 executePrestige(breakdown)
+            } else {
+                // Player cancelled — resume the engine that was paused on open
+                engine.resume()
             }
         }) {
             PigShowView(
@@ -272,6 +275,12 @@ struct ContentView: View {
                     showPigShow = false
                 }
             )
+        }
+        .onChange(of: showPigShow) { _, isShowing in
+            if isShowing {
+                // Pause engine so scoring stats freeze during the multi-step flow
+                engine.pause()
+            }
         }
         .confirmationDialog(
             "Remove Facility",
@@ -409,14 +418,15 @@ extension ContentView {
     /// Execute the prestige reset with a SpriteKit transition animation.
     ///
     /// Called after the PigShow fullScreenCover is dismissed with a confirmed breakdown.
-    /// Flow: pause engine → play parade animation → award Rosettes + farmReset → sunrise → resume.
+    /// Flow: pause engine → play parade animation → triggerPrestige → sunrise → resume.
     private func executePrestige(_ breakdown: RosetteBreakdown) {
         engine.pause()
         let newFarmNumber = gameState.prestigeState.farmCount + 1
 
         farmScene.playPrestigeTransition(farmNumber: newFarmNumber) { [self] in
-            gameState.prestigeState.addRosettes(breakdown.total)
-            engine.farmReset()
+            engine.triggerPrestige()
+            // Resume before the sunrise/banner sequence so game time doesn't
+            // freeze for ~3s while the visual transition plays out.
             engine.resume()
         }
     }

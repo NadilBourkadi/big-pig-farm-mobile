@@ -38,7 +38,7 @@ struct JudgingScreenView: View {
                 .accessibilityHidden(true)
             Text("Judging Results")
                 .font(.title2.bold())
-            Text("Your herd has been evaluated across five dimensions")
+            Text("Your herd has been evaluated across six dimensions")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

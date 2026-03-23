@@ -13,10 +13,9 @@ extension FarmScene {
         let paradeAction = buildParadeAction()
         let fadeAction = buildFadeAction()
         let overlayNode = buildOverlayNode()
-        addChild(overlayNode)
 
         let sunriseAction = buildSunriseAction(overlayNode: overlayNode)
-        let bannerAction = buildBannerAction(farmNumber: farmNumber, overlayNode: overlayNode)
+        let bannerAction = buildBannerAction(farmNumber: farmNumber)
 
         run(SKAction.sequence([
             paradeAction,
@@ -48,8 +47,7 @@ extension FarmScene {
         let sceneRight = size.width + 100
         let sortedPigs = pigNodes.values.sorted { $0.position.x < $1.position.x }
 
-        return SKAction.run { [weak self] in
-            guard self != nil else { return }
+        return SKAction.run {
             for (index, node) in sortedPigs.enumerated() {
                 let delay = Double(index) * 0.08
                 let moveRight = SKAction.moveTo(x: sceneRight, duration: 1.5)
@@ -83,19 +81,31 @@ extension FarmScene {
 
     // MARK: - Overlay
 
-    /// Full-screen black overlay for the transition.
+    /// Full-screen black overlay for the transition, attached to the camera
+    /// so it follows viewport movement from any residual pan momentum.
     private func buildOverlayNode() -> SKNode {
-        let overlay = SKShapeNode(rect: CGRect(origin: .zero, size: size))
+        let overlaySize = CGSize(
+            width: size.width * 2,
+            height: size.height * 2
+        )
+        let overlay = SKShapeNode(
+            rect: CGRect(
+                x: -overlaySize.width / 2,
+                y: -overlaySize.height / 2,
+                width: overlaySize.width,
+                height: overlaySize.height
+            )
+        )
         overlay.fillColor = .black
         overlay.strokeColor = .clear
         overlay.alpha = 0
         overlay.zPosition = 1000
-        // Anchor at camera position so it covers the viewport regardless of camera offset
+
+        // Attach to camera so overlay tracks viewport
         if let cam = camera {
-            overlay.position = CGPoint(
-                x: cam.position.x - size.width / 2,
-                y: cam.position.y - size.height / 2
-            )
+            cam.addChild(overlay)
+        } else {
+            addChild(overlay)
         }
         return overlay
     }
@@ -126,7 +136,7 @@ extension FarmScene {
     // MARK: - Banner
 
     /// Display "Farm #N — New Pastures" banner that scales in and fades out.
-    private func buildBannerAction(farmNumber: Int, overlayNode: SKNode) -> SKAction {
+    private func buildBannerAction(farmNumber: Int) -> SKAction {
         SKAction.run { [weak self] in
             guard let self, let cam = camera else { return }
 
@@ -134,6 +144,8 @@ extension FarmScene {
             label.fontName = "AvenirNext-Bold"
             label.fontSize = 28
             label.fontColor = .white
+            // Position at camera center — add to scene, not camera,
+            // so it doesn't inherit camera scale
             label.position = cam.position
             label.zPosition = 1001
             label.setScale(0.0)
