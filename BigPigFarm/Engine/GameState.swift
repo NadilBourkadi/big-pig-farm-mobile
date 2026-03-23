@@ -99,6 +99,13 @@ final class GameState: @unchecked Sendable {
     var totalPigsBorn: Int = 0
     var totalPigsSold: Int = 0
     var totalEarnings: Int = 0
+
+    // MARK: - Prestige (cross-farm, separate persistence)
+
+    /// Cross-farm prestige state. NOT included in CodableSnapshot (has its own save file).
+    /// Loaded once at app boot; mutated during gameplay; saved separately.
+    @ObservationIgnored
+    var prestigeState: PrestigeState = PrestigeState()
 }
 
 // MARK: - GameState Mutation Methods

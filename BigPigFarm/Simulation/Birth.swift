@@ -88,7 +88,7 @@ enum Birth {
     }
 
     /// Register a newborn pig's phenotype in the pigdex.
-    /// Awards Squeaks for new discoveries; checks milestones.
+    /// Awards Squeaks for new discoveries (50% for rediscoveries); checks milestones.
     /// Lucky Clover perk: 10% chance of bonus 50–200 Squeaks on discovery.
     @MainActor
     static func registerPigInPigdex(gameState: GameState, pig: GuineaPig) {
@@ -98,10 +98,17 @@ enum Birth {
 
         if isNew {
             let rarity = keyToRarity(key)
-            let reward = getDiscoveryReward(rarity)
+            let baseReward = getDiscoveryReward(rarity)
+
+            let isRediscovery = gameState.prestigeState.previousPigdexEntries.contains(key)
+            let reward = isRediscovery
+                ? Int(Double(baseReward) * GameConfig.Prestige.rediscoveryRewardFraction)
+                : baseReward
+            let label = isRediscovery ? "rediscovered" : "discovered"
+
             gameState.addMoney(reward)
             gameState.logEvent(
-                "Pigdex: \(pig.phenotype.displayName) discovered! (\(rarity.rawValue.capitalized)) +\(reward) Squeaks",
+                "Pigdex: \(pig.phenotype.displayName) \(label)! (\(rarity.rawValue.capitalized)) +\(reward) Squeaks",
                 eventType: "pigdex"
             )
             if gameState.hasUpgrade("lucky_clover"),

@@ -63,6 +63,30 @@ struct Pigdex: Codable, Sendable {
     }
 }
 
+// MARK: - DiscoveryStatus
+
+/// Status of a phenotype across farms, for UI display.
+enum DiscoveryStatus: Sendable {
+    case undiscovered
+    case previouslyDiscovered   // discovered on a past farm only
+    case discovered             // discovered on the current farm (new)
+    case rediscovered           // was previously discovered, now also on current farm
+}
+
+extension Pigdex {
+    /// Determine the discovery status of a phenotype key given cross-farm history.
+    func status(for key: String, previousEntries: Set<String>) -> DiscoveryStatus {
+        let discoveredThisFarm = discovered[key] != nil
+        let discoveredPreviousFarm = previousEntries.contains(key)
+        switch (discoveredThisFarm, discoveredPreviousFarm) {
+        case (true, true): return .rediscovered
+        case (true, false): return .discovered
+        case (false, true): return .previouslyDiscovered
+        case (false, false): return .undiscovered
+        }
+    }
+}
+
 // MARK: - Free Functions
 
 /// Generate a unique string key for a phenotype.

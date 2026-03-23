@@ -81,6 +81,10 @@ extension Birth {
                 gameState.logEvent("\(baby.name) was born with a mutation! (\(desc))", eventType: "mutation")
             }
             registerPigInPigdex(gameState: gameState, pig: baby)
+
+            if let biome = birthArea?.biome {
+                gameState.prestigeState.biomeMastery.recordBirth(in: biome)
+            }
         }
 
         applyBreedingFilter(gameState: gameState, babies: babiesBorn)
