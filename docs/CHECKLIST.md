@@ -133,6 +133,7 @@
 - [x] Clarify "LOW POP" HUD warning — display contextual threshold text with accessibility label (bead z5x)
 - [x] Add Reset Farm option with two-step confirmation in Settings (bead hncu)
 - [x] Use farm capacity as stock limit max and add explainer text in breeding program (bead waqh)
+- [x] Fix StatusToolbar icon layout overflow — two-row grouped design with improved top bar readability (bead 7lkg)
 
 ---
 
