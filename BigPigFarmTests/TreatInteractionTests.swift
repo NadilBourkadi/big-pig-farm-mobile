@@ -103,8 +103,8 @@ struct ReunionBoostIndicatorTests {
     @MainActor func displaysWithActiveBoost() {
         let boost = ReunionBoost.standard()
         let indicator = ReunionBoostIndicator(boost: boost)
-        #expect(indicator.boost != nil)
-        #expect(indicator.boost!.isActive())
+        let unwrapped = try #require(indicator.boost)
+        #expect(unwrapped.isActive())
     }
 
     @Test("Nil boost produces hidden indicator")
@@ -117,6 +117,7 @@ struct ReunionBoostIndicatorTests {
     @MainActor func expiredBoostHidden() {
         let boost = ReunionBoost.standard(at: Date().addingTimeInterval(-2000))
         let indicator = ReunionBoostIndicator(boost: boost)
-        #expect(!indicator.boost!.isActive())
+        let unwrapped = try #require(indicator.boost)
+        #expect(!unwrapped.isActive())
     }
 }

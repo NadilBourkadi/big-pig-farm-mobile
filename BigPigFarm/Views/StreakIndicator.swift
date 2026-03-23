@@ -14,7 +14,7 @@ struct StreakIndicator: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.white)
                 if streak.isStreakActive() {
-                    TimelineView(.periodic(every: 60)) { _ in
+                    TimelineView(.periodic(from: .now, by: 60)) { _ in
                         Text(countdownText)
                             .font(.system(size: 9))
                             .foregroundStyle(.white.opacity(0.7))

@@ -6,7 +6,7 @@ struct ReunionBoostIndicator: View {
 
     var body: some View {
         if let boost, boost.isActive() {
-            TimelineView(.periodic(every: 1)) { _ in
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
                 HStack(spacing: 4) {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.yellow)
