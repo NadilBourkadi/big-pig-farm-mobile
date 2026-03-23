@@ -22,8 +22,10 @@ struct OfflineBirthTests {
         state.updateGuineaPig(female)
 
         let pigCountBefore = state.pigCount
-        // 24 checkpoints = 24 game-hours = 1 game-day — well past gestation
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
+        // 24 game-hours (1 game-day) — well past 12h remaining gestation.
+        // Tier 1 (6gh/2h) + tier 2 (8gh/4h) + tier 3 partial (10gh/6.67h) = 12.67h real.
+        // Simpler: 2+4+6+1 = 13 real hours = 46800s for exactly 24 game-hours.
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 46_800)
 
         #expect(state.pigCount > pigCountBefore)
         #expect(!summary.pigsBorn.isEmpty)
@@ -40,8 +42,8 @@ struct OfflineAgingTests {
         pig.ageDays = 10.0
         state.updateGuineaPig(pig)
 
-        // 24 checkpoints = 24 game-hours = 1 game-day
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
+        // 24 game-hours = 1 game-day = 46800 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 46_800)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         // Should have aged by 1 day (24 hours / 24 hours per day)
@@ -50,22 +52,17 @@ struct OfflineAgingTests {
     }
 
     @Test @MainActor func oldPigsCanDie() {
-        let state = makeOfflineState(pigCount: 1)
-        var pig = state.getPigsList()[0]
-        pig.ageDays = Double(GameConfig.Simulation.maxAgeDays) + 1  // Past max age
-        state.updateGuineaPig(pig)
-
-        // Run many checkpoints to give death roll many chances
-        // 4800 seconds * 3 / 60 = 240 game-hours = 10 game-days
+        // 46800s = 13 real hours = 24 game-hours (24 death-roll checkpoints per attempt).
+        // 100 attempts × 24 rolls = 2400 chances — matches pre-rebalancing reliability.
         var diedAtLeastOnce = false
-        for _ in 0..<10 {
+        for _ in 0..<100 {
             let freshState = makeOfflineState(pigCount: 1)
             var freshPig = freshState.getPigsList()[0]
             freshPig.ageDays = Double(GameConfig.Simulation.maxAgeDays) + 5
             freshState.updateGuineaPig(freshPig)
 
             let summary = OfflineProgressRunner.runCatchUp(
-                state: freshState, wallClockSeconds: 4800
+                state: freshState, wallClockSeconds: 46_800
             )
             if !summary.pigsDied.isEmpty {
                 diedAtLeastOnce = true
@@ -92,9 +89,9 @@ struct OfflineBreedingTests {
                 pig.needs.happiness = 90.0
                 state.updateGuineaPig(pig)
             }
-            // 100 checkpoints = 100 game-hours
+            // ~8.7 game-hours via tier 1+2: 2h×3.0 + 1.33h×2.0 = 12000 wall seconds
             let summary = OfflineProgressRunner.runCatchUp(
-                state: state, wallClockSeconds: 2000
+                state: state, wallClockSeconds: 12_000
             )
             if !summary.pregnanciesStarted.isEmpty {
                 pregnancyOccurred = true
@@ -113,8 +110,8 @@ struct OfflineBreedingTests {
             state.updateGuineaPig(pig)
         }
 
-        // Single checkpoint (20 wall seconds * 3 / 60 = 1 game-hour)
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         // At most 1 pregnancy per checkpoint
         #expect(summary.pregnanciesStarted.count <= 1)
@@ -132,7 +129,8 @@ struct OfflineEconomyTests {
         state.breedingProgram.stockLimit = 4
 
         let moneyBefore = state.money
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         // Surplus pigs should have been marked and sold
         #expect(!summary.pigsSold.isEmpty || state.pigCount <= 4)
@@ -153,8 +151,8 @@ struct OfflineEconomyTests {
             state.updateFacility(mutable)
         }
 
-        // Several checkpoints — should drain the remaining 5 units
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
 
         #expect(summary.facilitiesEmptied > 0)
     }
@@ -168,7 +166,8 @@ struct OfflinePostCatchupTests {
         let state = makeOfflineState(pigCount: 4)
         let positionsBefore = state.getPigsList().map { $0.position }
 
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         let positionsAfter = state.getPigsList().map { $0.position }
         // At least some pigs should have moved (randomized positions)
@@ -186,7 +185,8 @@ struct OfflinePostCatchupTests {
             state.updateGuineaPig(pig)
         }
 
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         for pig in state.getPigsList() {
             #expect(pig.behaviorState == .idle)
@@ -205,14 +205,16 @@ struct OfflinePostCatchupTests {
 struct OfflineEdgeCaseTests {
     @Test @MainActor func zeroPigsNoCrash() {
         let state = makeOfflineState(pigCount: 0)
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
         #expect(!summary.hasMeaningfulEvents)
         #expect(summary.pigsBorn.isEmpty)
     }
 
     @Test @MainActor func noFacilitiesStillWorks() {
         let state = makeOfflineState(pigCount: 2, withFacilities: false)
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
         #expect(summary.gameHoursElapsed == 5.0)
     }
 
@@ -222,22 +224,22 @@ struct OfflineEdgeCaseTests {
         let summary = OfflineProgressRunner.runCatchUp(
             state: state, wallClockSeconds: 200_000
         )
-        // Should cap at 86400 * 3 / 60 = 4320 game-hours
-        #expect(summary.gameHoursElapsed == 4320.0)
+        // Capped at 86400s = 24 real hours → 35 game-hours via diminishing returns
+        #expect(summary.gameHoursElapsed == 35.0)
     }
 
     @Test @MainActor func veryShortDurationProducesOneCheckpoint() {
         let state = makeOfflineState(pigCount: 1)
-        // 20 wall seconds * 3 / 60 = 1 game-hour = 1 checkpoint
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
         #expect(summary.gameHoursElapsed == 1.0)
     }
 
     @Test @MainActor func belowOneCheckpointReturnsEmpty() {
         let state = makeOfflineState(pigCount: 1)
-        // 10 wall seconds * 3 / 60 = 0.5 game-hours = 0 checkpoints
+        // 10 wall seconds = 10/3600 * 3.0 ≈ 0.0083 game-hours (< 1 checkpoint)
         let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 10)
-        #expect(summary.gameHoursElapsed == 0.5)
+        #expect(summary.gameHoursElapsed < 1.0)
         // No checkpoints ran, so no events
         #expect(!summary.hasMeaningfulEvents)
     }
@@ -251,8 +253,8 @@ struct OfflineGameTimeTests {
         let state = makeOfflineState(pigCount: 1)
         let minutesBefore = state.gameTime.totalGameMinutes
 
-        // 24 checkpoints = 24 game-hours = 1440 game-minutes
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
+        // 24 game-hours = 1440 game-minutes = 46800 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 46_800)
 
         let minutesAdvanced = state.gameTime.totalGameMinutes - minutesBefore
         #expect(minutesAdvanced == 1440.0)
@@ -281,8 +283,8 @@ struct OfflineAcclimationTests {
         pig.currentAreaId = area.id
         state.updateGuineaPig(pig)
 
-        // 24 checkpoints = 24 game-hours — should push past 72-hour threshold
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
+        // 24 game-hours — should push past 72-hour threshold = 46800 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 46_800)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         // Timer should have advanced past 72 (acclimation threshold = 3 days * 24 = 72 hours)
@@ -300,8 +302,8 @@ struct OfflineContractTests {
         state.contractBoard.lastRefreshDay = 0
         state.contractBoard.activeContracts = []
 
-        // Run enough to cross a day boundary
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 480)
+        // 24 game-hours to cross a day boundary = 46800 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 46_800)
 
         // Contracts should have been refreshed
         #expect(!state.contractBoard.activeContracts.isEmpty)

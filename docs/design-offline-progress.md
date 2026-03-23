@@ -34,24 +34,28 @@ tick(gameDelta):
 
 ### Offline speed
 
-**Matches "1x" UI speed (rawValue 3).** The game progresses at the same rate offline as when the player watches at normal speed:
+**Diminishing returns curve.** Longer absences produce progressively less game-time per real hour. This prevents excessive unattended progression while keeping short breaks rewarding:
 
-- **1 real second = 3 game-minutes**
-- 1 real hour = 180 game-hours = **7.5 game-days**
-- 8 hours overnight = **60 game-days**
-- 24 hours = 4,320 game-hours = **180 game-days**
+| Tier | Real-time bracket | Multiplier | Game hours produced | Cumulative |
+|------|-------------------|------------|---------------------|------------|
+| 1    | 0 – 2h            | 3.0×       | 6                   | 6          |
+| 2    | 2 – 6h            | 2.0×       | 8                   | 14         |
+| 3    | 6 – 12h           | 1.5×       | 9                   | 23         |
+| 4    | 12 – 24h          | 1.0×       | 12                  | 35         |
+
+- 8 hours overnight → **17 game-hours ≈ 0.7 game-days**
+- 24 hours = 35 game-hours ≈ **1.5 game-days**
 
 Rationale:
-- Consistent with what the player sees at "1x" — offline feels like leaving the game running
-- Player's speed setting at time of backgrounding is irrelevant — offline always uses the base "1x" rate
+- Short breaks (1–2h) still feel rewarding at 3× — the first tier matches the old flat rate
+- Overnight absences produce meaningful but bounded progress (~1 game-day)
+- Full-day absences no longer cause 180 game-days of unattended turnover
 
 ### Maximum offline duration
 
-**Capped at 24 real hours (= 180 game-days).** Beyond 24 hours, no additional progression occurs. This prevents:
+**Capped at 24 real hours (= 35 game-hours ≈ 1.5 game-days).** Beyond 24 hours, no additional progression occurs. This prevents:
 - Unbounded progression from week/month-long absences
-- Excessive catch-up computation (though even 4,320 checkpoints is fast — see §4)
-
-Note: 180 game-days is ~4× the max pig lifespan (45 days). Long absences will see full generational turnover — pigs born, grown, bred, and died. The summary popup (§5) must handle large event counts gracefully.
+- The old system produced 4,320 game-hours (180 game-days) at max — the diminishing returns curve reduces this to 35 game-hours
 
 ---
 
@@ -118,28 +122,28 @@ after all checkpoints:
 
 ### Performance budget
 
-For maximum offline (24 real hours at 3x = 4,320 game-hours = **4,320 checkpoints**):
+For maximum offline (24 real hours → 35 game-hours = **35 checkpoints** via diminishing returns):
 
-| Operation | Per checkpoint | Total (4,320) |
-|-----------|---------------|---------------|
-| Needs decay + equilibrate | 50 pigs × 6 needs = 300 | 1,296,000 |
-| Pregnancy advance | O(pregnant) ≈ 5 | 21,600 |
-| Aging + death rolls | 50 pigs | 216,000 |
-| Breeding scan | O(males × females) ≈ 625 | 2,700,000 |
-| Culling | O(n log n) ≈ 300 | 1,296,000 |
+| Operation | Per checkpoint | Total (35) |
+|-----------|---------------|------------|
+| Needs decay + equilibrate | 50 pigs × 6 needs = 300 | 10,500 |
+| Pregnancy advance | O(pregnant) ≈ 5 | 175 |
+| Aging + death rolls | 50 pigs | 1,750 |
+| Breeding scan | O(males × females) ≈ 625 | 21,875 |
+| Culling | O(n log n) ≈ 300 | 10,500 |
 | Pig repositioning (final) | 50 pigs × 1 walkable lookup | 50 |
-| **Total** | **~1,280** | **~5,530,000** |
+| **Total** | **~1,280** | **~44,850** |
 
-**~5.5M simple arithmetic operations** (additions, comparisons, random rolls). On an A14 chip at ~3 GFLOPS single-thread, this completes in **well under 100ms**. No pathfinding, no spatial grid, no GKGridGraph — just math.
+**~45K simple arithmetic operations** — trivial on any device. The diminishing returns curve dramatically reduces checkpoint count compared to the old flat system (35 vs 4,320).
 
-Common cases are much faster:
+Common cases:
 
-| Scenario | Real time | Checkpoints | Est. wall time |
-|----------|-----------|-------------|----------------|
-| Quick break (5 min) | 5 min | 15 | <1ms |
-| Lunch (1 hour) | 1 hr | 180 | <5ms |
-| Overnight (8 hours) | 8 hr | 1,440 | <30ms |
-| Max cap (24 hours) | 24 hr | 4,320 | <100ms |
+| Scenario | Real time | Game hours | Checkpoints | Est. wall time |
+|----------|-----------|------------|-------------|----------------|
+| Quick break (5 min) | 5 min | 0.25 | 0 | <1ms |
+| Lunch (1 hour) | 1 hr | 3 | 3 | <1ms |
+| Overnight (8 hours) | 8 hr | 17 | 17 | <1ms |
+| Max cap (24 hours) | 24 hr | 35 | 35 | <1ms |
 
 ### 4.1 Needs equilibration (offline behavior substitute)
 
@@ -174,13 +178,13 @@ func equilibrateNeeds(pig: inout GuineaPig, state: GameState, hours: Double) {
 
 **Fidelity trade-off:** This assumes pigs always find a facility instantly (no walking time). In practice, real-time pigs spend some time walking, so offline needs will be slightly higher than real-time. This is acceptable — slightly higher needs is better than pigs starving because we didn't simulate eating at all.
 
-**Facility depletion at 25% rate.** Food and water facilities are consumed during offline recovery at `consumptionRateMultiplier = 0.25` of the real-time recovery rate. This models pigs eating "sometimes" rather than continuously. When all facilities of a type are empty, recovery stops — needs decay freely from that point.
+**Facility depletion at 40% rate.** Food and water facilities are consumed during offline recovery at `consumptionRateMultiplier = 0.40` of the real-time recovery rate. This models pigs eating regularly but not constantly. When all facilities of a type are empty, recovery stops — needs decay freely from that point.
 
 - Energy/happiness facilities (hideouts, play areas) don't deplete — they have no consumable resource in real-time either
 - AutoResources (drip/auto-feed/veggie) are skipped offline — they're a perk for active play
 - **Health mercy floor:** Health never drops below 10% (`healthMercyFloor`), even when facilities are empty. Pigs suffer but survive.
 
-**Balance curve:** Short absences (1-8 hours) barely affect facilities. Overnight (8h) may partially drain them. Max absence (24h = 180 game-days) will empty most facilities, leaving pigs in poor shape but alive. The summary popup reports how many facilities ran dry.
+**Balance curve:** Short absences (1–2h) barely affect facilities. Overnight (8h, 17 game-hours) will partially drain them at 40% consumption rate. Max absence (24h = 35 game-hours ≈ 1.5 game-days) may empty small facilities, but the combination of fewer checkpoints and reduced consumption rate prevents the catastrophic depletion that occurred under the old flat-3x system.
 
 ### 4.2 Breeding (offline courtship substitute)
 
@@ -375,7 +379,7 @@ Wire everything together.
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| 25% depletion too fast/slow | Balance off | Tunable via `consumptionRateMultiplier`. Short absences are harmless; 24h empties most facilities. Mercy floor prevents death spiral. |
+| 40% depletion too fast/slow | Balance off | Tunable via `consumptionRateMultiplier`. Short absences are harmless; overnight may partially drain. Mercy floor prevents death spiral. |
 | Breeding too generous (no proximity check) | Population explosion | Cap 1 pregnancy per checkpoint + existing capacity check |
 | Generational turnover on long absences | Overwhelming summary | 180 game-days = ~4 full lifespans. Summary must aggregate gracefully (e.g. "12 pigs born, 8 died") rather than listing every event individually. |
 | Pig repositioning onto occupied cells | Visual overlap | Use walkable-cell check; separate overlapping pigs on first real-time tick |
@@ -392,4 +396,4 @@ These are explicitly out of scope for v1 but worth noting:
 
 2. **Push notifications:** "Your pigs had 3 babies while you were away!" — local notifications triggered by offline catch-up producing interesting events. Could also predict when facilities will run dry and send a chaser notification to encourage the player to return.
 
-3. **Depletion rate tuning:** The 25% consumption rate and 10% health mercy floor are initial values. May need adjustment based on playtesting — too fast punishes casual players, too slow removes tension.
+3. **Depletion rate tuning:** The 40% consumption rate and 10% health mercy floor are tuned for the diminishing-returns curve. May need adjustment based on playtesting — too fast punishes casual players, too slow removes tension.

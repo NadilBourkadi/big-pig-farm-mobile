@@ -14,8 +14,8 @@ struct OfflineAutoResourcesTests {
         bowl.maxAmount = 200.0
         state.facilities[bowl.id] = bowl
 
-        // 5 checkpoints = 5 game-hours. Drip rate = 2.0/hr → expect ~+10.0
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds. Drip rate = 2.0/hr → expect ~+10.0
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
 
         let updated = try #require(state.facilities[bowl.id])
         #expect(updated.currentAmount > 59.0)
@@ -31,8 +31,8 @@ struct OfflineAutoResourcesTests {
         bowl.currentAmount = 48.0
         state.facilities[bowl.id] = bowl
 
-        // 1 checkpoint
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 20)
+        // 1 game-hour via tier 1 = 1200 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
 
         let updated = try #require(state.facilities[bowl.id])
         #expect(updated.currentAmount == 200.0)
@@ -48,9 +48,8 @@ struct OfflineAutoResourcesTests {
         bowl.maxAmount = 200.0
         state.facilities[bowl.id] = bowl
 
-        // 5 checkpoints = 5 game-hours. Garden produces 10.0/hr → 50.0 total
-        // (distributed across all non-full food facilities)
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds. Garden produces 10.0/hr → 50.0 total
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
 
         let updated = try #require(state.facilities[bowl.id])
         #expect(updated.currentAmount >= 50.0)
@@ -63,8 +62,8 @@ struct OfflineAutoResourcesTests {
         bowl.maxAmount = 200.0
         state.facilities[bowl.id] = bowl
 
-        // 5 checkpoints — no pigs, no upgrades
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds — no pigs, no upgrades
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
 
         let updated = try #require(state.facilities[bowl.id])
         // No consumption (0 pigs), no refill (no upgrades) → unchanged
@@ -84,8 +83,9 @@ struct OfflineAutoResourcesTests {
         _ = bowl.consume(bowl.currentAmount - 5)
         state.facilities[bowl.id] = bowl
 
+        // 5 game-hours via tier 1 = 6000 wall seconds
         let summaryWithDrip = OfflineProgressRunner.runCatchUp(
-            state: state, wallClockSeconds: 100
+            state: state, wallClockSeconds: 6000
         )
 
         // Compare with a baseline without drip
@@ -99,7 +99,7 @@ struct OfflineAutoResourcesTests {
         baseState.facilities[baseBowl.id] = baseBowl
 
         let summaryWithout = OfflineProgressRunner.runCatchUp(
-            state: baseState, wallClockSeconds: 100
+            state: baseState, wallClockSeconds: 6000
         )
 
         // Drip should help — either fewer facilities emptied or same
@@ -119,8 +119,8 @@ struct OfflineAutoResourcesTests {
         bowl.maxAmount = 200.0
         state.facilities[bowl.id] = bowl
 
-        // 5 checkpoints: consumption (needs equilibration) + drip (2.0/hr)
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 100)
+        // 5 game-hours via tier 1 = 6000 wall seconds: consumption + drip (2.0/hr)
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
 
         let updated = try #require(state.facilities[bowl.id])
         // Bowl should reflect both consumption and drip replenishment
