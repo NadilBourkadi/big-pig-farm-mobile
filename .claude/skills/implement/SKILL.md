@@ -10,19 +10,21 @@ This skill uses a three-phase approach: a Plan subagent researches and designs t
 
 ## Phase 1 — Task Selection
 
-**List candidates** — use `bd list` with `--ready -s open` to exclude in_progress tasks at the query level (never rely on eyeballing status symbols from `bd ready`):
+**List candidates** — use `bd ready -t task` which checks dependency satisfaction and excludes in_progress/blocked/deferred beads. The `-t task` filter prevents decision and epic beads from appearing (those need human input, not implementation):
 
 ```
-bd list --ready -s open --sort priority -n 30
+bd ready -t task -n 30
 ```
+
+**IMPORTANT:** Never use `bd list --ready` as a substitute — it does NOT check dependency satisfaction (only filters by status). Always use `bd ready`.
 
 If an argument was provided (`$ARGUMENTS`):
 - If it looks like a bead ID (e.g. `big-pig-farm-mobile-5qe`), use that task directly — but still verify it is `○ open` via `bd show <id>` before claiming
-- If it's a phase label (e.g. `p0`, `p1`, `phase-0`), add `-l <label>` to the list command
-- If it's a priority (e.g. `P0`, `P1`), add `-p <priority>` to the list command
-- If it's a feature label (e.g. `feature:icloud-sync`), add `-l <label>` to the list command
+- If it's a phase label (e.g. `p0`, `p1`, `phase-0`), add `-l <label>` to the command
+- If it's a priority (e.g. `P0`, `P1`), add `-p <priority>` to the command
+- If it's a feature label (e.g. `feature:icloud-sync`), add `-l <label>` to the command
 
-Otherwise, pick the highest-priority (lowest P-number) task from the filtered results. Skip tasks labeled "spec" or "investigation".
+Otherwise, pick the highest-priority (lowest P-number) task from the results. Skip tasks labeled "spec" or "investigation".
 
 **Claim atomically** — use `--claim` which sets status to `in_progress` and assignee in one operation, and fails if another agent already claimed it:
 
@@ -109,11 +111,18 @@ The `xcodegen generate` step is mandatory after switching branches — `project.
    ```
    bd comments add <other-bead-id> "[HEADS UP from <my-bead-id>] Renamed FacilityManager.refill() → replenish(). Update your callsites."
    ```
-   If you hit an architectural fork that needs human input, create a decision bead:
-   ```
-   bd create "DECISION: <question>" -t decision -p P0
-   ```
-6. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
+6. **Surface decisions inline** — if you encounter an architectural choice or design fork during implementation, do NOT silently pick one and move on. Instead:
+   1. **Pause implementation** and present the decision to the user directly in the conversation. Include: what the choice is, what options exist, and the trade-offs of each.
+   2. **Wait for the user's answer** before proceeding.
+   3. **Record the decision** — create an ADR in `docs/decisions/` using the template, and commit it as part of the PR.
+   4. **Optionally create a decision bead** if the decision affects other beads/agents:
+      ```
+      bd create "DECISION: <question>" -t decision -p P1 --parent <epic-id>
+      ```
+      Close it immediately after recording the ADR. This leaves an audit trail in Beads and unblocks any dependent tasks other agents are waiting on.
+
+   Examples of decisions that must be surfaced: choosing between two data structures, deciding an API shape that other code will depend on, picking a persistence strategy, trade-offs between performance and simplicity. When in doubt, ask.
+7. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
    - `bd close <id>` — updates the Dolt DB (local-only, **not** git-tracked; `.beads/` is gitignored)
    - Edit `docs/CHECKLIST.md` in the worktree (use the worktree absolute path, not the main repo path)
    - Commit only the checklist: `git add docs/CHECKLIST.md`
