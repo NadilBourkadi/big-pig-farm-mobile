@@ -247,6 +247,50 @@ This project uses [Beads](https://github.com/steveyegge/beads) for task manageme
 - Keep tasks granular — anything over ~2 files should be its own bead
 - Priority levels: P0 (critical — blocks everything), P1 (high — significant impact), P2 (medium — normal priority), P3 (low — nice to have / polish)
 
+## Feature Workstreams
+
+When working on a multi-bead feature, use epics, decision beads, and feature labels to coordinate work across parallel agents.
+
+### Epic beads
+Create an epic bead as the parent for all tasks in a feature:
+```
+bd create "iCloud Sync" -t epic -p P1
+```
+Then create child tasks with `--parent <epic-id>`:
+```
+bd create "CloudKit container setup" -t task -p P2 --parent <epic-id>
+```
+
+### Feature labels
+Label all beads in a feature for easy filtering:
+```
+bd label add <id> feature:icloud-sync
+```
+Use a consistent `feature:<slug>` naming convention. The label lets `/status` and `/next` filter across the feature regardless of parent-child structure.
+
+### Decision beads
+For architectural choices that need human input, create a decision bead:
+```
+bd create "Choose sync conflict resolution strategy" -t decision -p P1 --parent <epic-id>
+```
+Add it as a dependency for implementation beads that depend on the decision:
+```
+bd dep add <impl-bead> <decision-bead>
+```
+The implementation bead stays blocked until the decision bead is closed. Include context and options in the decision bead's description so the user can make an informed choice.
+
+When resolving a decision, create an Architecture Decision Record in `docs/decisions/` using the template at `docs/decisions/TEMPLATE.md`. Link the ADR from the decision bead.
+
+### Workflow skills
+- **`/status <feature-label>`** — overview of all beads for a feature, grouped by status, with blocking decisions highlighted
+- **`/next [feature-label]`** — highest-priority unblocked tasks, optionally filtered by feature
+
+### Rules
+- **One feature label per workstream.** Don't mix unrelated work under the same label.
+- **Decision beads block dependents via deps, not status.** A decision bead with `open` status but no dependents doesn't block anything.
+- **Close decision beads after recording the ADR.** The ADR is the durable record; the bead is the workflow gate.
+- **Agents pick up work via `/implement <bead-id>`**, not by feature label. The feature label is for visibility, not routing.
+
 ## Working Style
 
 - **Challenge instructions** that contradict existing rules
