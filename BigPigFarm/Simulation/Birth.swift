@@ -24,8 +24,11 @@ enum Birth {
     @MainActor
     static func checkBirths(gameState: GameState) -> Int {
         var birthCount = 0
+        let gestationThreshold = gameState.prestigeState.hasUpgrade(.speedGestation)
+            ? GameConfig.Prestige.speedGestationDays
+            : Double(GameConfig.Breeding.gestationDays)
         let pregnantPigs = gameState.getPigsList().filter(\.isPregnant)
-        for pig in pregnantPigs where pig.pregnancyDays >= Double(GameConfig.Breeding.gestationDays) {
+        for pig in pregnantPigs where pig.pregnancyDays >= gestationThreshold {
             if processBirth(mother: pig, gameState: gameState) {
                 birthCount += 1
             }
@@ -55,6 +58,9 @@ enum Birth {
         let gameDays = gameHours / 24.0
         let nurseryPoints = gameState.getFacilitiesByType(.nursery).flatMap(\.interactionPoints)
         let growthBonus = facilityInfo[.nursery]?.growthBonus ?? 0.0
+        let deathAge = gameState.prestigeState.hasUpgrade(.enduringBonds)
+            ? Double(GameConfig.Prestige.enduringBondsMaxAge)
+            : Double(GameConfig.Simulation.maxAgeDays)
         var deaths: [GuineaPig] = []
 
         for var pig in gameState.getPigsList() {
@@ -69,7 +75,7 @@ enum Birth {
             pig.ageDays += agingDays
             gameState.updateGuineaPig(pig)
 
-            if pig.ageDays >= Double(GameConfig.Simulation.maxAgeDays) {
+            if pig.ageDays >= deathAge {
                 if Double.random(in: 0.0..<1.0) < GameConfig.Breeding.oldAgeDeathRate * gameDays {
                     deaths.append(pig)
                 }
