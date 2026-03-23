@@ -109,7 +109,9 @@ enum Breeding {
             return
         }
 
-        guard !isPermanentlyUnbreedable(male), !isPermanentlyUnbreedable(female) else {
+        let prestige = gameState.prestigeState
+        guard !isPermanentlyUnbreedable(male, prestige: prestige),
+              !isPermanentlyUnbreedable(female, prestige: prestige) else {
             gameState.logEvent(
                 "Breeding pair cancelled: \(male.name) or \(female.name) cannot breed.",
                 eventType: "breeding"
@@ -125,7 +127,7 @@ enum Breeding {
         }
 
         // Wait if either pig isn't ready yet
-        guard male.canBreed, female.canBreed else { return }
+        guard male.isBreedable(prestige: prestige), female.isBreedable(prestige: prestige) else { return }
         guard male.behaviorState != .courting, female.behaviorState != .courting else { return }
 
         initiateCourtship(male: male, female: female, gameState: gameState)
@@ -139,11 +141,13 @@ enum Breeding {
     @MainActor
     private static func checkForNewBreeding(gameState: GameState) {
         let pigs = gameState.getPigsList()
+        let prestige = gameState.prestigeState
         let eligibleFemales = pigs.filter {
-            $0.gender == .female && $0.canBreed && !$0.isPregnant && $0.behaviorState != .courting
+            $0.gender == .female && $0.isBreedable(prestige: prestige)
+                && !$0.isPregnant && $0.behaviorState != .courting
         }
         let eligibleMales = pigs.filter {
-            $0.gender == .male && $0.canBreed && $0.behaviorState != .courting
+            $0.gender == .male && $0.isBreedable(prestige: prestige) && $0.behaviorState != .courting
         }
 
         for female in eligibleFemales {
@@ -157,9 +161,12 @@ enum Breeding {
 
     // MARK: - Breeding Eligibility
 
-    /// True if a pig is permanently unable to breed (senior or manually locked).
-    private static func isPermanentlyUnbreedable(_ pig: GuineaPig) -> Bool {
-        pig.isSenior || pig.breedingLocked
+    /// True if a pig is permanently unable to breed (past max breeding age or manually locked).
+    private static func isPermanentlyUnbreedable(_ pig: GuineaPig, prestige: PrestigeState) -> Bool {
+        let maxBreedAge = prestige.hasUpgrade(.enduringBonds)
+            ? Double(GameConfig.Prestige.enduringBondsMaxBreedingAge)
+            : Double(GameConfig.Breeding.maxAgeDays)
+        return pig.ageDays >= maxBreedAge || pig.breedingLocked
     }
 
     /// True if a male and female can breed together.
@@ -170,8 +177,9 @@ enum Breeding {
         female: GuineaPig,
         gameState: GameState
     ) -> Bool {
+        let prestige = gameState.prestigeState
         guard male.gender == .male, female.gender == .female else { return false }
-        guard male.canBreed, female.canBreed else { return false }
+        guard male.isBreedable(prestige: prestige), female.isBreedable(prestige: prestige) else { return false }
         guard !female.isPregnant else { return false }
         guard !areCloselyRelated(male, female) else { return false }
         let distance = male.position.distanceTo(female.position)
@@ -202,11 +210,21 @@ enum Breeding {
         female: GuineaPig,
         gameState: GameState
     ) -> Bool {
-        var chance = GameConfig.Breeding.baseBreedingChance
+        let prestige = gameState.prestigeState
+        var chance = prestige.hasUpgrade(.fertileGround)
+            ? GameConfig.Prestige.fertileGroundBreedingChance
+            : GameConfig.Breeding.baseBreedingChance
 
         if gameState.hasUpgrade("fertility_herbs") { chance += 0.05 }
         if !gameState.getFacilitiesByType(.breedingDen).isEmpty {
             chance += GameConfig.Breeding.breedingDenBonus
+        }
+        if prestige.hasUpgrade(.pigdexMomentum) {
+            let pigdexBonus = min(
+                Double(gameState.pigdex.discoveredCount) * GameConfig.Prestige.pigdexMomentumPerEntry,
+                GameConfig.Prestige.pigdexMomentumCap
+            )
+            chance += pigdexBonus
         }
         let avgHappiness = (male.needs.happiness + female.needs.happiness) / 2.0
         if avgHappiness > Double(GameConfig.Breeding.highHappinessThreshold) {

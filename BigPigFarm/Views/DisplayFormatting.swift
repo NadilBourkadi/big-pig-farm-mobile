@@ -7,13 +7,14 @@ import SwiftUI
 /// Format a pig's breeding status as a short string (or verbose full reason).
 ///
 /// Maps from: ui/utils.py format_breeding_status()
-func formatBreedingStatus(_ pig: GuineaPig, verbose: Bool = false) -> String {
+func formatBreedingStatus(_ pig: GuineaPig, verbose: Bool = false, prestige: PrestigeState? = nil) -> String {
     // Special case: baby marked for auto-sell
     if pig.isBaby && pig.markedForSale {
         return verbose ? "Marked for auto-sell at adulthood" : "Sell@Adult"
     }
-    if pig.canBreed { return "Ready" }
-    guard let reason = pig.breedingBlockReason else { return "Not ready" }
+    let blockReason = prestige.map { pig.checkBreedingBlock(prestige: $0) } ?? pig.breedingBlockReason
+    if blockReason == nil { return "Ready" }
+    guard let reason = blockReason else { return "Not ready" }
     if verbose { return reason }
     if reason.hasPrefix("Breeding locked") { return "LOCKED" }
     if reason.hasPrefix("Too young") { return "Baby" }

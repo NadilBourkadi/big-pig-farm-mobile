@@ -12,11 +12,13 @@ extension Breeding {
         guard gameState.breedingPair == nil else { return }
 
         let pigs = gameState.getPigsList()
+        let prestige = gameState.prestigeState
         let males = pigs.filter {
-            $0.gender == .male && $0.canBreed && !$0.breedingLocked && $0.behaviorState != .courting
+            $0.gender == .male && $0.isBreedable(prestige: prestige)
+                && !$0.breedingLocked && $0.behaviorState != .courting
         }
         let females = pigs.filter {
-            $0.gender == .female && $0.canBreed && !$0.isPregnant
+            $0.gender == .female && $0.isBreedable(prestige: prestige) && !$0.isPregnant
                 && !$0.breedingLocked && $0.behaviorState != .courting
         }
 
