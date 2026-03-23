@@ -7,7 +7,7 @@ import SwiftUI
 /// Contains notification settings (via NavigationLink) and a destructive
 /// farm reset option with two-step confirmation.
 struct SettingsView: View {
-    var onResetFarm: () -> Void
+    let onResetFarm: () -> Void
     @State private var showResetConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
@@ -47,11 +47,15 @@ struct SettingsView: View {
                 titleVisibility: .visible
             ) {
                 Button("Delete Everything", role: .destructive) {
+                    dismiss()
                     onResetFarm()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This will permanently delete all progress including pigs, money, Pigdex discoveries, and contracts. This cannot be undone.")
+                Text(
+                    "This will permanently delete all progress including pigs, money, " +
+                    "Pigdex discoveries, and contracts. This cannot be undone."
+                )
             }
         }
     }

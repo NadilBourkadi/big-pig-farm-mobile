@@ -17,7 +17,7 @@ enum AlmanacTab: String, Sendable {
 /// Maps from: almanac.py JournalScreen class.
 struct AlmanacView: View {
     let gameState: GameState
-    var onResetFarm: () -> Void
+    let onResetFarm: () -> Void
     @State private var selectedTab: AlmanacTab = .pigdex
     @State private var showingSettings = false
     @Environment(\.dismiss) private var dismiss
