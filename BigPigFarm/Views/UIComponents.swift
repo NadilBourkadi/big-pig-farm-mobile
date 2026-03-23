@@ -138,9 +138,10 @@ struct RarityBadge: View {
 /// Maps from: ui/utils.py format_breeding_status()
 struct BreedingStatusLabel: View {
     let pig: GuineaPig
+    var prestige: PrestigeState?
 
     var body: some View {
-        Text(formatBreedingStatus(pig))
+        Text(formatBreedingStatus(pig, prestige: prestige))
             .font(.caption2)
             .foregroundStyle(statusColor)
     }
@@ -149,7 +150,8 @@ struct BreedingStatusLabel: View {
     private var statusColor: Color {
         if pig.breedingLocked { return .red }
         if pig.isPregnant { return .orange }
-        if pig.canBreed { return .green }
+        let breedable = prestige.map { pig.isBreedable(prestige: $0) } ?? pig.canBreed
+        if breedable { return .green }
         return .secondary
     }
 }

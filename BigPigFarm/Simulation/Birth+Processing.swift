@@ -32,6 +32,7 @@ extension Birth {
             ? GameConfig.Prestige.prolificLineMinLitter
             : GameConfig.Breeding.minLitterSize
         var litterSize = Int.random(in: minLitter...maxLitter)
+        // Twin Spark adds one beyond the normal max (stacks with litter_boost by design)
         if prestige.hasUpgrade(.twinSpark),
            Double.random(in: 0.0..<1.0) < GameConfig.Prestige.twinSparkChance {
             litterSize += 1
@@ -69,8 +70,8 @@ extension Birth {
         // Phenotype Recall: collect all known phenotype keys for potential override
         let phenotypeRecallActive = prestige.hasUpgrade(.phenotypeRecall)
         let allPigdexKeys: [String] = phenotypeRecallActive
-            ? Array(gameState.pigdex.discovered.keys)
-                + Array(gameState.prestigeState.previousPigdexEntries)
+            ? Array(Set(gameState.pigdex.discovered.keys)
+                .union(gameState.prestigeState.previousPigdexEntries))
             : []
 
         for _ in 0..<litterSize {
@@ -208,7 +209,8 @@ extension Birth {
                 for (locus, boost) in biomeInfo.mutationBoostLoci where boost > 0 {
                     rates[locus] = rate + boost
                 }
-                // Biome Intuition: double biome-specific mutation boosts
+                // Biome Intuition: multiply the boost (locusRate - rate) by the multiplier.
+                // Precondition: locusRate >= rate (all biome boosts are positive).
                 if prestige.hasUpgrade(.biomeIntuition) {
                     for (locus, locusRate) in rates {
                         rates[locus] = rate + (locusRate - rate) * GameConfig.Prestige.biomeIntuitionMultiplier
