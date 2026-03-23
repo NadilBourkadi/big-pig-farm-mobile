@@ -142,6 +142,7 @@
 - [x] Prestige core: persistence, farm reset, Pigdex carry-over, biome mastery (bead dkuq)
 - [x] Rosette scoring: multi-dimensional Pig Show calculation (bead saiu)
 - [x] Showroom breeding+genetics effects: 14 upgrade effects wired into simulation (bead 0bx3)
+- [x] Showroom economy+QoL effects: Golden Touch, Expanded Hutch, Quick Study, Auto-Pilot, Keepsake Slot, treat perks (bead 66ap)
 - [x] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
