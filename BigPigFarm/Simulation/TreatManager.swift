@@ -83,9 +83,9 @@ enum TreatManager {
 
     // MARK: - Private Helpers
 
-    private static func distanceSquared(_ a: Position, _ b: Position) -> Double {
-        let dx = a.x - b.x
-        let dy = a.y - b.y
+    private static func distanceSquared(_ from: Position, _ to: Position) -> Double {
+        let dx = from.x - to.x
+        let dy = from.y - to.y
         return dx * dx + dy * dy
     }
 }
