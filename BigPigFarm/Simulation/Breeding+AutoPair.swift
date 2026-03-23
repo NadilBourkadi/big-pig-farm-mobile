@@ -92,7 +92,17 @@ extension Breeding {
                     ? min(Double(affinity) * GameConfig.Breeding.affinityWeight,
                           GameConfig.Breeding.maxAffinitySelectionBonus)
                     : 0.0
-                let score = prob + affinityBonus
+                var score = prob + affinityBonus
+
+                // Selective Advantage: bonus for preference-aligned genotypes
+                let prestige = gameState.prestigeState
+                if prestige.hasUpgrade(.selectiveAdvantage),
+                   prestige.allelePreferences.hasAnyPreference {
+                    score += preferenceAlignmentBonus(
+                        male.genotype, female.genotype,
+                        preferences: prestige.allelePreferences
+                    )
+                }
 
                 if score > bestScore {
                     bestScore = score
@@ -155,6 +165,30 @@ extension Breeding {
                 eventType: "breeding"
             )
         }
+    }
+
+    // MARK: - Preference Alignment Scoring
+
+    /// Score how well a pair's genotypes align with allele preferences.
+    /// Each locus where both parents carry the preferred allele adds 0.05.
+    /// Range: 0.0 to 0.30 (6 loci x 0.05).
+    private static func preferenceAlignmentBonus(
+        _ male: Genotype,
+        _ female: Genotype,
+        preferences: AllelePreferences
+    ) -> Double {
+        var bonus = 0.0
+        for (locusName, dominant, recessive) in locusDefinitions {
+            let pref = preferences.preference(forLocus: locusName)
+            guard pref != .noPreference else { continue }
+            let target = pref == .dominant ? dominant : recessive
+            let malePair = male.allelePair(forLocus: locusName)
+            let femalePair = female.allelePair(forLocus: locusName)
+            if malePair.contains(target) && femalePair.contains(target) {
+                bonus += 0.05
+            }
+        }
+        return bonus
     }
 
     // MARK: - Diversity Pair Scoring
