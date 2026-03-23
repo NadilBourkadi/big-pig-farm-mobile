@@ -8,8 +8,12 @@ enum PigShowCalculator {
         gameState: GameState,
         prestigeState: PrestigeState
     ) -> RosetteBreakdown {
+        // Include current run's earnings — they haven't been accumulated into
+        // lifetimeStats yet (that happens in farmReset, after evaluation).
+        let totalSqueaks = prestigeState.lifetimeStats.totalSqueaksEarned
+            + gameState.totalEarnings
         let input = RosetteInput(
-            lifetimeSqueaks: prestigeState.lifetimeStats.totalSqueaksEarned,
+            lifetimeSqueaks: totalSqueaks,
             newPigdexEntries: newPigdexEntries(
                 currentPigdex: gameState.pigdex,
                 previousEntries: prestigeState.previousPigdexEntries
