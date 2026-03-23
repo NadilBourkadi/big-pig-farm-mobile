@@ -94,7 +94,10 @@ extension Breeding {
                     : 0.0
                 var score = prob + affinityBonus
 
-                // Selective Advantage: bonus for preference-aligned genotypes
+                // Selective Advantage: bonus for preference-aligned genotypes.
+                // Intentionally contributes to score even when prob == 0 — if the
+                // player set allele preferences, they want genetically aligned pairs
+                // selected even without phenotype targets configured.
                 let prestige = gameState.prestigeState
                 if prestige.hasUpgrade(.selectiveAdvantage),
                    prestige.allelePreferences.hasAnyPreference {

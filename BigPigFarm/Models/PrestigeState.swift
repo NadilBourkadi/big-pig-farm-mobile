@@ -105,24 +105,24 @@ struct PrestigeState: Codable, Sendable {
     var activeReunionBoost: ReunionBoost?
 
     /// Per-locus allele preferences for the Selective Advantage upgrade.
-    var allelePreferences: AllelePreferences = AllelePreferences()
+    var allelePreferences = AllelePreferences()
 
     // MARK: - Codable
 
     init() {}
 
     init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        rosetteBalance = try c.decode(Int.self, forKey: .rosetteBalance)
-        purchasedUpgrades = try c.decode(Set<ShowroomUpgrade>.self, forKey: .purchasedUpgrades)
-        farmCount = try c.decode(Int.self, forKey: .farmCount)
-        previousPigdexEntries = try c.decode(Set<String>.self, forKey: .previousPigdexEntries)
-        lifetimeStats = try c.decode(LifetimeStats.self, forKey: .lifetimeStats)
-        visitStreak = try c.decode(VisitStreak.self, forKey: .visitStreak)
-        biomeMastery = try c.decode(BiomeMastery.self, forKey: .biomeMastery)
-        keepsakePerks = try c.decode([String].self, forKey: .keepsakePerks)
-        activeReunionBoost = try c.decodeIfPresent(ReunionBoost.self, forKey: .activeReunionBoost)
-        allelePreferences = try c.decodeIfPresent(AllelePreferences.self, forKey: .allelePreferences)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        rosetteBalance = try container.decode(Int.self, forKey: .rosetteBalance)
+        purchasedUpgrades = try container.decode(Set<ShowroomUpgrade>.self, forKey: .purchasedUpgrades)
+        farmCount = try container.decode(Int.self, forKey: .farmCount)
+        previousPigdexEntries = try container.decode(Set<String>.self, forKey: .previousPigdexEntries)
+        lifetimeStats = try container.decode(LifetimeStats.self, forKey: .lifetimeStats)
+        visitStreak = try container.decode(VisitStreak.self, forKey: .visitStreak)
+        biomeMastery = try container.decode(BiomeMastery.self, forKey: .biomeMastery)
+        keepsakePerks = try container.decode([String].self, forKey: .keepsakePerks)
+        activeReunionBoost = try container.decodeIfPresent(ReunionBoost.self, forKey: .activeReunionBoost)
+        allelePreferences = try container.decodeIfPresent(AllelePreferences.self, forKey: .allelePreferences)
             ?? AllelePreferences()
     }
 

@@ -140,9 +140,18 @@ func breed(
     var dLocus = inheritAlleleWithPreference(parent1.dLocus, parent2.dLocus,
         preference: prefs.dLocus, dominant: "D", recessive: "d")
 
-    // Check for lethal roan combination (RR) -- reroll until non-lethal
+    // Check for lethal roan combination (RR) -- reroll with bias preserved.
+    // With dominant roan preference, RR is likely (~81%); reroll biased up
+    // to 10 times, then fall back to unbiased to guarantee termination.
+    var roanAttempts = 0
     while rLocus.isHomozygous("R") {
-        rLocus = inheritAllele(parent1.rLocus, parent2.rLocus)
+        roanAttempts += 1
+        if roanAttempts <= 10 {
+            rLocus = inheritAlleleWithPreference(parent1.rLocus, parent2.rLocus,
+                preference: prefs.rLocus, dominant: "R", recessive: "r")
+        } else {
+            rLocus = inheritAllele(parent1.rLocus, parent2.rLocus)
+        }
     }
 
     // Genetic Imprinting: force one allele from the locked parent's genotype

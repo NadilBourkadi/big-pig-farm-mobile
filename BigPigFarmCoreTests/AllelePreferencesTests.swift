@@ -321,6 +321,37 @@ struct RoanSafetyTests {
                 "Lethal RR genotype should never appear")
         }
     }
+
+    @Test("Dominant roan preference produces more Rr than baseline")
+    func dominantRoanPreferenceSkewsTowardRr() {
+        let parent1 = Genotype(
+            eLocus: AllelePair(first: "E", second: "E"),
+            bLocus: AllelePair(first: "B", second: "B"),
+            sLocus: AllelePair(first: "S", second: "S"),
+            cLocus: AllelePair(first: "C", second: "C"),
+            rLocus: AllelePair(first: "R", second: "r"),
+            dLocus: AllelePair(first: "D", second: "D")
+        )
+        let parent2 = parent1
+
+        var prefs = AllelePreferences()
+        prefs.rLocus = .dominant
+
+        var rrCount = 0 // Should be Rr (heterozygous with R)
+        let trials = 10_000
+        for _ in 0..<trials {
+            let result = breed(parent1, parent2, allelePreferences: prefs)
+            if result.genotype.rLocus.contains("R") {
+                rrCount += 1
+            }
+        }
+
+        let ratio = Double(rrCount) / Double(trials)
+        // Baseline Rr from Rr x Rr = 50%. With dominant preference and
+        // biased reroll, should be significantly higher.
+        #expect(ratio > 0.60,
+            "Expected >60% Rr with dominant roan preference, got \(ratio)")
+    }
 }
 
 // MARK: - Auto-Pair Scoring Tests
@@ -409,8 +440,8 @@ struct PreferenceAlignmentScoringTests {
 
 // MARK: - Test Helper
 
-/// Public wrapper for the private preferenceAlignmentBonus function.
-/// Uses the same algorithm as Breeding+AutoPair.swift.
+/// Mirror of Breeding.preferenceAlignmentBonus (private static).
+/// KEEP IN SYNC with Breeding+AutoPair.swift if the scoring algorithm changes.
 func testPreferenceAlignmentBonus(
     _ male: Genotype,
     _ female: Genotype,
