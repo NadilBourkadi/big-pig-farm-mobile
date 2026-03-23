@@ -31,7 +31,7 @@ Read these before implementing (skip if already covered by the plan file):
 
 ## Workflow
 
-1. **Claim the task** — run `bd update <id> --status in_progress` with the bead ID provided.
+1. **Claim the task** — run `bd update <id> --claim` with the bead ID provided (atomic — fails if already claimed by another agent).
 2. **Explore** — read the spec, find the Python source, check existing Swift stubs. Use subagents for parallel exploration.
 3. **Plan** — design the implementation approach. Map Python code to Swift, identify all files to create/modify, note any dependencies. Present for user approval before coding.
 4. **Implement** — write the Swift code following CLAUDE.md conventions:
