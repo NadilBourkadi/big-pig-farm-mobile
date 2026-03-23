@@ -289,7 +289,7 @@ Shared state:
 |-------|---------|-------------|
 | `/triage` | Investigate a bug/feature, create a bead, auto-implement if simple | Starting new work from a user report |
 | `/implement [id]` | Pick up and implement the next unblocked task | Main implementation workflow |
-| `/next [feature-label]` | Show ready tasks + pending decisions needing user input | Deciding what to work on, resolving decisions |
+| `/next [feature-label]` | Surface decisions, then auto-start the top task if nothing is blocking | Starting work, resolving decisions |
 | `/status [feature-label]` | Feature workstream overview (progress, blockers, in-flight) | Tracking progress across agents |
 | `/test [--fast\|--full\|--all]` | Run tests in a subagent (preserves context) | After writing code, before pushing |
 | `/code-review swift` | Pre-push code quality review | Before pushing a PR |

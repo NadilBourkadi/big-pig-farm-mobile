@@ -62,7 +62,7 @@ This project is designed for parallel development with multiple Claude Code agen
 |-------|---------|
 | `/triage` | Investigate a bug or feature request. Creates a bead, auto-implements if simple. |
 | `/implement [id]` | Pick up and implement the next unblocked task. Plans, codes, tests, opens PR. |
-| `/next [feature:label]` | Show what's ready to work on. **Surfaces pending architectural decisions first** so you can resolve them. |
+| `/next [feature:label]` | Show pending decisions, then auto-start the top task if nothing is blocking. |
 | `/status [feature:label]` | Feature workstream overview — progress, blockers, what's in flight across agents. |
 | `/test [--fast\|--full\|--all]` | Run tests in a subagent to keep context clean. |
 | `/code-review swift` | Pre-push code quality review. |
