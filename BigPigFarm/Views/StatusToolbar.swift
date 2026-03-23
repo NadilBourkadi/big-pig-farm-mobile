@@ -14,6 +14,9 @@ struct StatusToolbar: View {
     /// Two-way binding to ContentView's edit-mode state.
     @Binding var isEditMode: Bool
 
+    /// Two-way binding to ContentView's treat-placement mode state.
+    @Binding var isTreatMode: Bool
+
     // MARK: - Action Callbacks
 
     var onShopTapped: () -> Void
@@ -33,6 +36,7 @@ struct StatusToolbar: View {
             HUDButton(systemImage: "books.vertical.fill", label: "Almanac", action: onAlmanacTapped)
 
             refillButton
+            TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
 
             Spacer()
 
@@ -89,6 +93,7 @@ private extension StatusToolbar {
 
 private struct StatusToolbarPreview: View {
     @State private var editMode = false
+    @State private var treatMode = false
     private let state: GameState = {
         let previewState = GameState()
         previewState.farm = FarmGrid.createStarter()
@@ -99,6 +104,7 @@ private struct StatusToolbarPreview: View {
         StatusToolbar(
             gameState: state,
             isEditMode: $editMode,
+            isTreatMode: $treatMode,
             onShopTapped: {},
             onPigListTapped: {},
             onBreedingTapped: {},
