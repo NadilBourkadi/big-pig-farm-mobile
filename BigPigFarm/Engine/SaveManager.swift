@@ -21,6 +21,7 @@ struct PrestigeEnvelope: Codable, Sendable {
 /// `baseDirectoryURL` is injectable for test isolation.
 struct SaveManager: Sendable {
     static let schemaVersion: Int = 1
+    static let prestigeSchemaVersion: Int = 1
     static let saveFileName = "save.json"
     static let backupFileName = "save.json.bak"
     static let prestigeFileName = "prestige.json"
@@ -94,7 +95,7 @@ extension SaveManager {
 extension SaveManager {
     /// Save prestige state to its own JSON file (survives farm resets).
     func savePrestigeState(_ state: PrestigeState) throws {
-        let envelope = PrestigeEnvelope(schemaVersion: Self.schemaVersion, prestige: state)
+        let envelope = PrestigeEnvelope(schemaVersion: Self.prestigeSchemaVersion, prestige: state)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = .sortedKeys
