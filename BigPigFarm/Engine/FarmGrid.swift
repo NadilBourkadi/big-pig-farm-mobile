@@ -275,7 +275,8 @@ extension FarmGrid {
         getAreaAt(x, y)?.biome
     }
 
-    /// Pig capacity = capacityPerRoom * number of rooms.
+    /// Base pig capacity (no prestige bonuses). Use `GameState.capacity` for the
+    /// authoritative value that includes Expanded Hutch and other Showroom bonuses.
     var capacity: Int {
         areas.count * getTierUpgrade(tier: tier).capacityPerRoom
     }

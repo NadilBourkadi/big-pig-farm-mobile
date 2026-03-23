@@ -131,11 +131,11 @@ let upgrades: [String: UpgradeDefinition] = [
     "treat_basket": UpgradeDefinition(
         id: "treat_basket", name: "Treat Basket",
         description: "+1 treat per visit.",
-        cost: 800, requiredTier: 3, category: "Treats", implemented: true),
+        cost: 800, requiredTier: 3, category: "Treats", implemented: false),
     "treat_wagon": UpgradeDefinition(
         id: "treat_wagon", name: "Treat Wagon",
         description: "+2 treats per visit.",
-        cost: 3_000, requiredTier: 4, category: "Treats", implemented: true),
+        cost: 3_000, requiredTier: 4, category: "Treats", implemented: false),
 ]
 
 // MARK: - Upgrades Logic
@@ -173,6 +173,9 @@ enum Upgrades {
 
     // MARK: - Immediate Effects
 
+    /// Apply the one-time side-effect of granting `upgradeId` (e.g. bulk_feeders doubles capacity).
+    /// Precondition: caller has already inserted the upgrade into `purchasedUpgrades` and verified
+    /// eligibility. Do NOT call before the duplicate/tier/currency checks in `purchasePerk`.
     @MainActor
     static func applyImmediateEffect(state: any UpgradesContext, upgradeId: String) {
         if upgradeId == "bulk_feeders" {

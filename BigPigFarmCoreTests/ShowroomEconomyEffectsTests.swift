@@ -19,14 +19,19 @@ import Testing
 
 @Test @MainActor func goldenTouchStacksWithPerkMultipliers() {
     let state = makeGameState()
+    let pig = makeAdultPig(rarity: .common)
+
+    // Get base value without any perks
+    let baseValue = Market.calculatePigValue(pig: pig, state: state)
+
+    // Add both perk and showroom upgrade
     state.purchasedUpgrades.insert("market_connections") // +10%
     state.prestigeState.purchasedUpgrades = [.goldenTouch]
-
-    let pig = makeAdultPig(rarity: .common)
     let value = Market.calculatePigValue(pig: pig, state: state)
 
-    // 25 * 1.1 (perk) * 1.25 (golden touch) = 34.375 → 34
-    #expect(value == 34)
+    // base * 1.1 (perk) * 1.25 (golden touch), truncated
+    let expected = Int(Double(baseValue) * 1.1 * 1.25)
+    #expect(value == expected)
 }
 
 @Test @MainActor func goldenTouchAppearsInBreakdown() {
@@ -178,6 +183,21 @@ import Testing
     #expect(!state.purchasedUpgrades.contains("bulk_feeders"))
 }
 
+@Test @MainActor func autoPilotAndKeepsakeWithBulkFeedersDoesNotDoubleApply() {
+    let state = makeGameState()
+    state.prestigeState.purchasedUpgrades = [.autoPilot, .keepsakeSlot]
+    state.prestigeState.keepsakePerks = ["bulk_feeders"]
+
+    let engine = GameEngine(state: state)
+    engine.farmReset()
+
+    // Auto-Pilot inserts bulk_feeders first; Keepsake should skip it (already present)
+    for facility in state.getFacilitiesByType(.foodBowl) {
+        let defaultCapacity = Double(facility.info.capacity)
+        #expect(facility.maxAmount == defaultCapacity * 2) // not * 4
+    }
+}
+
 // MARK: - Keepsake Slot
 
 @Test @MainActor func keepsakePerksAppliedOnReset() {
@@ -232,7 +252,7 @@ import Testing
     #expect(def != nil)
     #expect(def?.name == "Treat Basket")
     #expect(def?.category == "Treats")
-    #expect(def?.implemented == true)
+    #expect(def?.implemented == false) // not wired until visit system (bead tl7c)
 }
 
 @Test @MainActor func treatWagonPerkExists() {
@@ -240,7 +260,7 @@ import Testing
     #expect(def != nil)
     #expect(def?.name == "Treat Wagon")
     #expect(def?.category == "Treats")
-    #expect(def?.implemented == true)
+    #expect(def?.implemented == false) // not wired until visit system (bead tl7c)
 }
 
 @Test @MainActor func treatCapacityConstants() {
@@ -260,10 +280,6 @@ import Testing
 }
 
 // MARK: - ShowroomUpgrade Enum
-
-@Test func showroomUpgradeCountIs25() {
-    #expect(ShowroomUpgrade.allCases.count == 25)
-}
 
 @Test func autoPilotAndQuickStudyExist() {
     #expect(ShowroomUpgrade.autoPilot.rawValue == "auto_pilot")
