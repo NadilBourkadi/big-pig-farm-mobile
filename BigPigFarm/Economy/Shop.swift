@@ -219,11 +219,14 @@ enum Shop {
     }
 
     /// Total cost to purchase a new room of the given biome (base room cost + biome cost).
+    /// Mastered biomes receive a 25% discount on the total cost.
     @MainActor
     static func getRoomTotalCost(state: any ShopContext, biome: BiomeType) -> Int {
         guard let nextRoom = state.farm.nextRoomCost else { return 0 }
         let biomeCost = biomes[biome]?.cost ?? 0
-        return nextRoom.cost + biomeCost
+        let baseCost = nextRoom.cost + biomeCost
+        let multiplier = state.prestigeState.biomeMastery.roomCostMultiplier(for: biome)
+        return Int(Double(baseCost) * multiplier)
     }
 
     // MARK: - Shop Extensions (ShopView support)
