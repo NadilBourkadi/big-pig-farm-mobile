@@ -302,6 +302,9 @@ enum GameConfig {
         static let goldenTouchSaleBonus: Double = 0.25
         static let legendaryLineageMultiplier: Double = 2.0
         static let keepsakeMaxSlots: Int = 3
+        static let quickStudyThresholdMultiplier: Double = 0.75
+        static let treatBasketBonusTreats: Int = 1
+        static let treatWagonBonusTreats: Int = 2
 
         // Pigdex rediscovery
         static let rediscoveryRewardFraction: Double = 0.50

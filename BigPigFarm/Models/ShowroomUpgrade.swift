@@ -14,7 +14,7 @@ enum ShowroomTier: Int, Codable, CaseIterable, Sendable {
 
 // MARK: - ShowroomUpgrade
 
-/// All 23 Showroom upgrades purchasable with Rosettes.
+/// All 25 Showroom upgrades purchasable with Rosettes.
 enum ShowroomUpgrade: String, Codable, CaseIterable, Sendable {
     // Tier 1 — Newcomer (5 upgrades, 2–4 Rosettes each)
     case expandedHutch = "expanded_hutch"
@@ -23,21 +23,23 @@ enum ShowroomUpgrade: String, Codable, CaseIterable, Sendable {
     case pigdexMomentum = "pigdex_momentum"
     case twinSpark = "twin_spark"
 
-    // Tier 2 — Apprentice (6 upgrades, 5–10 Rosettes each)
+    // Tier 2 — Apprentice (7 upgrades, 5–10 Rosettes each)
     case fertileGround = "fertile_ground"
     case mutationCatalyst = "mutation_catalyst"
     case enduringBonds = "enduring_bonds"
     case phenotypeRecall = "phenotype_recall"
     case biomeIntuition = "biome_intuition"
     case treatPouch = "treat_pouch"
+    case quickStudy = "quick_study"
 
-    // Tier 3 — Expert (6 upgrades, 12–20 Rosettes each)
+    // Tier 3 — Expert (7 upgrades, 12–20 Rosettes each)
     case prolificLine = "prolific_line"
     case geneticImprinting = "genetic_imprinting"
     case premiumGenetics = "premium_genetics"
     case speedGestation = "speed_gestation"
     case establishedFarm = "established_farm"
     case reunionSpirit = "reunion_spirit"
+    case autoPilot = "auto_pilot"
 
     // Tier 4 — Master (6 upgrades, 25–50 Rosettes each)
     case grandFarm = "grand_farm"
@@ -77,7 +79,7 @@ struct ShowroomUpgradeInfo: Sendable {
 
 // MARK: - Showroom Upgrade Lookup Table
 
-/// All 23 upgrade metadata entries. From design doc Section 5.
+/// All 25 upgrade metadata entries. From design doc Section 5.
 let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
     // Tier 1 — Newcomer
     .expandedHutch: ShowroomUpgradeInfo(
@@ -125,6 +127,10 @@ let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
         displayName: "Treat Pouch",
         description: "+2 treats per visit",
         cost: 5, tier: .apprentice),
+    .quickStudy: ShowroomUpgradeInfo(
+        displayName: "Quick Study",
+        description: "Tier advancement requirements reduced by 25%",
+        cost: 8, tier: .apprentice),
     // Tier 3 — Expert
     .prolificLine: ShowroomUpgradeInfo(
         displayName: "Prolific Line",
@@ -150,6 +156,10 @@ let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
         displayName: "Reunion Spirit",
         description: "Visit bonuses last 2x longer and are 50% stronger",
         cost: 12, tier: .expert),
+    .autoPilot: ShowroomUpgradeInfo(
+        displayName: "Auto-Pilot",
+        description: "Start each new farm with Bulk Feeders and Drip System perks",
+        cost: 15, tier: .expert),
     // Tier 4 — Master
     .grandFarm: ShowroomUpgradeInfo(
         displayName: "Grand Farm",

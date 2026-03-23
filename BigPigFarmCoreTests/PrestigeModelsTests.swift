@@ -5,8 +5,8 @@ import Foundation
 
 // MARK: - ShowroomUpgrade Tests
 
-@Test func showroomUpgradeHas23Cases() {
-    #expect(ShowroomUpgrade.allCases.count == 23)
+@Test func showroomUpgradeHas25Cases() {
+    #expect(ShowroomUpgrade.allCases.count == 25)
 }
 
 @Test func showroomUpgradeTier1Has5Cases() {
@@ -14,14 +14,14 @@ import Foundation
     #expect(tier1.count == 5)
 }
 
-@Test func showroomUpgradeTier2Has6Cases() {
+@Test func showroomUpgradeTier2Has7Cases() {
     let tier2 = ShowroomUpgrade.allCases.filter { $0.tier == .apprentice }
-    #expect(tier2.count == 6)
+    #expect(tier2.count == 7)
 }
 
-@Test func showroomUpgradeTier3Has6Cases() {
+@Test func showroomUpgradeTier3Has7Cases() {
     let tier3 = ShowroomUpgrade.allCases.filter { $0.tier == .expert }
-    #expect(tier3.count == 6)
+    #expect(tier3.count == 7)
 }
 
 @Test func showroomUpgradeTier4Has6Cases() {
@@ -29,9 +29,9 @@ import Foundation
     #expect(tier4.count == 6)
 }
 
-@Test func showroomUpgradeTotalCostIs372() {
+@Test func showroomUpgradeTotalCostIs395() {
     let total = ShowroomUpgrade.allCases.reduce(0) { $0 + $1.cost }
-    #expect(total == 372)
+    #expect(total == 395)
 }
 
 @Test func showroomUpgradeTier1TotalIs15() {
@@ -41,18 +41,18 @@ import Foundation
     #expect(total == 15)
 }
 
-@Test func showroomUpgradeTier2TotalIs37() {
+@Test func showroomUpgradeTier2TotalIs45() {
     let total = ShowroomUpgrade.allCases
         .filter { $0.tier == .apprentice }
         .reduce(0) { $0 + $1.cost }
-    #expect(total == 37)
+    #expect(total == 45)
 }
 
-@Test func showroomUpgradeTier3TotalIs90() {
+@Test func showroomUpgradeTier3TotalIs105() {
     let total = ShowroomUpgrade.allCases
         .filter { $0.tier == .expert }
         .reduce(0) { $0 + $1.cost }
-    #expect(total == 90)
+    #expect(total == 105)
 }
 
 @Test func showroomUpgradeTier4TotalIs230() {
