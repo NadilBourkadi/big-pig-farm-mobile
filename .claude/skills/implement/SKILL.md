@@ -10,16 +10,42 @@ This skill uses a three-phase approach: a Plan subagent researches and designs t
 
 ## Phase 1 — Task Selection
 
-First, run `bd ready -n 30` to see available implementation tasks.
+**List candidates** — use `bd list` with `--ready -s open` to exclude in_progress tasks at the query level (never rely on eyeballing status symbols from `bd ready`):
+
+```
+bd list --ready -s open --sort priority -n 30
+```
 
 If an argument was provided (`$ARGUMENTS`):
-- If it looks like a bead ID (e.g. `big-pig-farm-mobile-5qe`), use that task directly
-- If it's a phase label (e.g. `p0`, `p1`, `phase-0`), filter for tasks with that phase label
-- If it's a priority (e.g. `P0`, `P1`), filter by priority level
+- If it looks like a bead ID (e.g. `big-pig-farm-mobile-5qe`), use that task directly — but still verify it is `○ open` via `bd show <id>` before claiming
+- If it's a phase label (e.g. `p0`, `p1`, `phase-0`), add `-l <label>` to the list command
+- If it's a priority (e.g. `P0`, `P1`), add `-p <priority>` to the list command
+- If it's a feature label (e.g. `feature:icloud-sync`), add `-l <label>` to the list command
 
-Otherwise, pick the highest-priority (lowest P-number) unblocked implementation task. **Only select tasks with `○ open` status.** Any task showing `◐ in_progress` belongs to another active agent — do not touch it, do not assume it is abandoned. Skip tasks labeled "spec" or "investigation".
+Otherwise, pick the highest-priority (lowest P-number) task from the filtered results. Skip tasks labeled "spec" or "investigation".
 
-Claim the task: `bd update <id> --status in_progress`
+**Claim atomically** — use `--claim` which sets status to `in_progress` and assignee in one operation, and fails if another agent already claimed it:
+
+```
+bd show <id>                        # 1. Pre-check: verify status is open
+bd update <id> --claim              # 2. Atomic claim
+bd show <id>                        # 3. Post-check: verify you own it
+```
+
+If `--claim` fails or hangs (another agent claimed it between your list and claim), pick the next task from your candidate list. **Never use `bd update <id> --status in_progress` directly** — it has no race protection.
+
+## Phase 1.5 — Check-In
+
+Before planning, gather awareness of what other agents are doing:
+
+```
+bd comments <id>                              # Warnings from other agents on YOUR bead
+bd query "status=in_progress" -n 10           # All beads currently being worked on
+```
+
+If your bead has comments (especially `[HEADS UP]` prefixed ones), read them carefully — another agent may have changed an API or discovered something that affects your approach.
+
+If another in-progress bead shares a feature label with yours, note which files it likely touches (check its description via `bd show`). Avoid modifying the same files where possible; if overlap is unavoidable, plan to rebase carefully before pushing.
 
 ## Phase 2 — Planning (Subagent)
 
@@ -79,7 +105,15 @@ The `xcodegen generate` step is mandatory after switching branches — `project.
 2. **Test** — write tests as specified in the plan. Use Swift Testing framework (`@Test`, `#expect`, `#require`). Tests are a mandatory deliverable. **Run tests via `/test` (the Skill tool), NEVER via `swift test` or `xcodebuild test` directly** — the `/test` skill runs in a subagent to preserve context.
 3. **Commit** — make atomic commits (one logical change per commit). Do NOT push yet.
 4. **Update backlog** — create beads for any bugs, tech debt, or follow-ups discovered during implementation. Use `bd create "title" -t task -p <priority> -l <phase-label>`. Add dependency links with `bd dep add <blocked-id> <blocker-id>`.
-5. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
+5. **Broadcast changes** — if you change a public API (protocol, function signature, type rename) or discover something that affects another bead, notify affected beads:
+   ```
+   bd comments add <other-bead-id> "[HEADS UP from <my-bead-id>] Renamed FacilityManager.refill() → replenish(). Update your callsites."
+   ```
+   If you hit an architectural fork that needs human input, create a decision bead:
+   ```
+   bd create "DECISION: <question>" -t decision -p P0
+   ```
+6. **Close bead and update checklist** — from the **worktree directory** (not the main repo):
    - `bd close <id>` — updates the Dolt DB (local-only, **not** git-tracked; `.beads/` is gitignored)
    - Edit `docs/CHECKLIST.md` in the worktree (use the worktree absolute path, not the main repo path)
    - Commit only the checklist: `git add docs/CHECKLIST.md`
