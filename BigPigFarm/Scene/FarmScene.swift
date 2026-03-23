@@ -75,6 +75,17 @@ class FarmScene: SKScene {
 
     var selectedPigID: UUID? { didSet { updateSelectionHighlight() } }
 
+    // MARK: - Treat Mode
+
+    var isTreatPlacementMode: Bool = false
+    let treatLayer = SKNode()
+
+    /// Called when a treat is placed (treat count changed).
+    var onTreatCountChanged: (() -> Void)?
+
+    /// Called when all treats are exhausted (auto-exit treat mode).
+    var onTreatsExhausted: (() -> Void)?
+
     // MARK: - Edit Mode
 
     var isEditMode: Bool = false
@@ -136,8 +147,10 @@ extension FarmScene {
         terrainLayer.zPosition = 0
         facilityLayer.zPosition = 5
         pigLayer.zPosition = 10
+        treatLayer.zPosition = 7
         addChild(terrainLayer)
         addChild(facilityLayer)
+        addChild(treatLayer)
         addChild(pigLayer)
 
         let cameraNode = SKCameraNode()
