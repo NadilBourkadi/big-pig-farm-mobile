@@ -9,7 +9,7 @@
 - **Never chain commands** (`cmd1 && cmd2`, `cd … && cmd`). Chaining causes permission escalation — even pre-approved commands require re-prompting when chained. Run each command as a separate Bash tool call instead.
 - **Never use `grep` or `rg` via Bash.** Always use the native `Grep` tool instead. `Bash(grep:*)` is NOT pre-approved and triggers a permission prompt every time. The native `Grep` tool ("Search" in the UI) is pre-approved and works without prompting.
 - **Never prepend `cd`** to commands. The working directory is always the repo root (or the worktree root when in a worktree).
-- **When inside a worktree, use the worktree root for ALL file paths — no exceptions.** Never read or write files via the main repo path (e.g. `/Users/.../big-pig-farm-mobile/…`) — every Read, Write, Edit, Glob, Grep, and `cat` must use the worktree absolute path (e.g. `/Users/.../big-pig-farm-mobile/.claude/worktrees/<name>/…`). This includes `.claude/settings.json`, `.claude/skills/**`, `CLAUDE.md`, and any other config file. Even if a config fix is discovered mid-task, it goes into the worktree copy so it ships with the PR. The main repo's files are not the ones being modified.
+- **When inside a worktree, use YOUR worktree root for ALL file paths — no exceptions.** Never read, write, or search via the main repo path (e.g. `/Users/.../big-pig-farm-mobile/…`) or the parent worktrees directory (e.g. `.../worktrees/`) — every Read, Write, Edit, Glob, Grep, and `cat` must use YOUR worktree's absolute path (e.g. `/Users/.../big-pig-farm-mobile/.claude/worktrees/<your-name>/…`). Searching the parent `worktrees/` directory hits other agents' in-progress work and triggers permission prompts. This includes `.claude/settings.json`, `.claude/skills/**`, `CLAUDE.md`, and any other config file. Even if a config fix is discovered mid-task, it goes into the worktree copy so it ships with the PR. The main repo's files are not the ones being modified.
 - Never use inline env vars; use `export` on a separate line
 - **Scratch files go in `.tmp/`** (gitignored, inside repo). Use this for commit messages, temp output, etc. **Never write to `/tmp/`** — it is outside the repo sandbox and triggers permission prompts.
 - **`*` in Read permissions only works as a trailing wildcard.** `Read(path:~/.claude/skills/**)` and `Read(path:~/.claude/skills/*/*)` both fail — neither `**` nor intermediate `*` segments match subdirectories. The only pattern that works is a trailing `*` on a concrete directory: `Read(path:/Users/nadilbourkadi/.claude/skills/code-review/*)`. Each skill subdirectory needs its own entry. Use absolute paths, not `~`.
@@ -385,7 +385,7 @@ Multiple agents working in parallel causes state drift: one agent can close a be
 - Worktrees live in `.claude/worktrees/`. Each gets its own isolated repo copy.
 - Worktrees are **reusable across tasks** — after merging a PR, create a fresh branch in the same worktree instead of creating a new one.
 - After switching branches in a worktree, always run `xcodegen generate` (project.yml may have changed on main).
-- All file paths in tool calls must use the **worktree absolute path**, never the main repo path.
+- All file paths in tool calls must use **your worktree's absolute path**, never the main repo path or the parent `worktrees/` directory. Searching `worktrees/` hits other agents' branches and triggers permission prompts.
 
 ## Working Style
 
