@@ -33,7 +33,7 @@ struct AllelePreferencesPanel: View {
                 case "cLocus": gameState.prestigeState.allelePreferences.cLocus = newValue
                 case "rLocus": gameState.prestigeState.allelePreferences.rLocus = newValue
                 case "dLocus": gameState.prestigeState.allelePreferences.dLocus = newValue
-                default: break
+                default: assertionFailure("Unhandled locus: \(locusName)")
                 }
             }
         )
