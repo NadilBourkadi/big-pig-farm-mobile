@@ -2,28 +2,6 @@
 /// Shows name, Rosette cost, effect description, and purchase state.
 import SwiftUI
 
-// MARK: - UpgradeDisplayState
-
-/// Visual state of a Showroom upgrade card.
-enum UpgradeDisplayState: Sendable {
-    case purchased
-    case affordable
-    case unaffordable
-
-    static func resolve(
-        upgrade: ShowroomUpgrade,
-        prestigeState: PrestigeState
-    ) -> UpgradeDisplayState {
-        if prestigeState.hasUpgrade(upgrade) {
-            return .purchased
-        } else if prestigeState.rosetteBalance >= upgrade.cost {
-            return .affordable
-        } else {
-            return .unaffordable
-        }
-    }
-}
-
 // MARK: - ShowroomUpgradeCard
 
 struct ShowroomUpgradeCard: View {
