@@ -385,6 +385,10 @@ extension GameState {
 
         // Prestige (full wipe — distinct from prestige farm reset which preserves this)
         prestigeState = PrestigeState()
+
+        // Visit tracking (transient)
+        lastBackgroundDate = nil
+        remainingTreatsThisVisit = 0
     }
 }
 
