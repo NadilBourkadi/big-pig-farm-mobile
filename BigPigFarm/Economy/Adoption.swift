@@ -56,10 +56,15 @@ enum Adoption {
     ///
     /// About 50% of generated pigs carry a bloodline allele, gated by farm tier.
     /// Pigs are created as adults (ageDays = 5.0).
+    /// Pass an explicit `gender` to force male/female (used by emergency bailout).
     ///
     /// Maps from: `generate_adoption_pig()` in Python adoption.py.
-    static func generateAdoptionPig(existingNames: Set<String>, farmTier: Int) -> GuineaPig {
-        let gender: Gender = Bool.random() ? .male : .female
+    static func generateAdoptionPig(
+        existingNames: Set<String>,
+        farmTier: Int,
+        gender: Gender? = nil
+    ) -> GuineaPig {
+        let gender: Gender = gender ?? (Bool.random() ? .male : .female)
         let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
         let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
 
