@@ -141,6 +141,7 @@ protocol ShopContext: CurrencyContext, PigQueryContext, UpgradeQueryContext, Eve
     var farm: FarmGrid { get set }
     var farmTier: Int { get set }
     var pigdex: Pigdex { get }
+    var prestigeState: PrestigeState { get }
     var totalPigsBorn: Int { get }
     func addFacility(_ facility: Facility) -> Bool
     func getFacilitiesList() -> [Facility]
