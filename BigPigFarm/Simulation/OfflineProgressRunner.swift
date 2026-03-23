@@ -42,10 +42,14 @@ enum OfflineProgressRunner {
         repositionPigs(state: state)
         resetBehaviorStates(state: state)
 
+        // Capture earnings from simulation before milestone awards — milestones
+        // are one-time breadcrumbs, not offline income.
+        let moneyAfterCheckpoints = state.money
+
         // Award milestones triggered during offline catch-up (births, sales, etc.)
         MilestoneTracker.checkMilestones(state: state)
 
-        summary.totalMoneyEarned = max(0, state.money - moneyBefore)
+        summary.totalMoneyEarned = max(0, moneyAfterCheckpoints - moneyBefore)
         let emptyAfter = state.getFacilitiesList().filter(\.isEmpty).count
         summary.facilitiesEmptied = max(0, emptyAfter - emptyBefore)
 
