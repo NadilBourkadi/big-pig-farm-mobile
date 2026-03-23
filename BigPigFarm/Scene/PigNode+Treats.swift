@@ -47,9 +47,8 @@ extension PigNode {
             actions.append(moveAction)
         }
 
-        run(SKAction.sequence(actions), withKey: "treatMovement") {
-            completion()
-        }
+        actions.append(SKAction.run { completion() })
+        run(SKAction.sequence(actions), withKey: "treatMovement")
     }
 
     /// Play hearts particle at the pig's position.
