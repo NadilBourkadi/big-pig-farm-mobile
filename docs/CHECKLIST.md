@@ -145,6 +145,7 @@
 - [x] Showroom economy+QoL effects: Golden Touch, Expanded Hutch, Quick Study, Auto-Pilot, Keepsake Slot, treat perks (bead 66ap)
 - [x] Visit core: detection, reunion boost, streak tracking, treat delivery (bead tl7c)
 - [x] Visit UI: treat HUD button, scatter animation, streak indicator, reunion boost HUD (bead a685)
+- [x] Showroom UI: prestige shop with tier-grouped upgrades, purchase flow, Rosette balance display (bead dnk2)
 - [ ] Offline rebalancing: diminishing returns curve and consumption rate (bead 9oga)
 - [x] Retune progression: room/tier/perk/facility costs and Pigdex rewards (bead nh62)
 - [x] New Farmer Spirit: first-run boosters and milestone rewards (bead 6kys)
