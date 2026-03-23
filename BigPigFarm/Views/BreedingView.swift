@@ -83,6 +83,9 @@ private struct ProgramTab: View {
                 Section("Target Patterns") { targetPatternToggles }
                 Section("Target Intensities") { targetIntensityToggles }
                 Section("Target Roan") { targetRoanToggles }
+                if gameState.prestigeState.hasUpgrade(.selectiveAdvantage) {
+                    AllelePreferencesPanel(gameState: gameState)
+                }
                 Section("Settings") { settingsRows }
             }
         }
