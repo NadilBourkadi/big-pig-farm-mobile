@@ -12,6 +12,11 @@ extension FarmScene {
             return
         }
 
+        if isTreatPlacementMode {
+            handleTreatPlacement(at: location)
+            return
+        }
+
         if let pigNode = pigNodeAt(location) {
             if selectedPigID == pigNode.pigID {
                 selectedPigID = nil
