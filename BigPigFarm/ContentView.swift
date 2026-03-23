@@ -106,6 +106,9 @@ struct ContentView: View {
     /// Whether edit mode is currently active.
     @State private var isEditMode = false
 
+    /// Whether treat placement mode is currently active.
+    @State private var isTreatMode = false
+
     // MARK: - Edit Mode Panel State
 
     /// The facility currently selected in edit mode, mirrored from scene delegate callbacks.
@@ -155,6 +158,12 @@ struct ContentView: View {
             // EditModeActionPanel appears above the toolbar while edit mode is active.
             VStack {
                 StatusInfoRow(gameState: gameState)
+                HStack(spacing: 8) {
+                    StreakIndicator(streak: gameState.prestigeState.visitStreak)
+                    ReunionBoostIndicator(boost: gameState.prestigeState.activeReunionBoost)
+                    Spacer()
+                }
+                .padding(.horizontal, 8)
                 if EmergencyBailout.isSoftLocked(state: gameState) {
                     EmergencyBailoutBanner {
                         shopInitialTab = .pigs
@@ -175,6 +184,7 @@ struct ContentView: View {
                 StatusToolbar(
                     gameState: gameState,
                     isEditMode: $isEditMode,
+                    isTreatMode: $isTreatMode,
                     onShopTapped: {
                         shopInitialTab = .facilities
                         showShop = true
@@ -267,7 +277,17 @@ struct ContentView: View {
                 farmScene.selectedFacilityID = facilityID
                 HapticManager.pigSelected()
             }
+            farmScene.onTreatsExhausted = {
+                isTreatMode = false
+            }
             engine.start()
+        }
+        .onChange(of: isTreatMode) { _, newValue in
+            farmScene.isTreatPlacementMode = newValue
+            // Exit edit mode when entering treat mode and vice versa
+            if newValue && isEditMode {
+                toggleEditMode()
+            }
         }
     }
 }
@@ -284,7 +304,9 @@ extension ContentView {
         showBreeding = false
         selectedPig = nil
         isEditMode = false
+        isTreatMode = false
         farmScene.isEditMode = false
+        farmScene.isTreatPlacementMode = false
         farmScene.selectedFacilityID = nil
         farmScene.draggedFacilityID = nil
         editModeSelectedFacilityID = nil
