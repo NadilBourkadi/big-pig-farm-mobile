@@ -39,7 +39,7 @@ Decision beads block other work and need human attention. Present them **before*
 with enough context for the user to decide on the spot.
 
 For each open decision bead:
-1. Run `bd show <id> --long` to get the full description
+1. Run `bd show <id>` to get the full description
 2. Check what it blocks: look for dependent beads in the output
 3. Present as:
 
