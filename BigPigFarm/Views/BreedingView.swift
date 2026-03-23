@@ -99,11 +99,7 @@ extension ProgramTab {
                     Text(strategy.rawValue.capitalized).tag(strategy)
                 }
             }
-            Stepper(
-                "Stock Limit: \(gameState.breedingProgram.stockLimit)",
-                value: $gameState.breedingProgram.stockLimit,
-                in: 2...20
-            )
+            stockLimitRow
         }
     }
 
@@ -116,6 +112,23 @@ extension ProgramTab {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private var stockLimitRow: some View {
+        let clamped = Binding(
+            get: { min(gameState.breedingProgram.stockLimit, gameState.capacity) },
+            set: { gameState.breedingProgram.stockLimit = $0 }
+        )
+        return VStack(alignment: .leading, spacing: 2) {
+            Stepper(
+                "Stock Limit: \(clamped.wrappedValue)",
+                value: clamped,
+                in: 2...gameState.capacity
+            )
+            Text("Non-target pigs beyond this limit are auto-sold.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 
