@@ -10,7 +10,7 @@ extension FarmScene {
         let target = Position(x: Double(grid.x), y: Double(grid.y))
 
         let fedPigIDs = TreatManager.deliverTreat(
-            type: .freshVeggies,
+            type: selectedTreatType,
             at: target,
             state: gameState
         )
@@ -22,7 +22,7 @@ extension FarmScene {
 
         // Spawn treat sprite
         let treatNode = TreatNode(
-            type: .freshVeggies,
+            type: selectedTreatType,
             scenePosition: scenePoint,
             gridPosition: target
         )

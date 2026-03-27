@@ -64,18 +64,6 @@ class TreatNode: SKSpriteNode {
     // MARK: - Textures
 
     private static func textureForType(_ type: TreatType) -> SKTexture {
-        let size = CGSize(width: 12, height: 12)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let image = renderer.image { _ in
-            let color: UIColor = switch type {
-            case .freshVeggies: .systemGreen
-            case .fruitSlices: .systemOrange
-            case .herbBundle: .systemMint
-            case .haySampler: .systemYellow
-            }
-            color.setFill()
-            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1)).fill()
-        }
-        return SKTexture(image: image)
+        SpriteAssets.treatTexture(type: type)
     }
 }

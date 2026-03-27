@@ -93,6 +93,14 @@ enum SpriteAssets {
         return loadTexture(named: name)
     }
 
+    // MARK: - Treat Sprites
+
+    /// Load a treat sprite texture.
+    /// Asset name: `Sprites/Treats/treat_{treatRawValue}`
+    static func treatTexture(type: TreatType) -> SKTexture {
+        loadTexture(named: type.spriteAssetName)
+    }
+
     // MARK: - Terrain Tiles
 
     /// Load a terrain tile texture for use in SKTileMapNode.
