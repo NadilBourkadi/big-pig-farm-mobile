@@ -229,30 +229,9 @@ struct ContentView: View {
         .sheet(isPresented: $showAtlas) {
             BiomeAtlasView(gameState: gameState)
         }
-        .sheet(item: $selectedPig) { pig in
-            NavigationStack {
-                PigDetailView(gameState: gameState, pig: pig)
-                    .navigationTitle(pig.name)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Done") { selectedPig = nil }
-                        }
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Follow") {
-                                farmScene.centerOnPig(pig.id)
-                            }
-                        }
-                    }
-            }
-            .background(.clear)
-            .presentationDetents([.fraction(0.45), .large])
-            .presentationDragIndicator(.visible)
-            .presentationBackgroundInteraction(.enabled(upThrough: .fraction(0.45)))
-            .presentationContentInteraction(.scrolls)
-            .presentationBackground(.ultraThinMaterial)
-        }
+        .pigDetailSheet(pig: $selectedPig, gameState: gameState, onFollow: { pigID in
+            farmScene.centerOnPig(pigID)
+        })
         .fullScreenCover(item: $offlineSummary) { summary in
             OfflineProgressView(summary: summary, onContinue: {
                 offlineSummary = nil
