@@ -55,7 +55,7 @@ enum Adoption {
     /// Generate a single random guinea pig available for adoption.
     ///
     /// About 50% of generated pigs carry a bloodline allele, gated by farm tier.
-    /// Pigs are created as adults (ageDays = 25.0).
+    /// Pigs are created as adults (ageDays = adultAgeDays).
     /// Pass an explicit `gender` to force male/female (used by emergency bailout).
     ///
     /// Maps from: `generate_adoption_pig()` in Python adoption.py.
@@ -78,7 +78,8 @@ enum Adoption {
             }
         }
 
-        var pig = GuineaPig.create(name: name, gender: gender, genotype: genotype, ageDays: 25.0)
+        var pig = GuineaPig.create(name: name, gender: gender, genotype: genotype,
+                                  ageDays: Double(GameConfig.Simulation.adultAgeDays))
         pig.originTag = originTag
         return pig
     }

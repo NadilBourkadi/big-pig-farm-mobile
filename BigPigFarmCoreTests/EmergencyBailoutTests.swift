@@ -59,7 +59,7 @@ import Foundation
 @Test func emergencyPigsAreAdults() {
     let pigs = EmergencyBailout.generateEmergencyPigs(existingNames: [], farmTier: 1)
     for pig in pigs {
-        #expect(pig.ageDays == 25.0)
+        #expect(pig.ageDays == Double(GameConfig.Simulation.adultAgeDays))
         #expect(pig.isAdult)
     }
 }

@@ -142,7 +142,7 @@ extension ShowroomUpgradeDetail {
                 + "\(Int(cfg.rapidRecoveryMultiplier * 100))% of normal duration."
         case .earlyBloomer:
             return "Breeding eligibility at \(cfg.earlyBloomerMinBreedingAge) "
-                + "days old instead of the standard 3 days."
+                + "days old instead of the standard \(GameConfig.Breeding.minAgeDays) days."
         case .pigdexMomentum:
             let per = formatPercent(cfg.pigdexMomentumPerEntry)
             let cap = formatPercent(cfg.pigdexMomentumCap)
@@ -190,7 +190,7 @@ extension ShowroomUpgradeDetail {
                 + "in all breeding outcomes."
         case .speedGestation:
             let days = formatDays(cfg.speedGestationDays)
-            return "Pregnancy: 2 days \u{2192} \(days), "
+            return "Pregnancy: \(GameConfig.Breeding.gestationDays) days \u{2192} \(days), "
                 + "accelerating your breeding cycle."
         case .establishedFarm:
             return "New farms start at Tier 2 with 2 rooms, "

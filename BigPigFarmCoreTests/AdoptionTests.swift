@@ -135,8 +135,7 @@ private func makeAdoptionPig(rarity: Rarity = .common, originTag: String? = nil)
 
 @Test func generateAdoptionPigIsAdult() {
     let pig = Adoption.generateAdoptionPig(existingNames: [], farmTier: 1)
-    // Adults have ageDays >= 15 (GameConfig.Simulation.adultAgeDays)
-    #expect(pig.ageDays == 25.0)
+    #expect(pig.ageDays == Double(GameConfig.Simulation.adultAgeDays))
     #expect(pig.isAdult)
 }
 
