@@ -24,6 +24,34 @@ enum TreatType: String, Codable, CaseIterable, Sendable {
 
     /// Farm tier required to unlock this treat type.
     var requiredTier: Int { info.requiredTier }
+
+    /// SF Symbol name for menu display.
+    var systemImageName: String {
+        switch self {
+        case .freshVeggies: "leaf.fill"
+        case .fruitSlices: "apple.logo"
+        case .herbBundle: "leaf.arrow.circlepath"
+        case .haySampler: "square.stack.fill"
+        }
+    }
+
+    /// Asset catalog name for the SpriteKit treat sprite.
+    var spriteAssetName: String {
+        "Sprites/Treats/treat_\(rawValue)"
+    }
+
+    /// Short summary of the treat's stat effects for the picker menu.
+    var effectSummary: String {
+        let ti = info
+        var parts: [String] = []
+        if ti.hungerBoost > 0 { parts.append("+\(Int(ti.hungerBoost)) hunger") }
+        if ti.happinessBoost > 0 { parts.append("+\(Int(ti.happinessBoost)) happiness") }
+        if ti.healthBoost > 0 { parts.append("+\(Int(ti.healthBoost)) health") }
+        if ti.socialBoost > 0 { parts.append("+\(Int(ti.socialBoost)) social") }
+        if ti.breedingChanceBoost > 0 { parts.append("+\(Int(ti.breedingChanceBoost * 100))% breeding") }
+        if ti.needDecayReduction > 0 { parts.append("-\(Int(ti.needDecayReduction * 100))% decay") }
+        return parts.joined(separator: ", ")
+    }
 }
 
 // MARK: - TreatInfo
