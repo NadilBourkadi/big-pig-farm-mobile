@@ -8,7 +8,7 @@ import Foundation
 /// Make an adult common pig with full health.
 @MainActor func makeAdultPig(name: String = "Test", rarity: Rarity = .common) -> GuineaPig {
     var pig = GuineaPig.create(name: name, gender: .female)
-    pig.ageDays = 10.0
+    pig.ageDays = 25.0
     pig.phenotype = Phenotype(
         baseColor: .black, pattern: .solid, intensity: .full, roan: .none, rarity: rarity
     )
@@ -131,7 +131,7 @@ import Foundation
 @Test @MainActor func calculateValueSeniorPig() {
     let state = makeGameState()
     var pig = makeAdultPig(rarity: .common)
-    pig.ageDays = 35.0 // senior (> 30)
+    pig.ageDays = 175.0 // senior (> 150)
     // 25 * 0.8 = 20
     #expect(Market.calculatePigValue(pig: pig, state: state) == 20)
 }

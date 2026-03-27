@@ -69,12 +69,12 @@ enum GameConfig {
 
     enum Breeding {
         static let minHappinessToBreed: Int = 70
-        static let minAgeDays: Int = 3
-        static let maxAgeDays: Int = 30
-        static let gestationDays: Int = 2
+        static let minAgeDays: Int = 15
+        static let maxAgeDays: Int = 150
+        static let gestationDays: Int = 10
         static let minLitterSize: Int = 1
         static let maxLitterSize: Int = 4
-        static let recoveryDays: Int = 1
+        static let recoveryDays: Int = 5
         static let breedingDistance: Double = 3.0
         static let baseBreedingChance: Double = 0.05
         static let breedingDenBonus: Double = 0.10
@@ -124,9 +124,9 @@ enum GameConfig {
         static let maxPathfindingIterations: Int = 1500
         static let decisionIntervalSeconds: Double = 2.0
         static let babyAgeDays: Int = 0
-        static let adultAgeDays: Int = 3
-        static let seniorAgeDays: Int = 30
-        static let maxAgeDays: Int = 45
+        static let adultAgeDays: Int = 15
+        static let seniorAgeDays: Int = 150
+        static let maxAgeDays: Int = 225
     }
 
     enum Genetics {
@@ -176,7 +176,7 @@ enum GameConfig {
         static let biomeMutationBoost: Double = 0.08
         static let biomeContractRewardBonus: Double = 0.50
         static let biomeContractChance: Double = 0.3
-        static let acclimationDays: Double = 3.0
+        static let acclimationDays: Double = 15.0
         static let colorMatchAffinityReduction: Double = 0.6
         static let colorMatchAcclimationMultiplier: Double = 0.5
     }
@@ -201,7 +201,7 @@ enum GameConfig {
         /// Breed only once every N checkpoints during offline catch-up.
         /// Prevents baby-heavy population after long absences — with only
         /// ~35 game-hours in a 24h session, babies born late can never reach
-        /// adultAgeDays (3 days = 72 game-hours) before catch-up ends.
+        /// adultAgeDays (15 days = 360 game-hours) before catch-up ends.
         static let breedingCheckpointInterval: Int = 6
 
         /// A single tier in the diminishing-returns offline speed curve.
@@ -291,19 +291,19 @@ enum GameConfig {
         // Showroom upgrade effect values
         static let expandedHutchCapacityBonus: Int = 2
         static let rapidRecoveryMultiplier: Double = 0.5
-        static let earlyBloomerMinBreedingAge: Int = 2
+        static let earlyBloomerMinBreedingAge: Int = 10
         static let pigdexMomentumPerEntry: Double = 0.005
         static let pigdexMomentumCap: Double = 0.10
         static let twinSparkChance: Double = 0.10
         static let fertileGroundBreedingChance: Double = 0.10
         static let mutationCatalystRate: Double = 0.05
-        static let enduringBondsMaxBreedingAge: Int = 40
-        static let enduringBondsMaxAge: Int = 60
+        static let enduringBondsMaxBreedingAge: Int = 200
+        static let enduringBondsMaxAge: Int = 300
         static let phenotypeRecallChance: Double = 0.15
         static let biomeIntuitionMultiplier: Double = 2.0
         static let prolificLineMinLitter: Int = 2
         static let premiumGeneticsRarityMultiplier: Double = 1.5
-        static let speedGestationDays: Double = 1.5
+        static let speedGestationDays: Double = 7.5
         static let goldenTouchSaleBonus: Double = 0.25
         static let legendaryLineageMultiplier: Double = 2.0
         static let selectiveAdvantageBias: Double = 0.80

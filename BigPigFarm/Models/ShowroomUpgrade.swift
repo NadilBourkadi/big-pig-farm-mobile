@@ -98,11 +98,11 @@ let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
         cost: 3, tier: .newcomer),
     .rapidRecovery: ShowroomUpgradeInfo(
         displayName: "Rapid Recovery",
-        description: "Post-birth recovery halved: 1 day to 12 hours",
+        description: "Post-birth recovery halved: 5 days to 2.5 days",
         cost: 2, tier: .newcomer),
     .earlyBloomer: ShowroomUpgradeInfo(
         displayName: "Early Bloomer",
-        description: "Breeding age minimum reduced from 3 days to 2 days",
+        description: "Breeding age minimum reduced from 15 days to 10 days",
         cost: 3, tier: .newcomer),
     .pigdexMomentum: ShowroomUpgradeInfo(
         displayName: "Pigdex Momentum",
@@ -123,7 +123,7 @@ let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
         cost: 5, tier: .apprentice),
     .enduringBonds: ShowroomUpgradeInfo(
         displayName: "Enduring Bonds",
-        description: "Max breeding age 30 to 40 days, lifespan 45 to 60 days",
+        description: "Max breeding age 150 to 200 days, lifespan 225 to 300 days",
         cost: 8, tier: .apprentice),
     .phenotypeRecall: ShowroomUpgradeInfo(
         displayName: "Phenotype Recall",
@@ -156,7 +156,7 @@ let showroomUpgradeInfo: [ShowroomUpgrade: ShowroomUpgradeInfo] = [
         cost: 15, tier: .expert),
     .speedGestation: ShowroomUpgradeInfo(
         displayName: "Speed Gestation",
-        description: "Pregnancy duration 2 to 1.5 days permanently",
+        description: "Pregnancy duration 10 to 7.5 days permanently",
         cost: 14, tier: .expert),
     .establishedFarm: ShowroomUpgradeInfo(
         displayName: "Established Farm",

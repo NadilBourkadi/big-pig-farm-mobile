@@ -13,9 +13,9 @@ struct OfflineBirthTests {
         let male = try #require(pigs.first { $0.gender == .male })
         var female = try #require(pigs.first { $0.gender == .female })
 
-        // Set up pregnancy near term (gestation = 2 days = 48 hours)
+        // Set up pregnancy near term (gestation = 10 days = 240 hours)
         female.isPregnant = true
-        female.pregnancyDays = 1.5  // 12 hours from term
+        female.pregnancyDays = 9.5  // 12 hours from term
         female.partnerId = male.id
         female.partnerGenotype = male.genotype
         female.partnerName = male.name

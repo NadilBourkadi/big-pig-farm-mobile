@@ -45,7 +45,7 @@ func makeLargeIntegrationState(pigCount: Int) -> (GameState, SimulationRunner) {
     for i in 0..<pigCount {
         let gender: Gender = i.isMultiple(of: 2) ? .male : .female
         var pig = GuineaPig.create(name: "PerfPig\(i)", gender: gender)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         pig.needs.happiness = 80.0
         pig.position = Position(
             x: Double(5 + (i % interiorCols) * 3),
