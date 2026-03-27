@@ -43,69 +43,80 @@ struct StatusToolbar: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            gameActionRow
-                .padding(.top, 6)
+            menuRow
+                .padding(.top, 10)
                 .padding(.bottom, 4)
 
             Divider()
                 .opacity(0.3)
 
-            systemControlRow
+            actionRow
                 .padding(.top, 4)
                 .padding(.bottom, 6)
         }
         .padding(.horizontal, 12)
-        .background(.ultraThinMaterial)
+        .background(Color(red: 0.08, green: 0.05, blue: 0.02).opacity(0.92))
     }
 }
 
 // MARK: - Sub-views
 
 private extension StatusToolbar {
-    var gameActionRow: some View {
-        HStack(spacing: 6) {
-            HUDButton(systemImage: "cart.fill", label: "Shop", action: onShopTapped)
-            HUDButton(systemImage: "list.bullet", label: "Pigs", action: onPigListTapped)
-            HUDButton(systemImage: "heart.fill", label: "Breed", action: onBreedingTapped)
-            HUDButton(systemImage: "books.vertical.fill", label: "Almanac", action: onAlmanacTapped)
-            HUDButton(systemImage: "rosette", label: "Showroom", action: onShowroomTapped)
-            HUDButton(systemImage: "map.fill", label: "Atlas", action: onAtlasTapped)
 
-            refillButton
-            TreatHUDButton(
-                gameState: gameState,
-                isTreatMode: $isTreatMode,
-                selectedTreatType: $selectedTreatType
-            )
+    // MARK: Row 1 — Menu buttons (open sheets/screens)
+
+    var menuRow: some View {
+        HStack(spacing: 4) {
+            HUDButton(systemImage: "cart.fill", label: "Shop", fillWidth: true, action: onShopTapped)
+            HUDButton(systemImage: "list.bullet", label: "Pigs", fillWidth: true, action: onPigListTapped)
+            HUDButton(systemImage: "heart.fill", label: "Breed", fillWidth: true, action: onBreedingTapped)
+            HUDButton(systemImage: "books.vertical.fill", label: "Almanac", fillWidth: true, action: onAlmanacTapped)
+            HUDButton(systemImage: "rosette", label: "Showroom", fillWidth: true, action: onShowroomTapped)
+            HUDButton(systemImage: "map.fill", label: "Atlas", fillWidth: true, action: onAtlasTapped)
 
             if isPigShowEligible, let onPigShowTapped {
-                HUDButton(systemImage: "trophy.fill", label: "Show", action: onPigShowTapped)
+                HUDButton(systemImage: "trophy.fill", label: "Show", fillWidth: true, action: onPigShowTapped)
             }
         }
         .frame(maxWidth: .infinity)
     }
 
-    var systemControlRow: some View {
-        HStack(spacing: 12) {
-            Spacer()
-            HUDButton(
-                systemImage: isEditMode ? "pencil.slash" : "pencil",
-                label: "Edit",
-                isActive: isEditMode,
-                action: onEditTapped
-            )
-            HUDButton(
-                systemImage: gameState.isPaused ? "play.fill" : "pause.fill",
-                label: gameState.isPaused ? "Play" : "Pause",
-                action: onPauseTapped
-            )
-            HUDButton(
-                systemImage: "forward.fill",
-                label: gameState.speed.displayLabel,
-                isDisabled: gameState.isPaused,
-                action: onSpeedTapped
-            )
+    // MARK: Row 2 — Immediate actions (refill, treats, edit, pause, speed)
+
+    var actionRow: some View {
+        GeometryReader { geo in
+            let buttonWidth = (geo.size.width - 5 * 4) / 6
+            HStack(spacing: 4) {
+                refillButton.frame(width: buttonWidth)
+                TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode, selectedTreatType: $selectedTreatType)
+                    .frame(width: buttonWidth)
+                HUDButton(
+                    systemImage: isEditMode ? "pencil.slash" : "pencil",
+                    label: "Edit",
+                    isActive: isEditMode,
+                    fillWidth: true,
+                    action: onEditTapped
+                )
+                .frame(width: buttonWidth)
+                HUDButton(
+                    systemImage: gameState.isPaused ? "play.fill" : "pause.fill",
+                    label: gameState.isPaused ? "Play" : "Pause",
+                    fillWidth: true,
+                    action: onPauseTapped
+                )
+                .frame(width: buttonWidth)
+                HUDButton(
+                    systemImage: "forward.fill",
+                    label: gameState.speed.displayLabel,
+                    isDisabled: gameState.isPaused,
+                    fillWidth: true,
+                    action: onSpeedTapped
+                )
+                .frame(width: buttonWidth)
+            }
+            .frame(maxWidth: .infinity)
         }
+        .frame(height: 42)
     }
 
     var refillButton: some View {
@@ -113,16 +124,25 @@ private extension StatusToolbar {
             VStack(spacing: 2) {
                 Image(systemName: "drop.fill")
                     .font(.system(size: 16))
+                    .frame(height: 18)
                 if gameState.hasFacilitiesToRefill {
                     Text(Currency.formatCurrency(gameState.totalRefillCost))
                         .font(.system(size: 9))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                         .foregroundStyle(gameState.canAffordRefill ? .green : .red)
                 } else {
                     Text("Refill")
                         .font(.system(size: 9))
                 }
             }
-            .foregroundStyle(.white)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
+            )
+            .foregroundStyle(Color(red: 0.9, green: 0.84, blue: 0.72))
         }
         .buttonStyle(.plain)
         .disabled(!gameState.isRefillEnabled)

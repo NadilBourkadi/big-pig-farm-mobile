@@ -18,7 +18,7 @@ struct StatusInfoRow: View {
                 .fixedSize()
             Text("Tier \(gameState.farmTier)")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color(red: 0.9, green: 0.84, blue: 0.72).opacity(0.7))
                 .fixedSize()
             CurrencyLabel(amount: gameState.money)
             populationLabel
@@ -36,9 +36,11 @@ struct StatusInfoRow: View {
             resourceIndicator(systemImage: "fork.knife", level: foodLevel)
             resourceIndicator(systemImage: "drop.fill", level: waterLevel)
         }
+        .foregroundStyle(Color(red: 0.9, green: 0.84, blue: 0.72))
         .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(.ultraThinMaterial)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
+        .background(Color(red: 0.08, green: 0.05, blue: 0.02).opacity(0.92))
     }
 }
 
@@ -106,7 +108,7 @@ private extension StatusInfoRow {
                 .font(.caption)
         }
         .fixedSize()
-        .foregroundStyle(level < 30 ? .red : .primary)
+        .foregroundStyle(level < 30 ? .red : .white)
     }
 }
 

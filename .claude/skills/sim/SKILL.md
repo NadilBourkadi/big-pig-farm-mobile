@@ -56,7 +56,7 @@ Two separate Bash calls:
 
 ```
 xcrun simctl install booted <app-path>
-xcrun simctl launch booted com.bigpigfarm.app
+xcrun simctl launch booted com.nadilbourkadi.bigpigfarm
 ```
 
 ### Step 6 — Confirm
@@ -64,7 +64,7 @@ xcrun simctl launch booted com.bigpigfarm.app
 Print a one-line summary: device name, whether this was a fresh build or reused existing, and the bundle ID launched. Example:
 
 ```
-Launched com.bigpigfarm.app on iPhone 17 (fresh build)
+Launched com.nadilbourkadi.bigpigfarm on iPhone 17 (fresh build)
 ```
 
 ## Notes

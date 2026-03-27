@@ -43,6 +43,7 @@ struct TreatHUDButton: View {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 16))
+                        .frame(height: 18)
                     if treatCount > 0 {
                         Text("\(treatCount)")
                             .font(.system(size: 8, weight: .bold))
@@ -56,8 +57,15 @@ struct TreatHUDButton: View {
                 Text(isTreatMode ? selectedTreatType.displayName : "Treats")
                     .font(.system(size: 9))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
-            .foregroundStyle(isTreatMode ? .yellow : .white)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
+            )
+            .foregroundStyle(isTreatMode ? .yellow : Color(red: 0.9, green: 0.84, blue: 0.72))
             .opacity(treatCount > 0 ? 1.0 : 0.4)
         }
         .disabled(treatCount <= 0)
