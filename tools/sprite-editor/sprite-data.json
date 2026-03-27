@@ -327,6 +327,30 @@
           "b": "#aa7788"
         }
       }
+    },
+    "treat": {
+      "fresh_veggies": {
+        "stem": "#2d5a1e",
+        "leaf": "#4caf50",
+        "skin": "#66bb6a",
+        "flesh": "#a5d6a7"
+      },
+      "fruit_slices": {
+        "stem": "#5d4037",
+        "rind": "#e65100",
+        "flesh": "#ffab40",
+        "seed": "#fff176"
+      },
+      "herb_bundle": {
+        "stem": "#5d4037",
+        "leaf": "#26a69a",
+        "tie": "#8d6e63"
+      },
+      "hay_sampler": {
+        "straw": "#c6a032",
+        "bale": "#ffd54f",
+        "band": "#8d6e63"
+      }
     }
   },
   "palette_keys": {
@@ -8057,6 +8081,224 @@
             "a",
             "a",
             null,
+            null
+          ]
+        ]
+      }
+    },
+    "treat_normal": {
+      "fresh_veggies": {
+        "width": 6,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            null,
+            "stem",
+            "stem",
+            null,
+            null
+          ],
+          [
+            null,
+            "leaf",
+            "skin",
+            "skin",
+            "leaf",
+            null
+          ],
+          [
+            "leaf",
+            "skin",
+            "flesh",
+            "flesh",
+            "skin",
+            "leaf"
+          ],
+          [
+            "leaf",
+            "skin",
+            "flesh",
+            "flesh",
+            "skin",
+            "leaf"
+          ],
+          [
+            null,
+            "skin",
+            "skin",
+            "flesh",
+            "skin",
+            null
+          ],
+          [
+            null,
+            null,
+            "skin",
+            "skin",
+            null,
+            null
+          ]
+        ]
+      },
+      "fruit_slices": {
+        "width": 6,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            null,
+            "stem",
+            null,
+            null,
+            null
+          ],
+          [
+            null,
+            "rind",
+            "rind",
+            "rind",
+            null,
+            null
+          ],
+          [
+            "rind",
+            "flesh",
+            "seed",
+            "flesh",
+            "rind",
+            null
+          ],
+          [
+            "rind",
+            "flesh",
+            "flesh",
+            "seed",
+            "flesh",
+            "rind"
+          ],
+          [
+            null,
+            "rind",
+            "flesh",
+            "flesh",
+            "rind",
+            null
+          ],
+          [
+            null,
+            null,
+            "rind",
+            "rind",
+            null,
+            null
+          ]
+        ]
+      },
+      "herb_bundle": {
+        "width": 6,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            "leaf",
+            null,
+            null,
+            "leaf",
+            null
+          ],
+          [
+            "leaf",
+            "leaf",
+            "leaf",
+            "leaf",
+            "leaf",
+            "leaf"
+          ],
+          [
+            null,
+            "leaf",
+            "stem",
+            "stem",
+            "leaf",
+            null
+          ],
+          [
+            null,
+            null,
+            "stem",
+            "stem",
+            null,
+            null
+          ],
+          [
+            null,
+            "tie",
+            "stem",
+            "stem",
+            "tie",
+            null
+          ],
+          [
+            null,
+            null,
+            "stem",
+            "stem",
+            null,
+            null
+          ]
+        ]
+      },
+      "hay_sampler": {
+        "width": 6,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            "straw",
+            "straw",
+            "straw",
+            "straw",
+            null
+          ],
+          [
+            "straw",
+            "bale",
+            "bale",
+            "bale",
+            "bale",
+            "straw"
+          ],
+          [
+            "straw",
+            "bale",
+            "band",
+            "band",
+            "bale",
+            "straw"
+          ],
+          [
+            "straw",
+            "bale",
+            "band",
+            "band",
+            "bale",
+            "straw"
+          ],
+          [
+            "straw",
+            "bale",
+            "bale",
+            "bale",
+            "bale",
+            "straw"
+          ],
+          [
+            null,
+            "straw",
+            "straw",
+            "straw",
+            "straw",
             null
           ]
         ]

@@ -68,6 +68,9 @@ def load_sprite_data() -> dict:
     indicator_palettes = data["palettes"]["indicator"]
     indicator_sprites = {k: v["pixels"] for k, v in data["sprites"]["indicator_normal"].items()}
 
+    treat_palettes = data["palettes"].get("treat", {})
+    treat_sprites = {k: v["pixels"] for k, v in data["sprites"].get("treat_normal", {}).items()}
+
     pig_adult_idle = data["sprites"]["pig_adult"]["idle_right"]["pixels"]
     pig_baby_idle = data["sprites"]["pig_baby"]["idle_right"]["pixels"]
 
@@ -79,6 +82,8 @@ def load_sprite_data() -> dict:
         "facility_sprites": facility_sprites,
         "indicator_palettes": indicator_palettes,
         "indicator_sprites": indicator_sprites,
+        "treat_palettes": treat_palettes,
+        "treat_sprites": treat_sprites,
         "pig_adult_idle_right": pig_adult_idle,
         "pig_baby_idle_right": pig_baby_idle,
     }
@@ -247,6 +252,27 @@ def export_indicator_sprites(sprite_data: dict, output_dir: Path, scale: int) ->
             img = render_grid_to_image(grid, palette, scale=scale)
             write_imageset(img, indicators_dir, asset_name)
             count += 1
+
+    return count
+
+
+def export_treat_sprites(sprite_data: dict, output_dir: Path, scale: int) -> int:
+    """Export all treat sprites as PNG image sets."""
+    treats_dir = output_dir / "Treats"
+    write_namespace_contents_json(treats_dir)
+    count = 0
+
+    for treat_name, grid in sprite_data["treat_sprites"].items():
+        if treat_name not in sprite_data["treat_palettes"]:
+            raise ValueError(
+                f"No palette for treat '{treat_name}'. "
+                f"Available: {sorted(sprite_data['treat_palettes'].keys())}"
+            )
+        palette = sprite_data["treat_palettes"][treat_name]
+        asset_name = f"treat_{treat_name}"
+        img = render_grid_to_image(grid, palette, scale=scale)
+        write_imageset(img, treats_dir, asset_name)
+        count += 1
 
     return count
 
@@ -478,6 +504,7 @@ EXPECTED_COUNTS = {
     "pigs": 272,       # 8 colors x (22 adult + 12 baby)
     "facilities": 25,  # 17 base + 8 state variants
     "indicators": 12,  # 6 types x 2 brightness levels
+    "treats": 4,       # 4 treat types
     "portraits": 144,  # 8 colors x 3 patterns x 3 intensities x 2 roan
     "terrain": 27,     # 8 biomes x 3 tile types (24) + tunnel x 3 tile types (3)
     "patterns": 6,     # 3 patterns x 2 ages
@@ -496,6 +523,7 @@ def validate_export(
         "pigs": "Pigs",
         "facilities": "Facilities",
         "indicators": "Indicators",
+        "treats": "Treats",
         "portraits": "Portraits",
         "terrain": "Terrain",
         "patterns": "Patterns",
@@ -550,7 +578,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--category",
-        choices=["all", "pigs", "facilities", "indicators", "portraits", "terrain", "patterns"],
+        choices=["all", "pigs", "facilities", "indicators", "treats", "portraits", "terrain", "patterns"],
         default="all",
         help="Export only a specific category (default: all)",
     )
@@ -600,6 +628,7 @@ def main() -> None:
         "pigs": lambda: export_pig_sprites(sprite_data, output_dir, args.scale),
         "facilities": lambda: export_facility_sprites(sprite_data, output_dir, args.scale),
         "indicators": lambda: export_indicator_sprites(sprite_data, output_dir, args.scale),
+        "treats": lambda: export_treat_sprites(sprite_data, output_dir, args.scale),
         "portraits": lambda: export_portraits(source_path, output_dir, args.portrait_scale),
         "terrain": lambda: export_terrain_tiles(source_path, output_dir, args.scale),
         "patterns": lambda: export_pattern_masks(sprite_data, output_dir, args.scale),
