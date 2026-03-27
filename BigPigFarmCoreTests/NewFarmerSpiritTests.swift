@@ -286,13 +286,13 @@ private func secondFarmPrestige() -> PrestigeState {
     }
 }
 
-@Test @MainActor func eagerLearnersNotAppliedOnSecondFarm() {
+@Test @MainActor func eagerLearnersAppliedOnSecondFarm() {
     let state = GameState()
     state.prestigeState.farmCount = 2
     setupNewGame(state: state)
     for pig in state.getPigsList() {
-        // Default happiness from GuineaPig.create, not the 85 boost
-        #expect(pig.needs.happiness != GameConfig.NewFarmer.eagerLearnersHappiness)
+        // All starter pigs get elevated happiness so they can breed from day 1
+        #expect(pig.needs.happiness == GameConfig.NewFarmer.eagerLearnersHappiness)
     }
 }
 
