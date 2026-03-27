@@ -52,7 +52,7 @@ struct AlmanacView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(onResetFarm: onResetFarm)
+                SettingsView(gameState: gameState, onResetFarm: onResetFarm)
             }
         }
     }
