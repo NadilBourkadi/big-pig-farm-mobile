@@ -26,10 +26,12 @@ func setupNewGame(state: GameState) {
         var pig = GuineaPig.create(name: name, gender: gender)
         pig.ageDays = Double(GameConfig.Simulation.adultAgeDays)
         pig.position = pos
-        // Eager Learners: starter pigs on Farm #1 begin happier
-        if NewFarmerSpirit.isFirstFarm(state.prestigeState) {
-            pig.needs.happiness = GameConfig.NewFarmer.eagerLearnersHappiness
-        }
+        // All starter pigs begin with elevated happiness so they can breed
+        // from day 1. The slim default (75) decays below the 70 threshold
+        // before the breeding program can pair them — especially on post-
+        // prestige farms where the Eager Learners booster was previously
+        // the only source of this headroom.
+        pig.needs.happiness = GameConfig.NewFarmer.eagerLearnersHappiness
         state.addGuineaPig(pig)
     }
 
