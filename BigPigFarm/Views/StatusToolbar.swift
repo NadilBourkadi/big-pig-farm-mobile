@@ -17,6 +17,9 @@ struct StatusToolbar: View {
     /// Two-way binding to ContentView's treat-placement mode state.
     @Binding var isTreatMode: Bool
 
+    /// Two-way binding to ContentView's selected treat type.
+    @Binding var selectedTreatType: TreatType
+
     // MARK: - Action Callbacks
 
     var onShopTapped: () -> Void
@@ -69,7 +72,11 @@ private extension StatusToolbar {
             HUDButton(systemImage: "map.fill", label: "Atlas", action: onAtlasTapped)
 
             refillButton
-            TreatHUDButton(gameState: gameState, isTreatMode: $isTreatMode)
+            TreatHUDButton(
+                gameState: gameState,
+                isTreatMode: $isTreatMode,
+                selectedTreatType: $selectedTreatType
+            )
 
             if isPigShowEligible, let onPigShowTapped {
                 HUDButton(systemImage: "trophy.fill", label: "Show", action: onPigShowTapped)
@@ -128,6 +135,7 @@ private extension StatusToolbar {
 private struct StatusToolbarPreview: View {
     @State private var editMode = false
     @State private var treatMode = false
+    @State private var treatType: TreatType = .freshVeggies
     private let state: GameState = {
         let previewState = GameState()
         previewState.farm = FarmGrid.createStarter()
@@ -139,6 +147,7 @@ private struct StatusToolbarPreview: View {
             gameState: state,
             isEditMode: $editMode,
             isTreatMode: $treatMode,
+            selectedTreatType: $treatType,
             onShopTapped: {},
             onPigListTapped: {},
             onBreedingTapped: {},
