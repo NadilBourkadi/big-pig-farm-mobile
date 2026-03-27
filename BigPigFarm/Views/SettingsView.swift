@@ -1,4 +1,5 @@
 /// SettingsView — App settings with notification preferences and farm reset.
+/// In Debug/Internal builds, includes a debug section for testing.
 import SwiftUI
 
 // MARK: - SettingsView
@@ -7,6 +8,7 @@ import SwiftUI
 /// Contains notification settings (via NavigationLink) and a destructive
 /// farm reset option with two-step confirmation.
 struct SettingsView: View {
+    let gameState: GameState
     let onResetFarm: () -> Void
     @State private var showResetConfirmation = false
     @Environment(\.dismiss) private var dismiss
@@ -33,6 +35,10 @@ struct SettingsView: View {
                 } footer: {
                     Text("Permanently delete all progress and start a new farm.")
                 }
+
+                #if DEBUG || INTERNAL
+                debugSection
+                #endif
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -60,3 +66,39 @@ struct SettingsView: View {
         }
     }
 }
+
+// MARK: - Debug Section
+
+#if DEBUG || INTERNAL
+private extension SettingsView {
+    var debugSection: some View {
+        Section {
+            Button {
+                gameState.remainingTreatsThisVisit = gameState.prestigeState.treatsPerVisit
+            } label: {
+                Label(
+                    "Refill Treats (\(gameState.prestigeState.treatsPerVisit))",
+                    systemImage: "leaf.fill"
+                )
+            }
+
+            Button {
+                gameState.addMoney(10_000)
+            } label: {
+                Label("Add 10,000 Squeaks", systemImage: "dollarsign.circle")
+            }
+
+            Stepper(value: Binding(
+                get: { gameState.farmTier },
+                set: { gameState.farmTier = $0 }
+            ), in: 1...4) {
+                Label("Farm Tier: \(gameState.farmTier)", systemImage: "star.fill")
+            }
+        } header: {
+            Text("Debug")
+        } footer: {
+            Text("Internal build only. These controls are stripped from Release.")
+        }
+    }
+}
+#endif
