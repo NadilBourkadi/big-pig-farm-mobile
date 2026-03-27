@@ -9,7 +9,7 @@ import Foundation
 func makeCullingAdult(
     name: String = "Pig",
     gender: Gender = .female,
-    ageDays: Double = 10.0,
+    ageDays: Double = 25.0,
     markedForSale: Bool = false,
     isPregnant: Bool = false
 ) -> GuineaPig {
@@ -23,7 +23,7 @@ func makeCullingAdult(
 @MainActor
 func makeCullingAdultWith(genotype: Genotype, name: String, gender: Gender = .female) -> GuineaPig {
     var pig = GuineaPig.create(name: name, gender: gender, genotype: genotype)
-    pig.ageDays = 10.0
+    pig.ageDays = 25.0
     return pig
 }
 

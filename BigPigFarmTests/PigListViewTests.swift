@@ -55,9 +55,9 @@ struct PigListSortAgeTests {
     @Test func sortByAgeAscending() {
         let state = makeGameState()
         var young = GuineaPig.create(name: "Young", gender: .female)
-        young.ageDays = 5.0
+        young.ageDays = 25.0
         var old = GuineaPig.create(name: "Old", gender: .female)
-        old.ageDays = 30.0
+        old.ageDays = 150.0
         state.addGuineaPig(young)
         state.addGuineaPig(old)
 
@@ -69,9 +69,9 @@ struct PigListSortAgeTests {
     @Test func sortByAgeDescending() {
         let state = makeGameState()
         var young = GuineaPig.create(name: "Young", gender: .female)
-        young.ageDays = 5.0
+        young.ageDays = 25.0
         var senior = GuineaPig.create(name: "Senior", gender: .female)
-        senior.ageDays = 100.0
+        senior.ageDays = 200.0
         state.addGuineaPig(young)
         state.addGuineaPig(senior)
 

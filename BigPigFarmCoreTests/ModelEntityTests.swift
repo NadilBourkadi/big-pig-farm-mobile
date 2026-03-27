@@ -22,7 +22,7 @@ import Foundation
     let pig = GuineaPig(
         id: UUID(), name: "Test", genotype: Genotype.randomCommon(),
         phenotype: Phenotype(baseColor: .black, pattern: .solid, intensity: .full, roan: .none, rarity: .common),
-        gender: .male, birthTime: Date(), ageDays: 10.0
+        gender: .male, birthTime: Date(), ageDays: 25.0
     )
     #expect(pig.ageGroup == .adult)
     #expect(pig.isAdult)
@@ -32,7 +32,7 @@ import Foundation
     let pig = GuineaPig(
         id: UUID(), name: "Test", genotype: Genotype.randomCommon(),
         phenotype: Phenotype(baseColor: .black, pattern: .solid, intensity: .full, roan: .none, rarity: .common),
-        gender: .male, birthTime: Date(), ageDays: 35.0
+        gender: .male, birthTime: Date(), ageDays: 175.0
     )
     #expect(pig.ageGroup == .senior)
     #expect(pig.isSenior)

@@ -32,7 +32,7 @@ import Foundation
 @Test @MainActor func notSoftLockedWhenPigsExistEvenIfBroke() {
     let state = makeGameState()
     state.money = 0
-    let pig = GuineaPig.create(name: "Survivor", gender: .female, ageDays: 5.0)
+    let pig = GuineaPig.create(name: "Survivor", gender: .female, ageDays: 25.0)
     state.addGuineaPig(pig)
     #expect(!EmergencyBailout.isSoftLocked(state: state))
 }
@@ -59,7 +59,7 @@ import Foundation
 @Test func emergencyPigsAreAdults() {
     let pigs = EmergencyBailout.generateEmergencyPigs(existingNames: [], farmTier: 1)
     for pig in pigs {
-        #expect(pig.ageDays == 5.0)
+        #expect(pig.ageDays == 25.0)
         #expect(pig.isAdult)
     }
 }
@@ -114,7 +114,7 @@ import Foundation
     state.money = 0
     #expect(EmergencyBailout.isSoftLocked(state: state))
 
-    let pig = GuineaPig.create(name: "Rescue", gender: .female, ageDays: 5.0)
+    let pig = GuineaPig.create(name: "Rescue", gender: .female, ageDays: 25.0)
     state.addGuineaPig(pig)
     #expect(!EmergencyBailout.isSoftLocked(state: state))
 }

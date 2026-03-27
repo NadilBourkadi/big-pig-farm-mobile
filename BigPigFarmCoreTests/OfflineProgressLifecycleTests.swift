@@ -70,7 +70,7 @@ struct OfflineCatchUpFlowTests {
         var female = GuineaPig.create(name: "Mom", gender: .female)
         female.ageDays = Double(GameConfig.Simulation.adultAgeDays)
         female.isPregnant = true
-        female.pregnancyDays = 1.9  // Just under 2-day gestation
+        female.pregnancyDays = 9.9  // Just under 10-day gestation
         female.partnerId = male.id
         female.partnerGenotype = male.genotype
         female.partnerName = male.name

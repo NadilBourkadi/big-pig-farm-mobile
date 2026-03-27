@@ -9,16 +9,16 @@ import SwiftUI
 
 struct FormatBreedingStatusTests {
 
-    // ageDays=5 (adult), default happiness=75 >= 70 threshold, not locked → Ready
+    // ageDays=25 (adult), default happiness=75 >= 70 threshold, not locked → Ready
     @Test func adultHealthyPigIsReady() {
         var pig = GuineaPig.create(name: "Test", gender: .male)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         #expect(formatBreedingStatus(pig) == "Ready")
     }
 
     @Test func lockedPigShowsLocked() {
         var pig = GuineaPig.create(name: "Test", gender: .male)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         pig.breedingLocked = true
         #expect(formatBreedingStatus(pig) == "LOCKED")
     }
@@ -37,13 +37,13 @@ struct FormatBreedingStatusTests {
 
     @Test func seniorPigShowsSenior() {
         var pig = GuineaPig.create(name: "Test", gender: .male)
-        pig.ageDays = 35.0 // seniorAgeDays=30
+        pig.ageDays = 175.0 // seniorAgeDays=150
         #expect(formatBreedingStatus(pig) == "Senior")
     }
 
     @Test func pregnantPigShowsPregnant() {
         var pig = GuineaPig.create(name: "Test", gender: .female)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         pig.isPregnant = true
         pig.pregnancyDays = 1.0
         #expect(formatBreedingStatus(pig) == "Pregnant")
@@ -51,7 +51,7 @@ struct FormatBreedingStatusTests {
 
     @Test func verboseLockedShowsFullReason() {
         var pig = GuineaPig.create(name: "Test", gender: .male)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         pig.breedingLocked = true
         #expect(formatBreedingStatus(pig, verbose: true) == "Breeding locked")
     }
@@ -64,7 +64,7 @@ struct FormatBreedingStatusTests {
 
     @Test func unhappyPigShowsNotReady() {
         var pig = GuineaPig.create(name: "Test", gender: .male)
-        pig.ageDays = 5.0
+        pig.ageDays = 25.0
         pig.needs.happiness = 50.0 // below 70 threshold
         #expect(formatBreedingStatus(pig) == "Not ready")
     }

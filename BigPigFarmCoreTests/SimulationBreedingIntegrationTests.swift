@@ -16,11 +16,11 @@ import Foundation
     state.farm = FarmGrid.createStarter()
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
-    male.ageDays = 5.0
+    male.ageDays = 25.0
     male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
-    female.ageDays = 5.0
+    female.ageDays = 25.0
     female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
     female.pregnancyDays = 0.0
@@ -51,22 +51,22 @@ import Foundation
 
 /// Verify that a pig at near-term pregnancy gives birth within a few ticks.
 ///
-/// Female starts at pregnancyDays=1.9 (gestationDays=2.0). Each tick advances by
-/// gameHours/24 = (30/60)/24 ≈ 0.021 game-days. After 5 ticks: 1.9+0.104 >= 2.0.
+/// Female starts at pregnancyDays=9.9 (gestationDays=10.0). Each tick advances by
+/// gameHours/24 = (30/60)/24 ≈ 0.021 game-days. After 5 ticks: 9.9+0.104 >= 10.0.
 /// Birth.checkBirths fires inside Breeding.checkBreedingOpportunities (processEconomyPhase).
 @Test @MainActor func simulationBirthOccursAfterGestation() {
     let state = GameState()
     state.farm = FarmGrid.createStarter()
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
-    male.ageDays = 5.0
+    male.ageDays = 25.0
     male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
-    female.ageDays = 5.0
+    female.ageDays = 25.0
     female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
-    female.pregnancyDays = 1.9
+    female.pregnancyDays = 9.9
     female.partnerGenotype = male.genotype
     female.partnerName = male.name
     female.partnerId = male.id
@@ -89,14 +89,14 @@ import Foundation
     state.farm = FarmGrid.createStarter()
 
     var male = GuineaPig.create(name: "Dad", gender: .male)
-    male.ageDays = 5.0
+    male.ageDays = 25.0
     male.position = Position(x: 8.0, y: 10.0)
 
     var female = GuineaPig.create(name: "Mum", gender: .female)
-    female.ageDays = 5.0
+    female.ageDays = 25.0
     female.position = Position(x: 10.0, y: 10.0)
     female.isPregnant = true
-    female.pregnancyDays = 1.9
+    female.pregnancyDays = 9.9
     female.partnerGenotype = male.genotype
     female.partnerName = male.name
     female.partnerId = male.id
@@ -127,13 +127,13 @@ import Foundation
     state.farm = FarmGrid.createStarter()
 
     var male = GuineaPig.create(name: "Romeo", gender: .male)
-    male.ageDays = 5.0
+    male.ageDays = 25.0
     male.needs.happiness = 80.0
     male.position = Position(x: 8.0, y: 10.0)
     male.path = []
 
     var female = GuineaPig.create(name: "Juliet", gender: .female)
-    female.ageDays = 5.0
+    female.ageDays = 25.0
     female.needs.happiness = 80.0
     female.position = Position(x: 10.0, y: 10.0)
     female.path = []
@@ -171,14 +171,14 @@ import Foundation
 /// Verify that selling a pig marked for sale increments money and removes the pig.
 ///
 /// Culling.sellMarkedAdults processes marked adults each tick via processEconomyPhase.
-/// Pig must be adult (ageDays >= 3) — babies are skipped until adulthood.
+/// Pig must be adult (ageDays >= 15) — babies are skipped until adulthood.
 @Test @MainActor func simulationSellingMarkedAdultIncrementsMoney() {
     let state = GameState()
     state.farm = FarmGrid.createStarter()
     state.money = 0
 
     var pig = GuineaPig.create(name: "ForSale", gender: .female)
-    pig.ageDays = 5.0
+    pig.ageDays = 25.0
     pig.markedForSale = true
     state.addGuineaPig(pig)
 
