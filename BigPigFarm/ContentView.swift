@@ -111,6 +111,9 @@ struct ContentView: View {
     /// Whether treat placement mode is currently active.
     @State private var isTreatMode = false
 
+    /// The treat type to place on the next tap.
+    @State private var selectedTreatType: TreatType = .freshVeggies
+
     /// Whether the Pig Show flow is presented.
     @State private var showPigShow = false
 
@@ -194,6 +197,7 @@ struct ContentView: View {
                     gameState: gameState,
                     isEditMode: $isEditMode,
                     isTreatMode: $isTreatMode,
+                    selectedTreatType: $selectedTreatType,
                     onShopTapped: {
                         shopInitialTab = .facilities
                         showShop = true
@@ -330,6 +334,9 @@ struct ContentView: View {
                 toggleEditMode()
             }
         }
+        .onChange(of: selectedTreatType) { _, newValue in
+            farmScene.selectedTreatType = newValue
+        }
     }
 }
 
@@ -348,6 +355,7 @@ extension ContentView {
         selectedPig = nil
         isEditMode = false
         isTreatMode = false
+        selectedTreatType = .freshVeggies
         farmScene.isEditMode = false
         farmScene.isTreatPlacementMode = false
         farmScene.selectedFacilityID = nil

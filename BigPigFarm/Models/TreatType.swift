@@ -29,7 +29,7 @@ enum TreatType: String, Codable, CaseIterable, Sendable {
     var systemImageName: String {
         switch self {
         case .freshVeggies: "leaf.fill"
-        case .fruitSlices: "apple.logo"
+        case .fruitSlices: "oval.portrait.fill"
         case .herbBundle: "leaf.arrow.circlepath"
         case .haySampler: "square.stack.fill"
         }
