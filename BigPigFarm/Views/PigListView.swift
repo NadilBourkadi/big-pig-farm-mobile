@@ -57,16 +57,7 @@ struct PigListView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(item: $selectedPig) { pig in
-                NavigationStack {
-                    PigDetailView(gameState: gameState, pig: pig)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button("Done") { selectedPig = nil }
-                            }
-                        }
-                }
-            }
+            .pigDetailSheet(pig: $selectedPig, gameState: gameState)
             .confirmationDialog(
                 sellConfirmationTitle,
                 isPresented: Binding(
