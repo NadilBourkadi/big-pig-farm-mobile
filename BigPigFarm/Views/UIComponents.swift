@@ -211,6 +211,7 @@ struct HUDButton: View {
     let label: String
     var isActive: Bool = false
     var isDisabled: Bool = false
+    var fillWidth: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -218,10 +219,19 @@ struct HUDButton: View {
             VStack(spacing: 2) {
                 Image(systemName: systemImage)
                     .font(.system(size: 16))
+                    .frame(height: 18)
                 Text(label)
                     .font(.system(size: 9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
-            .foregroundStyle(isActive ? .yellow : .white)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: fillWidth ? .infinity : nil, minHeight: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
+            )
+            .foregroundStyle(isActive ? .yellow : Color(red: 0.9, green: 0.84, blue: 0.72))
             .opacity(isDisabled ? 0.4 : 1.0)
         }
         .buttonStyle(.plain)

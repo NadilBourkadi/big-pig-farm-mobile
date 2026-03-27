@@ -19,13 +19,13 @@ struct ToastView: View {
             Text(toast.message)
                 .font(.subheadline)
                 .lineLimit(2)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(Color(red: 0.12, green: 0.08, blue: 0.04).opacity(0.9))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(toast.category.color.opacity(0.12))
