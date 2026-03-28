@@ -241,15 +241,10 @@ private extension PigDetailView {
                 let limit = showFullLog ? 30 : 10
                 let entries = Array(log.suffix(limit).reversed())
                 ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
-                    HStack(alignment: .top, spacing: 4) {
-                        Text("\u{2022}")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text(entry)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
+                    Text(entry)
+                        .font(.caption)
+                        .lineLimit(2)
+                        .padding(.leading, 12)
                 }
                 if log.count > 10 {
                     Button(showFullLog ? "Show less" : "Show all (\(min(log.count, 30)))") {
