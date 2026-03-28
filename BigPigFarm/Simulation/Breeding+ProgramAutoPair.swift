@@ -1,4 +1,9 @@
-/// Breeding+AutoPair — Auto-pairing strategies for the breeding program.
+/// Breeding+ProgramAutoPair — Auto-pairing strategies driven by BreedingProgram.
+///
+/// These methods live on the Breeding enum namespace (not BreedingProgram) because
+/// auto-pairing is a simulation-layer operation that mutates GameState via the
+/// breeding tick loop. BreedingProgram itself is a data-model struct that holds
+/// the strategy and target configuration consumed here.
 import Foundation
 
 extension Breeding {
