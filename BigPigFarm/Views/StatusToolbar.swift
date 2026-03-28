@@ -142,7 +142,7 @@ private extension StatusToolbar {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
             )
-            .foregroundStyle(Color(red: 0.9, green: 0.84, blue: 0.72))
+            .foregroundStyle(Color(red: 0.95, green: 0.9, blue: 0.82))
         }
         .buttonStyle(.plain)
         .disabled(!gameState.isRefillEnabled)
