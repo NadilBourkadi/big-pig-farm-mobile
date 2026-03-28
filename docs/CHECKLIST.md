@@ -23,7 +23,7 @@
 - [x] Determine `SKShader` vs alpha compositing for pattern overlays (during Phase 2)
 - [x] Test `SpriteView` performance with 50+ animated nodes (during Phase 3)
 - [ ] Evaluate `CADisplayLink` vs `Timer` for tick loop precision (during Phase 1)
-- [ ] Measure JSON save/load performance with 200+ pigs (during Phase 5)
+- [x] Measure JSON save/load performance with 200+ pigs (during Phase 5) (bead 3a8)
 - [x] Test Swift 6 strict concurrency with SpriteKit scene updates (during Phase 3)
 
 ---
