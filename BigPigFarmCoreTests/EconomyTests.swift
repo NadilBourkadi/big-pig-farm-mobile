@@ -70,18 +70,6 @@ import Foundation
 
 // MARK: - CurrencyContext: Money Management
 
-@Test @MainActor func canAffordReturnsTrueWhenSufficient() {
-    let state = makeGameState()
-    state.money = 100
-    #expect(state.money >= 100)
-}
-
-@Test @MainActor func canAffordReturnsFalseWhenInsufficient() {
-    let state = makeGameState()
-    state.money = 50
-    #expect(!(state.money >= 100))
-}
-
 @Test @MainActor func addMoneyIncreasesBalance() {
     let state = makeGameState()
     state.money = 0

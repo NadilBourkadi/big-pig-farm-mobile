@@ -236,12 +236,6 @@ final class StubContractGeneratorContext: ContractGeneratorContext {
     #expect(stub.money == 50)
 }
 
-@Test @MainActor func currencyCanAffordWithStub() {
-    let stub = StubCurrencyContext(money: 100)
-    #expect(stub.money >= 100)
-    #expect(!(stub.money >= 101))
-}
-
 @Test @MainActor func adoptionEligibilityWithStub() {
     let eligible = StubAdoptionContext(isAtCapacity: false)
     #expect(Adoption.isEligibleForAdoption(state: eligible) == nil)
