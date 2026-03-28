@@ -135,7 +135,7 @@ private extension StatusToolbar {
 private struct StatusToolbarPreview: View {
     @State private var editMode = false
     @State private var treatMode = false
-    @State private var treatType: TreatType = .freshVeggies
+    @State private var treatType: TreatType = .leafyGreens
     private let state: GameState = {
         let previewState = GameState()
         previewState.farm = FarmGrid.createStarter()

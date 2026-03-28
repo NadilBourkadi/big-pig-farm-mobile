@@ -6,10 +6,10 @@ import Foundation
 
 /// One of 4 treat types available during farm visits.
 enum TreatType: String, Codable, CaseIterable, Sendable {
-    case freshVeggies = "fresh_veggies"
-    case fruitSlices = "fruit_slices"
-    case herbBundle = "herb_bundle"
-    case haySampler = "hay_sampler"
+    case leafyGreens = "leafy_greens"
+    case cucumber = "cucumber"
+    case strawberries = "strawberries"
+    case watermelon = "watermelon"
 
     /// Human-readable name for display.
     var displayName: String { info.displayName }
@@ -28,10 +28,10 @@ enum TreatType: String, Codable, CaseIterable, Sendable {
     /// SF Symbol name for menu display.
     var systemImageName: String {
         switch self {
-        case .freshVeggies: "leaf.fill"
-        case .fruitSlices: "oval.portrait.fill"
-        case .herbBundle: "leaf.arrow.circlepath"
-        case .haySampler: "square.stack.fill"
+        case .leafyGreens: "leaf.fill"
+        case .cucumber: "oval.portrait.fill"
+        case .strawberries: "heart.fill"
+        case .watermelon: "circle.lefthalf.filled"
         }
     }
 
@@ -75,23 +75,23 @@ struct TreatInfo: Sendable {
 
 /// All 4 treat metadata entries. From design doc Section 6.
 let treatInfo: [TreatType: TreatInfo] = [
-    .freshVeggies: TreatInfo(
-        displayName: "Fresh Veggies",
+    .leafyGreens: TreatInfo(
+        displayName: "Leafy Greens",
         hungerBoost: 30, happinessBoost: 10, healthBoost: 0, socialBoost: 0,
         socialRadius: 0, breedingChanceBoost: 0, breedingBoostDurationHours: 0,
         needDecayReduction: 0, needDecayDurationHours: 0, requiredTier: 1),
-    .fruitSlices: TreatInfo(
-        displayName: "Fruit Slices",
+    .cucumber: TreatInfo(
+        displayName: "Cucumber",
         hungerBoost: 0, happinessBoost: 25, healthBoost: 0, socialBoost: 0,
         socialRadius: 0, breedingChanceBoost: 0.05, breedingBoostDurationHours: 2,
         needDecayReduction: 0, needDecayDurationHours: 0, requiredTier: 2),
-    .herbBundle: TreatInfo(
-        displayName: "Herb Bundle",
+    .strawberries: TreatInfo(
+        displayName: "Strawberries",
         hungerBoost: 0, happinessBoost: 0, healthBoost: 15, socialBoost: 0,
         socialRadius: 0, breedingChanceBoost: 0, breedingBoostDurationHours: 0,
         needDecayReduction: 0.20, needDecayDurationHours: 2, requiredTier: 3),
-    .haySampler: TreatInfo(
-        displayName: "Hay Sampler",
+    .watermelon: TreatInfo(
+        displayName: "Watermelon",
         hungerBoost: 0, happinessBoost: 0, healthBoost: 0, socialBoost: 20,
         socialRadius: 4, breedingChanceBoost: 0, breedingBoostDurationHours: 0,
         needDecayReduction: 0, needDecayDurationHours: 0, requiredTier: 4),

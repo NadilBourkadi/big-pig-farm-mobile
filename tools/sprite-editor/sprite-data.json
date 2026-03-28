@@ -329,27 +329,30 @@
       }
     },
     "treat": {
-      "fresh_veggies": {
+      "leafy_greens": {
         "tip": "#2e7d32",
         "leaf": "#43a047",
         "mid": "#66bb6a",
         "vein": "#a5d6a7"
       },
-      "fruit_slices": {
-        "stem": "#5d4037",
-        "rind": "#e65100",
-        "flesh": "#ffab40",
-        "seed": "#fff176"
+      "cucumber": {
+        "stem": "#2e7d32",
+        "skin": "#558b2f",
+        "flesh": "#c5e1a5",
+        "seed": "#e8f5e9"
       },
-      "herb_bundle": {
-        "stem": "#5d4037",
-        "leaf": "#26a69a",
-        "tie": "#8d6e63"
+      "strawberries": {
+        "stem": "#33691e",
+        "leaf": "#4caf50",
+        "skin": "#c62828",
+        "flesh": "#ef5350",
+        "seed": "#ffee58"
       },
-      "hay_sampler": {
-        "straw": "#c6a032",
-        "bale": "#ffd54f",
-        "band": "#8d6e63"
+      "watermelon": {
+        "rind": "#2e7d32",
+        "inner": "#66bb6a",
+        "flesh": "#ef5350",
+        "seed": "#212121"
       }
     }
   },
@@ -8087,7 +8090,7 @@
       }
     },
     "treat_normal": {
-      "fresh_veggies": {
+      "leafy_greens": {
         "width": 6,
         "height": 6,
         "pixels": [
@@ -8141,7 +8144,7 @@
           ]
         ]
       },
-      "fruit_slices": {
+      "cucumber": {
         "width": 6,
         "height": 6,
         "pixels": [
@@ -8149,28 +8152,134 @@
             null,
             null,
             "stem",
-            null,
+            "stem",
             null,
             null
           ],
           [
             null,
-            "rind",
-            "rind",
-            "rind",
+            "skin",
+            "skin",
+            "skin",
+            "skin",
+            null
+          ],
+          [
+            "skin",
+            "flesh",
+            "seed",
+            "flesh",
+            "seed",
+            "skin"
+          ],
+          [
+            "skin",
+            "seed",
+            "flesh",
+            "seed",
+            "flesh",
+            "skin"
+          ],
+          [
+            null,
+            "skin",
+            "skin",
+            "skin",
+            "skin",
+            null
+          ],
+          [
+            null,
+            null,
+            "skin",
+            "skin",
             null,
             null
+          ]
+        ]
+      },
+      "strawberries": {
+        "width": 6,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            "stem",
+            null,
+            null,
+            "stem",
+            null
+          ],
+          [
+            null,
+            "skin",
+            "leaf",
+            "leaf",
+            "skin",
+            null
+          ],
+          [
+            "skin",
+            "flesh",
+            "seed",
+            "flesh",
+            "flesh",
+            "skin"
+          ],
+          [
+            "skin",
+            "flesh",
+            "flesh",
+            "seed",
+            "flesh",
+            "skin"
+          ],
+          [
+            null,
+            "skin",
+            "flesh",
+            "flesh",
+            "skin",
+            null
+          ],
+          [
+            null,
+            null,
+            "skin",
+            "skin",
+            null,
+            null
+          ]
+        ]
+      },
+      "watermelon": {
+        "width": 8,
+        "height": 6,
+        "pixels": [
+          [
+            null,
+            "rind",
+            "rind",
+            "rind",
+            "rind",
+            "rind",
+            "rind",
+            null
+          ],
+          [
+            "rind",
+            "inner",
+            "flesh",
+            "flesh",
+            "flesh",
+            "flesh",
+            "inner",
+            "rind"
           ],
           [
             "rind",
             "flesh",
             "seed",
-            "flesh",
-            "rind",
-            null
-          ],
-          [
-            "rind",
             "flesh",
             "flesh",
             "seed",
@@ -8178,10 +8287,22 @@
             "rind"
           ],
           [
-            null,
             "rind",
             "flesh",
             "flesh",
+            "seed",
+            "seed",
+            "flesh",
+            "flesh",
+            "rind"
+          ],
+          [
+            null,
+            "rind",
+            "inner",
+            "flesh",
+            "flesh",
+            "inner",
             "rind",
             null
           ],
@@ -8190,115 +8311,9 @@
             null,
             "rind",
             "rind",
+            "rind",
+            "rind",
             null,
-            null
-          ]
-        ]
-      },
-      "herb_bundle": {
-        "width": 6,
-        "height": 6,
-        "pixels": [
-          [
-            null,
-            "leaf",
-            null,
-            null,
-            "leaf",
-            null
-          ],
-          [
-            "leaf",
-            "leaf",
-            "leaf",
-            "leaf",
-            "leaf",
-            "leaf"
-          ],
-          [
-            null,
-            "leaf",
-            "stem",
-            "stem",
-            "leaf",
-            null
-          ],
-          [
-            null,
-            null,
-            "stem",
-            "stem",
-            null,
-            null
-          ],
-          [
-            null,
-            "tie",
-            "stem",
-            "stem",
-            "tie",
-            null
-          ],
-          [
-            null,
-            null,
-            "stem",
-            "stem",
-            null,
-            null
-          ]
-        ]
-      },
-      "hay_sampler": {
-        "width": 6,
-        "height": 6,
-        "pixels": [
-          [
-            null,
-            "straw",
-            "straw",
-            "straw",
-            "straw",
-            null
-          ],
-          [
-            "straw",
-            "bale",
-            "bale",
-            "bale",
-            "bale",
-            "straw"
-          ],
-          [
-            "straw",
-            "bale",
-            "band",
-            "band",
-            "bale",
-            "straw"
-          ],
-          [
-            "straw",
-            "bale",
-            "band",
-            "band",
-            "bale",
-            "straw"
-          ],
-          [
-            "straw",
-            "bale",
-            "bale",
-            "bale",
-            "bale",
-            "straw"
-          ],
-          [
-            null,
-            "straw",
-            "straw",
-            "straw",
-            "straw",
             null
           ]
         ]
