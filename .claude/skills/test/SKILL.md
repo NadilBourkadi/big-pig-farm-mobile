@@ -38,6 +38,10 @@ of the current working directory (e.g. the worktree root).
 > IMPORTANT: Use exactly `bash scripts/run-tests.sh`, NOT an absolute path. The working directory is already correct.
 > Use timeout 120000 for --fast, 300000 for --full or --all.
 >
+> CRITICAL: Do NOT run `grep`, `awk`, `sed`, `cat`, `head`, or `tail` via Bash to parse the output.
+> The test script output is returned directly in the Bash tool result — parse it from there.
+> Running text-processing commands via Bash triggers permission prompts and is forbidden.
+>
 > Parse the output and return EXACTLY this format:
 >
 > ```
