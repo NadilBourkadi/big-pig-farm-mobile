@@ -128,14 +128,15 @@ import Foundation
     #expect(AgeGroup.allCases == expected)
 }
 
-@Test func behaviorStateHas8Cases() {
-    #expect(BehaviorState.allCases.count == 8)
+@Test func behaviorStateHas9Cases() {
+    #expect(BehaviorState.allCases.count == 9)
 }
 
-@Test func behaviorStateCasesMatchPython() {
+@Test func behaviorStateCasesMatchExpected() {
     let expected: [BehaviorState] = [
         .idle, .wandering, .eating, .drinking,
         .playing, .sleeping, .socializing, .courting,
+        .seekingTreat,
     ]
     #expect(BehaviorState.allCases == expected)
 }
