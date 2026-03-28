@@ -147,6 +147,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
 
     // Treat seeking
     var targetTreatGridPosition: GridPosition?
+    var targetTreatType: TreatType?
 
     // Courtship
     var courtingPartnerId: UUID?
@@ -339,6 +340,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         case lastBirthAge = "last_birth_age"
         case courtingPartnerId = "courting_partner_id"
         case targetTreatGridPosition = "target_treat_grid_position"
+        case targetTreatType = "target_treat_type"
         case courtingInitiator = "courting_initiator"
         case courtingTimer = "courting_timer"
         case motherId = "mother_id"

@@ -91,7 +91,8 @@ enum BehaviorDecision {
             || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
         if critical {
             pig.behaviorState = .idle; pig.path = []; pig.targetPosition = nil
-            pig.targetTreatGridPosition = nil; pig.targetDescription = nil
+            pig.targetTreatGridPosition = nil; pig.targetTreatType = nil
+            pig.targetDescription = nil
         }
         return true // Block downstream phases: either cancelled or keep seeking
     }

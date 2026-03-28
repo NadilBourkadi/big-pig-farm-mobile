@@ -18,8 +18,9 @@ enum TreatManager {
 
     // MARK: - Delivery
 
-    /// Deliver a treat at a target position. Feeds up to 4 nearest pigs within radius.
-    /// Decrements remainingTreatsThisVisit. Returns IDs of pigs that received the treat.
+    /// Claim a treat at a target position. Returns IDs of up to 4 nearest pigs within radius.
+    /// Decrements remainingTreatsThisVisit. Stat effects are NOT applied here — they are
+    /// deferred to pig arrival (BehaviorController.checkTreatArrival).
     /// Returns empty array if no treats remain or no pigs are in range.
     @MainActor
     static func deliverTreat(
@@ -46,34 +47,25 @@ enum TreatManager {
         guard !nearbyPigs.isEmpty else { return [] }
 
         state.remainingTreatsThisVisit -= 1
-        var fedPigIds: [UUID] = []
-
-        state.withBatchUpdate {
-            for pig in nearbyPigs {
-                var updated = pig
-                applyTreatEffects(type: type, pig: &updated)
-                state.updateGuineaPig(updated)
-                fedPigIds.append(pig.id)
-            }
-        }
 
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         DebugLogger.shared.log(
             category: .simulation, level: .info,
-            message: "Treat delivered: \(type.displayName) to \(fedPigIds.count) pigs, "
+            message: "Treat placed: \(type.displayName) for \(nearbyPigs.count) pigs, "
                 + "\(state.remainingTreatsThisVisit) remaining"
         )
         #endif
 
-        return fedPigIds
+        return nearbyPigs.map(\.id)
     }
 
     // MARK: - Treat Effects
 
     /// Apply a treat's instant effects to a pig's needs.
+    /// Called by BehaviorController when a pig arrives at a treat position.
     /// Note: timed buffs (cucumber breedingChanceBoost, strawberries needDecayReduction)
     /// require per-pig timer fields and are deferred to a follow-up task.
-    private static func applyTreatEffects(type: TreatType, pig: inout GuineaPig) {
+    static func applyTreatEffects(type: TreatType, pig: inout GuineaPig) {
         let info = type.info
         pig.needs.hunger = min(100, pig.needs.hunger + info.hungerBoost)
         pig.needs.happiness = min(100, pig.needs.happiness + info.happinessBoost)

@@ -292,8 +292,13 @@ extension BehaviorController {
         }
         let pigGrid = pig.position.gridPosition
         if pigGrid.manhattanDistance(to: treatTarget) <= 1 {
+            // Apply treat stat effects now that the pig has arrived
+            if let treatType = pig.targetTreatType {
+                TreatManager.applyTreatEffects(type: treatType, pig: &pig)
+            }
             pig.behaviorState = .idle
             pig.targetTreatGridPosition = nil
+            pig.targetTreatType = nil
             pig.targetPosition = nil
             pig.targetDescription = nil
             resetDecisionTimer(pig.id)
@@ -301,9 +306,10 @@ extension BehaviorController {
             // Path consumed but not at target — re-pathfind
             BehaviorMovement.setPathTo(controller: self, pig: &pig, target: treatTarget)
             if pig.path.isEmpty {
-                // Unreachable — give up
+                // Unreachable — give up (no treat effects applied)
                 pig.behaviorState = .idle
                 pig.targetTreatGridPosition = nil
+                pig.targetTreatType = nil
                 pig.targetPosition = nil
                 pig.targetDescription = nil
             }
