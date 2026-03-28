@@ -33,15 +33,16 @@ struct ShopViewModelFacilitiesTests {
         let state = makeGameState()
         state.money = 100_000
         let vm = ShopViewModel(gameState: state)
-        let items = vm.facilityItems
-        // Fill up all space by repeatedly purchasing
+        // Fill the farm until placement fails
         for _ in 0..<50 {
-            for item in items {
+            for item in vm.facilityItems {
                 vm.purchaseFacility(item)
             }
         }
-        // After many purchases, at least one should have triggered the error
-        // (We just need to verify it doesn't crash — exact error state depends on farm size)
+        // Reset alert state and try one more — space must be exhausted by now
+        vm.showingAlert = false
+        vm.purchaseFacility(vm.facilityItems[0])
+        #expect(vm.showingAlert == true)
     }
 }
 
