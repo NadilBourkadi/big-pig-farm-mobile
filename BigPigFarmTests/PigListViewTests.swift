@@ -198,6 +198,84 @@ struct PigListSellTests {
     }
 }
 
+// MARK: - Batch Sell
+
+@MainActor
+@Suite("PigListView - Batch Sell")
+struct PigListBatchSellTests {
+
+    @Test func batchSellRemovesAllSelectedPigs() {
+        let state = makeGameState()
+        let pig1 = GuineaPig.create(name: "Alpha", gender: .female)
+        let pig2 = GuineaPig.create(name: "Beta", gender: .male)
+        let pig3 = GuineaPig.create(name: "Gamma", gender: .female)
+        state.addGuineaPig(pig1)
+        state.addGuineaPig(pig2)
+        state.addGuineaPig(pig3)
+        #expect(state.pigCount == 3)
+
+        let selection: Set<UUID> = [pig1.id, pig2.id]
+        batchSellPigs(ids: selection, state: state)
+        #expect(state.pigCount == 1)
+        #expect(state.getGuineaPig(pig3.id) != nil)
+    }
+
+    @Test func batchSellAddsTotalValueToMoney() {
+        let state = makeGameState()
+        state.boosterState.welcomeGiftUsed = true // disable 3× first-sale multiplier
+        var pig1 = GuineaPig.create(name: "Alpha", gender: .female)
+        pig1.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+        var pig2 = GuineaPig.create(name: "Beta", gender: .male)
+        pig2.ageDays = Double(GameConfig.Simulation.adultAgeDays)
+        state.addGuineaPig(pig1)
+        state.addGuineaPig(pig2)
+
+        let expectedValue = Market.calculatePigValue(pig: pig1, state: state)
+            + Market.calculatePigValue(pig: pig2, state: state)
+        let moneyBefore = state.money
+
+        batchSellPigs(ids: [pig1.id, pig2.id], state: state)
+        #expect(state.money == moneyBefore + expectedValue)
+    }
+
+    @Test func batchSellSkipsMissingPigs() {
+        let state = makeGameState()
+        let pig = GuineaPig.create(name: "Real", gender: .female)
+        state.addGuineaPig(pig)
+        let fakePigID = UUID()
+
+        let selection: Set<UUID> = [pig.id, fakePigID]
+        batchSellPigs(ids: selection, state: state)
+        #expect(state.pigCount == 0)
+    }
+
+    @Test func batchSellEmptySelectionIsNoOp() {
+        let state = makeGameState()
+        let pig = GuineaPig.create(name: "Safe", gender: .female)
+        state.addGuineaPig(pig)
+        let moneyBefore = state.money
+
+        batchSellPigs(ids: [], state: state)
+        #expect(state.pigCount == 1)
+        #expect(state.money == moneyBefore)
+    }
+}
+
+/// Mirrors PigListView.batchSell() for testability.
+@MainActor
+@discardableResult
+private func batchSellPigs(ids: Set<UUID>, state: GameState) -> (soldCount: Int, anyContractBonus: Bool) {
+    var soldCount = 0
+    var anyContractBonus = false
+    for pigID in ids {
+        guard let pig = state.getGuineaPig(pigID) else { continue }
+        let result = Market.sellPig(state: state, pig: pig)
+        soldCount += 1
+        if result.contractBonus > 0 { anyContractBonus = true }
+    }
+    return (soldCount, anyContractBonus)
+}
+
 // MARK: - Lock Toggle Action
 
 @MainActor
