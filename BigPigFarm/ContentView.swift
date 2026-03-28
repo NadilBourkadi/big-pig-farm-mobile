@@ -345,8 +345,6 @@ extension ContentView {
         farmScene.draggedFacilityID = nil
         editModeSelectedFacilityID = nil
         isDraggingFacility = false
-        coachMarkState.resetAll()
-        coachMarkState.save()
         onResetFarm()
     }
 

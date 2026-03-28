@@ -8,6 +8,7 @@ import SwiftUI
 
 // MARK: - CoachMarkOverlayView
 
+@MainActor
 struct CoachMarkOverlayView: View {
     let gameState: GameState
     @Binding var coachState: CoachMarkState

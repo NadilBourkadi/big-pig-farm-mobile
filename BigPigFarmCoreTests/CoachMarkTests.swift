@@ -75,6 +75,7 @@ import Foundation
 
 @Test @MainActor func welcomeTapPigNotShownAfter5Minutes() {
     let state = makeGameState()
+    // Boundary: exactly 5.0 minutes does NOT satisfy < 5, so mark is suppressed
     state.gameTime.advance(minutes: 5)
     var pig1 = GuineaPig.create(name: "Pig1", gender: .male)
     pig1.position = Position(x: 5, y: 5)
@@ -85,6 +86,20 @@ import Foundation
 
     let result = CoachMarkTrigger.evaluate(state: state, coachState: CoachMarkState())
     #expect(result != .welcomeTapPig)
+}
+
+@Test @MainActor func welcomeTapPigStillShowsJustBefore5Minutes() {
+    let state = makeGameState()
+    state.gameTime.advance(minutes: 4.9)
+    var pig1 = GuineaPig.create(name: "Pig1", gender: .male)
+    pig1.position = Position(x: 5, y: 5)
+    state.addGuineaPig(pig1)
+    var pig2 = GuineaPig.create(name: "Pig2", gender: .female)
+    pig2.position = Position(x: 8, y: 5)
+    state.addGuineaPig(pig2)
+
+    let result = CoachMarkTrigger.evaluate(state: state, coachState: CoachMarkState())
+    #expect(result == .welcomeTapPig)
 }
 
 @Test @MainActor func openShopShowsWhen10MinutesAndFewFacilities() {
@@ -136,6 +151,22 @@ import Foundation
 
     let result = CoachMarkTrigger.evaluate(state: state, coachState: coachState)
     #expect(result == .refillFacilities)
+}
+
+@Test @MainActor func refillFacilitiesNotShownForNonRefillableFacility() {
+    let state = makeGameState()
+    state.gameTime.advance(minutes: 15)
+    // Hideouts have refillCost == 0, so even at low fill they should not trigger
+    var hideout = Facility.create(type: .hideout, x: 5, y: 5)
+    hideout.currentAmount = hideout.maxAmount * 0.1
+    _ = state.addFacility(hideout)
+
+    var coachState = CoachMarkState()
+    coachState.markShown(.welcomeTapPig)
+    coachState.markShown(.openShop)
+
+    let result = CoachMarkTrigger.evaluate(state: state, coachState: coachState)
+    #expect(result != .refillFacilities)
 }
 
 @Test @MainActor func breedingReadyShowsWithTwoAdults() {
