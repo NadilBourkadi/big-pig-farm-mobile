@@ -20,6 +20,9 @@ struct StatusToolbar: View {
     /// Two-way binding to ContentView's selected treat type.
     @Binding var selectedTreatType: TreatType
 
+    /// When true, highlights the Shop button to draw attention (e.g. farm has zero pigs).
+    var isShopHighlighted: Bool = false
+
     // MARK: - Action Callbacks
 
     var onShopTapped: () -> Void
@@ -67,7 +70,7 @@ private extension StatusToolbar {
 
     var menuRow: some View {
         HStack(spacing: 4) {
-            HUDButton(systemImage: "cart.fill", label: "Shop", fillWidth: true, action: onShopTapped)
+            HUDButton(systemImage: "cart.fill", label: "Shop", isActive: isShopHighlighted, fillWidth: true, action: onShopTapped)
             HUDButton(systemImage: "list.bullet", label: "Pigs", fillWidth: true, action: onPigListTapped)
             HUDButton(systemImage: "heart.fill", label: "Breed", fillWidth: true, action: onBreedingTapped)
             HUDButton(systemImage: "books.vertical.fill", label: "Almanac", fillWidth: true, action: onAlmanacTapped)

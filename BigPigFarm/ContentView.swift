@@ -186,7 +186,17 @@ struct ContentView: View {
                     }
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                Spacer()
+                if gameState.pigCount == 0 {
+                    Spacer()
+                    EmptyFarmOverlay {
+                        shopInitialTab = .pigs
+                        showShop = true
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    Spacer()
+                } else {
+                    Spacer()
+                }
                 ToastOverlayView(notificationManager: notificationManager)
                 CoachMarkOverlayView(gameState: gameState, coachState: $coachMarkState)
                 if isEditMode {
@@ -202,8 +212,9 @@ struct ContentView: View {
                     isEditMode: $isEditMode,
                     isTreatMode: $isTreatMode,
                     selectedTreatType: $selectedTreatType,
+                    isShopHighlighted: gameState.pigCount == 0,
                     onShopTapped: {
-                        shopInitialTab = .facilities
+                        shopInitialTab = gameState.pigCount == 0 ? .pigs : .facilities
                         showShop = true
                     },
                     onPigListTapped: { showPigList = true },
