@@ -301,6 +301,7 @@ private extension BehaviorMovement {
         pig.targetDescription = nil
         controller.resetBlockedState(pig.id)
         controller.clearStuckState(pig.id)
+        controller.clearShyTreatDelay(pig.id)
         let isCritical = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
             || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
         controller.facilityManager.setFailedCooldown(
