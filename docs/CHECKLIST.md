@@ -149,6 +149,7 @@
 - [x] Add Economy layer to CLAUDE.md architecture diagram (bead do6)
 - [x] Add sell button to pig detail sheet and multi-select batch sell to pig list (bead eu7s)
 - [x] Introduce view models for ContentView, PigListView, PigDetailView, ShopView (bead 1vd)
+- [x] Add section footers and color swatches to breeding program toggles (bead n6xy)
 
 ---
 
