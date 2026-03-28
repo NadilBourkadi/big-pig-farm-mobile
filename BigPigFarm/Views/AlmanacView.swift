@@ -66,31 +66,26 @@ private struct PigdexTab: View {
     let gameState: GameState
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+        List {
+            Section("Progress") {
                 milestonesSection
-                    .padding(.horizontal)
-                ForEach(RoanType.allCases, id: \.rawValue) { roan in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(roan == .none ? "Standard" : "Roan")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        ForEach(ColorIntensity.allCases, id: \.rawValue) { intensity in
-                            ForEach(Pattern.allCases, id: \.rawValue) { pattern in
-                                PigdexRow(
-                                    pattern: pattern,
-                                    intensity: intensity,
-                                    roan: roan,
-                                    pigdex: gameState.pigdex
-                                )
-                                .padding(.horizontal)
-                            }
+            }
+            ForEach(RoanType.allCases, id: \.rawValue) { roan in
+                Section(roan == .none ? "Standard" : "Roan") {
+                    ForEach(ColorIntensity.allCases, id: \.rawValue) { intensity in
+                        ForEach(Pattern.allCases, id: \.rawValue) { pattern in
+                            PigdexRow(
+                                pattern: pattern,
+                                intensity: intensity,
+                                roan: roan,
+                                pigdex: gameState.pigdex
+                            )
                         }
                     }
                 }
             }
-            .padding(.vertical)
         }
+        .listStyle(.insetGrouped)
     }
 
     private var milestonesSection: some View {
