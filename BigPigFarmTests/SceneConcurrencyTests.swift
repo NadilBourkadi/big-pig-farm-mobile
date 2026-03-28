@@ -67,22 +67,20 @@ struct TickGatedSyncTests {
         _ = scene.gameState.simulationTick
     }
 
-    @Test("Scene sync is gated by simulationTick comparison")
-    func sceneSyncOnlyOnTickBoundary() {
+    @Test("simulationTick is monotonically increasing (sync gate precondition)")
+    func simulationTickIsMonotonic() {
         let state = GameState()
         state.farm = FarmGrid.createStarter()
 
-        // Verify the gating mechanism: lastSyncedTick vs simulationTick.
-        // The initial values should differ (lastSyncedTick = 0, simulationTick = 0),
-        // meaning the first update() triggers sync. After sync, they match.
+        // The tick-gated sync in FarmScene.update() compares lastSyncedTick
+        // (private) against simulationTick. We can't observe lastSyncedTick,
+        // but we can verify the precondition: simulationTick increments reliably.
         #expect(state.simulationTick == 0)
 
-        state.advanceSimulationTick()
-        #expect(state.simulationTick == 1)
-
-        // A second advance creates a gap again
-        state.advanceSimulationTick()
-        #expect(state.simulationTick == 2)
+        for i: UInt64 in 1...10 {
+            state.advanceSimulationTick()
+            #expect(state.simulationTick == i)
+        }
     }
 }
 
@@ -159,8 +157,8 @@ struct NonisolatedPureFunctionTests {
 @MainActor
 struct SpriteTextureCacheConcurrencyTests {
 
-    @Test("Sequential cache operations produce correct results")
-    func sequentialOperationsAreCorrect() {
+    @Test("Cache returns identical texture for same pig and frame key")
+    func cacheHitReturnsIdenticalTexture() {
         // SpriteTextureCache is @unchecked Sendable with single-thread-only semantics.
         // Verify that sequential operations on MainActor work correctly.
         let cache = SpriteTextureCache { _ in SKTexture() }
@@ -168,17 +166,10 @@ struct SpriteTextureCacheConcurrencyTests {
         var pig = GuineaPig.create(name: "CacheTest", gender: .female)
         pig.ageDays = 20
 
-        // First call caches; second returns cached texture
+        // First call caches; second returns the same object (identity check)
         let tex1 = cache.texture(for: pig, state: "idle", direction: "left", frame: 0)
         let tex2 = cache.texture(for: pig, state: "idle", direction: "left", frame: 0)
         #expect(tex1 === tex2)
-
-        // Evict and verify cache count changes
-        let countBefore = cache.patternedCacheCount + cache.solidCacheCount
-        cache.evict(pigID: pig.id)
-        cache.evictAll()
-        let countAfter = cache.patternedCacheCount + cache.solidCacheCount
-        #expect(countAfter <= countBefore)
     }
 
     @Test("evictAll clears both cache tiers")
