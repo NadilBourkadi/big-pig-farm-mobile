@@ -138,6 +138,7 @@
 - [x] Fix StatusToolbar icon layout overflow — two-row grouped design with improved top bar readability (bead 7lkg)
 - [x] Fix StatusToolbar button alignment — equalize first-row button widths and center system control row (bead nqs9)
 - [x] Add VoiceOver accessibility elements to SpriteKit farm scene (bead d8vl)
+- [x] Replace fixed-size HUD fonts with Dynamic Type scaled text styles (bead l8oc)
 
 ---
 
