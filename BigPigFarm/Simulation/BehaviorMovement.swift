@@ -142,10 +142,12 @@ enum BehaviorMovement {
     }
 }
 
-// MARK: - Private Movement Helpers
+// MARK: - Speed Computation
 
-private extension BehaviorMovement {
+extension BehaviorMovement {
 
+    /// Compute movement speed for a pig, accounting for upgrades, fatigue, age,
+    /// and personality-based treat-seeking modifiers.
     @MainActor
     static func computeSpeed(controller: BehaviorController, pig: GuineaPig) -> Double {
         var speed = GameConfig.Simulation.baseMoveSpeed
@@ -158,8 +160,21 @@ private extension BehaviorMovement {
             speed *= GameConfig.Behavior.tiredSpeedMult
         }
         if pig.isBaby { speed *= GameConfig.Behavior.babySpeedMult }
+
+        // Personality modifiers when seeking treats
+        if pig.behaviorState == .seekingTreat {
+            if pig.hasTrait(.greedy) { speed *= GameConfig.Behavior.greedyTreatSpeedMult }
+            if pig.hasTrait(.brave) { speed *= GameConfig.Behavior.braveTreatSpeedMult }
+            if pig.hasTrait(.lazy) { speed *= GameConfig.Behavior.lazyTreatSpeedMult }
+        }
+
         return speed
     }
+}
+
+// MARK: - Private Movement Helpers
+
+private extension BehaviorMovement {
 
     /// Consume waypoints until the movement budget runs out. Returns true if pig moved.
     @MainActor
