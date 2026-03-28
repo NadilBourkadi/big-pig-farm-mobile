@@ -83,6 +83,7 @@ class FarmScene: SKScene {
     var isTreatPlacementMode: Bool = false
     var selectedTreatType: TreatType = .leafyGreens
     let treatLayer = SKNode()
+    var activeTreats: [Position: (node: TreatNode, pendingPigIDs: Set<UUID>)] = [:]
 
     /// Called when a treat is placed (treat count changed).
     var onTreatCountChanged: (() -> Void)?

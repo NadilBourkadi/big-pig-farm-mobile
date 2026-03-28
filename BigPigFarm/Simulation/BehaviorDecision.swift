@@ -13,6 +13,7 @@ enum BehaviorDecision {
     static func isContent(_ pig: GuineaPig) -> Bool {
         guard pig.behaviorState == .idle || pig.behaviorState == .wandering else { return false }
         guard pig.targetFacilityId == nil else { return false }
+        guard pig.targetTreatPosition == nil else { return false }
         let needs = pig.needs
         let high = Double(GameConfig.Needs.highThreshold)
         return needs.hunger >= high
@@ -63,6 +64,11 @@ enum BehaviorDecision {
     /// Returns false to continue re-deciding — either facility was consumed/removed, or pig wasn't traveling.
     @MainActor
     private static func shouldKeepTraveling(controller: BehaviorController, pig: inout GuineaPig) -> Bool {
+        // Protect pigs traveling to treats from re-decision
+        if pig.behaviorState == .wandering, !pig.path.isEmpty,
+           pig.targetTreatPosition != nil {
+            return true
+        }
         guard pig.behaviorState == .wandering, !pig.path.isEmpty,
               let targetId = pig.targetFacilityId else { return false }
         if let facility = controller.gameState.getFacility(targetId) {
@@ -84,6 +90,10 @@ enum BehaviorDecision {
 
     @MainActor
     private static func cleanupTargetState(controller: BehaviorController, pig: inout GuineaPig) {
+        if pig.targetTreatPosition != nil, pig.path.isEmpty {
+            pig.targetTreatPosition = nil
+            pig.targetDescription = nil
+        }
         if pig.targetFacilityId != nil, pig.path.isEmpty {
             pig.targetFacilityId = nil
             pig.targetDescription = nil

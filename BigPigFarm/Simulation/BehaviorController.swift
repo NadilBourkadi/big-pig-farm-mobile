@@ -39,6 +39,12 @@ final class BehaviorController {
             lastGridGeneration = gridGen
         }
 
+        // Dispatch pig to treat if target is set but no path computed yet
+        if pig.targetTreatPosition != nil, pig.path.isEmpty,
+           pig.behaviorState == .wandering {
+            dispatchTreatPath(pig: &pig)
+        }
+
         // Decision timer — stagger initial evaluation with a random offset to spread CPU load
         let timer = decisionTimers[pig.id] ?? Double.random(in: 0..<1)
         let newTimer = timer + gameMinutes
@@ -128,6 +134,19 @@ final class BehaviorController {
     func drainCompletedCourtships() -> [(UUID, UUID)] {
         defer { completedCourtships.removeAll() }
         return completedCourtships
+    }
+
+    /// Compute a path from the pig's current position to its treat target.
+    /// Clears the treat target and resets to idle if pathfinding fails.
+    private func dispatchTreatPath(pig: inout GuineaPig) {
+        guard let treatPos = pig.targetTreatPosition else { return }
+        let target = GridPosition(x: Int(treatPos.x), y: Int(treatPos.y))
+        BehaviorMovement.setPathTo(controller: self, pig: &pig, target: target)
+        if pig.path.isEmpty {
+            pig.targetTreatPosition = nil
+            pig.targetDescription = nil
+            pig.behaviorState = .idle
+        }
     }
 }
 
@@ -224,6 +243,25 @@ extension BehaviorController {
     /// advance the courtship timer when adjacent to a partner, and consume
     /// resources from any facility the pig is currently using.
     private func updateCurrentBehavior(pig: inout GuineaPig, gameMinutes: Double) {
+        // Arrived at treat (wandering, path consumed, treat target set)
+        if pig.behaviorState == .wandering, pig.path.isEmpty, pig.targetTreatPosition != nil {
+            blockedTimers.removeValue(forKey: pig.id)
+            stuckPositions.removeValue(forKey: pig.id)
+            stuckTimers.removeValue(forKey: pig.id)
+            pig.targetTreatPosition = nil
+            pig.behaviorState = .eating
+            pig.targetDescription = "eating treat"
+            resetDecisionTimer(pig.id)
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            DebugLogger.shared.log(
+                category: .behavior, level: .info,
+                message: "\(pig.name): arrived at treat",
+                pigId: pig.id, pigName: pig.name,
+                payload: ["trigger": "treatArrival"]
+            )
+            #endif
+        }
+
         // Arrived at targeted facility (wandering, path consumed, facility target set)
         if pig.behaviorState == .wandering, pig.path.isEmpty, pig.targetFacilityId != nil {
             blockedTimers.removeValue(forKey: pig.id)

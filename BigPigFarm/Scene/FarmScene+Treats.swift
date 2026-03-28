@@ -1,10 +1,11 @@
-/// FarmScene+Treats — Treat placement touch handling and pig dispatching.
+/// FarmScene+Treats — Treat placement touch handling and active treat tracking.
 import SpriteKit
 
 extension FarmScene {
 
     /// Handle a tap in treat placement mode.
-    /// Calls TreatManager backend, spawns a TreatNode, and dispatches nearby pigs.
+    /// Calls TreatManager backend (applies stat boosts + sets behavior target),
+    /// spawns a TreatNode, and registers it for pickup animation on pig arrival.
     func handleTreatPlacement(at scenePoint: CGPoint) {
         let grid = sceneToGrid(scenePoint)
         let target = Position(x: Double(grid.x), y: Double(grid.y))
@@ -31,8 +32,8 @@ extension FarmScene {
 
         HapticManager.treatPlaced()
 
-        // Dispatch pigs to treat
-        dispatchPigsToTreat(treatNode, fedPigIDs: fedPigIDs)
+        // Register treat for pickup animation when pigs arrive via behavior AI
+        activeTreats[target] = (node: treatNode, pendingPigIDs: Set(fedPigIDs))
 
         // Notify SwiftUI of count change
         onTreatCountChanged?()
@@ -43,18 +44,24 @@ extension FarmScene {
         }
     }
 
-    /// Animate pigs moving toward the treat and playing consumption effects.
-    private func dispatchPigsToTreat(_ treatNode: TreatNode, fedPigIDs: [UUID]) {
-        for pigID in fedPigIDs {
-            guard let pigNode = pigNodes[pigID],
-                  let pig = gameState.getGuineaPig(pigID) else { continue }
+    /// Called from syncPigs when a pig transitions to .eating — check if it
+    /// arrived at an active treat and trigger pickup animation.
+    func checkTreatArrival(pigID: UUID, pigNode: PigNode) {
+        for (pos, var treatInfo) in activeTreats {
+            guard treatInfo.pendingPigIDs.contains(pigID) else { continue }
+            treatInfo.pendingPigIDs.remove(pigID)
 
-            let traits = pig.personality
-            pigNode.moveToTreat(at: treatNode.position, traits: traits) { [weak treatNode] in
-                pigNode.playHeartParticle()
-                HapticManager.treatConsumed()
-                _ = treatNode?.animatePickup {}
+            pigNode.playHeartParticle()
+            HapticManager.treatConsumed()
+
+            let isLast = treatInfo.node.animatePickup {}
+
+            if isLast || treatInfo.pendingPigIDs.isEmpty {
+                activeTreats.removeValue(forKey: pos)
+            } else {
+                activeTreats[pos] = treatInfo
             }
+            return
         }
     }
 }

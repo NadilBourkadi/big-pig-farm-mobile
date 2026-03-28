@@ -27,6 +27,11 @@ extension FarmScene {
             if let node = pigNodes[id] {
                 node.isSelected = (id == selectedPigID)
                 updateIndicator(for: node, pig: pig)
+
+                // Check for treat arrival (pig just transitioned to .eating near a treat)
+                if pig.behaviorState == .eating, !activeTreats.isEmpty {
+                    checkTreatArrival(pigID: id, pigNode: node)
+                }
             }
         }
     }

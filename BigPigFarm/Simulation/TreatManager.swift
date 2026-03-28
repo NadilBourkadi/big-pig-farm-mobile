@@ -52,6 +52,11 @@ enum TreatManager {
             for pig in nearbyPigs {
                 var updated = pig
                 applyTreatEffects(type: type, pig: &updated)
+                // Dispatch pig to walk toward the treat via behavior AI
+                updated.targetTreatPosition = target
+                updated.targetFacilityId = nil
+                updated.behaviorState = .wandering
+                updated.targetDescription = "going to treat"
                 state.updateGuineaPig(updated)
                 fedPigIds.append(pig.id)
             }

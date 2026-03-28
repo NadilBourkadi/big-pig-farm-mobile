@@ -134,6 +134,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var targetPosition: Position?
     var targetDescription: String?
     var targetFacilityId: UUID?
+    var targetTreatPosition: Position?
     var path: [GridPosition] = []
 
     // Breeding
@@ -325,6 +326,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         case targetPosition = "target_position"
         case targetDescription = "target_description"
         case targetFacilityId = "target_facility_id"
+        case targetTreatPosition = "target_treat_position"
         case path
         case isPregnant = "is_pregnant"
         case pregnancyDays = "pregnancy_days"
