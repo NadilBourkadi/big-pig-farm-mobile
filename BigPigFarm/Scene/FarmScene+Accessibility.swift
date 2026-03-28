@@ -182,6 +182,7 @@ extension FarmScene {
         case .sleeping: "sleeping"
         case .socializing: "socializing"
         case .courting: "courting"
+        case .seekingTreat: "seeking treat"
         }
     }
 }
