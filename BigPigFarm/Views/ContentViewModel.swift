@@ -212,7 +212,8 @@ final class ContentViewModel: FarmSceneDelegate {
     func executePrestige(_ breakdown: RosetteBreakdown) {
         engine.pause()
         let newFarmNumber = gameState.prestigeState.farmCount + 1
-        scene.playPrestigeTransition(farmNumber: newFarmNumber) { [self] in
+        scene.playPrestigeTransition(farmNumber: newFarmNumber) { [weak self] in
+            guard let self else { return }
             engine.triggerPrestige()
             engine.resume()
         }
