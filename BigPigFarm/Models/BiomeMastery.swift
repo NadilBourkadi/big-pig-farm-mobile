@@ -4,6 +4,7 @@ import Foundation
 
 // MARK: - BiomeMastery
 
+// swiftlint:disable inclusive_language
 /// Cross-farm biome mastery tracking. Persists across prestige resets.
 struct BiomeMastery: Codable, Sendable {
     /// Number of pigs bred in each biome across all farms.
@@ -29,7 +30,7 @@ struct BiomeMastery: Codable, Sendable {
         pigsBredByBiome[biome] ?? 0
     }
 
-    /// Progress toward mastery as a fraction (0.0–1.0).
+    /// Progress toward mastery as a fraction (0.0-1.0).
     func masteryProgress(for biome: BiomeType) -> Double {
         let bred = Double(pigsBred(in: biome))
         let threshold = Double(GameConfig.Prestige.biomeMasteryThreshold)
@@ -52,3 +53,4 @@ struct BiomeMastery: Codable, Sendable {
         case pigsBredByBiome = "pigs_bred_by_biome"
     }
 }
+// swiftlint:enable inclusive_language

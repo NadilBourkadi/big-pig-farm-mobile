@@ -60,19 +60,7 @@ extension Breeding {
         females: [GuineaPig],
         program: BreedingProgram
     ) {
-        var targetColors = program.targetColors
-        var targetPatterns = program.targetPatterns
-        var targetIntensities = program.targetIntensities
-        var targetRoan = program.targetRoan
-
-        if program.strategy == .money && !program.hasTarget {
-            for contract in gameState.contractBoard.activeContracts where !contract.fulfilled {
-                if let color = contract.requiredColor { targetColors.insert(color) }
-                if let pattern = contract.requiredPattern { targetPatterns.insert(pattern) }
-                if let intensity = contract.requiredIntensity { targetIntensities.insert(intensity) }
-                if let roan = contract.requiredRoan { targetRoan.insert(roan) }
-            }
-        }
+        let targets = resolveTargets(program: program, gameState: gameState)
 
         var bestScore = -1.0
         var bestMale: GuineaPig?
@@ -80,33 +68,10 @@ extension Breeding {
 
         for male in males {
             for female in females {
-                let prob = calculateTargetProbability(
-                    male.genotype, female.genotype,
-                    targetColors: targetColors,
-                    targetPatterns: targetPatterns,
-                    targetIntensities: targetIntensities,
-                    targetRoan: targetRoan
+                let score = scorePairForTarget(
+                    male: male, female: female,
+                    targets: targets, gameState: gameState
                 )
-                let affinity = gameState.getAffinity(male.id, female.id)
-                let affinityBonus = prob > 0
-                    ? min(Double(affinity) * GameConfig.Breeding.affinityWeight,
-                          GameConfig.Breeding.maxAffinitySelectionBonus)
-                    : 0.0
-                var score = prob + affinityBonus
-
-                // Selective Advantage: bonus for preference-aligned genotypes.
-                // Intentionally contributes to score even when prob == 0 — if the
-                // player set allele preferences, they want genetically aligned pairs
-                // selected even without phenotype targets configured.
-                let prestige = gameState.prestigeState
-                if prestige.hasUpgrade(.selectiveAdvantage),
-                   prestige.allelePreferences.hasAnyPreference {
-                    score += preferenceAlignmentBonus(
-                        male.genotype, female.genotype,
-                        preferences: prestige.allelePreferences
-                    )
-                }
-
                 if score > bestScore {
                     bestScore = score
                     bestMale = male
@@ -122,6 +87,76 @@ extension Breeding {
                 eventType: "breeding"
             )
         }
+    }
+
+    /// Resolved breeding phenotype targets.
+    private struct PhenotypeTargets {
+        var colors: Set<BaseColor>
+        var patterns: Set<Pattern>
+        var intensities: Set<ColorIntensity>
+        var roan: Set<RoanType>
+    }
+
+    /// Resolve phenotype targets from program settings and active contracts.
+    @MainActor
+    private static func resolveTargets(
+        program: BreedingProgram,
+        gameState: GameState
+    ) -> PhenotypeTargets {
+        var targets = PhenotypeTargets(
+            colors: program.targetColors,
+            patterns: program.targetPatterns,
+            intensities: program.targetIntensities,
+            roan: program.targetRoan
+        )
+
+        if program.strategy == .money && !program.hasTarget {
+            for contract in gameState.contractBoard.activeContracts where !contract.fulfilled {
+                if let color = contract.requiredColor { targets.colors.insert(color) }
+                if let pattern = contract.requiredPattern { targets.patterns.insert(pattern) }
+                if let intensity = contract.requiredIntensity { targets.intensities.insert(intensity) }
+                if let roan = contract.requiredRoan { targets.roan.insert(roan) }
+            }
+        }
+
+        return targets
+    }
+
+    /// Score a single male-female pair against phenotype targets, including affinity and preference bonuses.
+    @MainActor
+    private static func scorePairForTarget(
+        male: GuineaPig, female: GuineaPig,
+        targets: PhenotypeTargets,
+        gameState: GameState
+    ) -> Double {
+        let prob = calculateTargetProbability(
+            male.genotype, female.genotype,
+            targetColors: targets.colors,
+            targetPatterns: targets.patterns,
+            targetIntensities: targets.intensities,
+            targetRoan: targets.roan
+        )
+        let affinity = gameState.getAffinity(male.id, female.id)
+        let affinityBonus = prob > 0
+            ? min(Double(affinity) * GameConfig.Breeding.affinityWeight,
+                  GameConfig.Breeding.maxAffinitySelectionBonus)
+            : 0.0
+        var score = prob + affinityBonus
+
+        // Selective Advantage: bonus for preference-aligned genotypes.
+        // Intentionally contributes to score even when prob == 0 — if the
+        // player set allele preferences, they want genetically aligned pairs
+        // selected even without phenotype targets configured.
+        let prestige = gameState.prestigeState
+        if prestige.hasUpgrade(.selectiveAdvantage),
+           prestige.allelePreferences.hasAnyPreference {
+            score += preferenceAlignmentBonus(
+                male.genotype, female.genotype,
+                preferences: prestige.allelePreferences
+            )
+        }
+
+        return score
     }
 
     // MARK: - Diversity Strategy

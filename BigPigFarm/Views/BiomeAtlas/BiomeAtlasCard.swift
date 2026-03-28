@@ -3,11 +3,13 @@ import SwiftUI
 
 struct BiomeAtlasCard: View {
     let biome: BiomeType
+    // swiftlint:disable:next inclusive_language
     let mastery: BiomeMastery
 
     private var info: BiomeInfo? { biomes[biome] }
     private var pigsBred: Int { mastery.pigsBred(in: biome) }
     private var threshold: Int { GameConfig.Prestige.biomeMasteryThreshold }
+    // swiftlint:disable:next inclusive_language
     private var isMastered: Bool { mastery.isMastered(biome) }
     private var progress: Double { mastery.masteryProgress(for: biome) }
 

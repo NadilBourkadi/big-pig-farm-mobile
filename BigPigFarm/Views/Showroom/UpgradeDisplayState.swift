@@ -10,7 +10,7 @@ enum UpgradeDisplayState: Sendable {
     static func resolve(
         upgrade: ShowroomUpgrade,
         prestigeState: PrestigeState
-    ) -> UpgradeDisplayState {
+    ) -> Self {
         if prestigeState.hasUpgrade(upgrade) {
             return .purchased
         } else if prestigeState.rosetteBalance >= upgrade.cost {

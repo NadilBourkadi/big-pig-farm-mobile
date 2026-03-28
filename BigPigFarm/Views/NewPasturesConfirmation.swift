@@ -40,7 +40,8 @@ struct NewPasturesConfirmation: View {
 
     private var detailSection: some View {
         VStack(spacing: 16) {
-            Text("Sell your prize-winning herd and start a new farm. Your Rosettes and breeding knowledge travel with you.")
+            Text("Sell your prize-winning herd and start a new farm. "
+                + "Your Rosettes and breeding knowledge travel with you.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

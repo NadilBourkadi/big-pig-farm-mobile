@@ -57,6 +57,7 @@ let package = Package(
                 "Models/GameTime.swift",
                 "Models/Genetics.swift",
                 "Models/GeneticsBreeding.swift",
+                "Models/GeneticsHelpers.swift",
                 "Models/GeneticsPrediction.swift",
                 "Models/GridPosition.swift",
                 "Models/GuineaPig.swift",

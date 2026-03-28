@@ -125,24 +125,70 @@ func breed(
     lockedLoci: [(locusName: String, parentGenotype: Genotype)]? = nil,
     allelePreferences: AllelePreferences? = nil
 ) -> BreedResult {
-    // Mendelian inheritance with optional Selective Advantage bias
     let prefs = allelePreferences ?? AllelePreferences()
-    var eLocus = inheritAlleleWithPreference(parent1.eLocus, parent2.eLocus,
+    var loci = inheritAllLoci(parent1, parent2, preferences: prefs)
+
+    // Genetic Imprinting: force one allele from the locked parent's genotype
+    if let locked = lockedLoci {
+        applyGeneticImprinting(loci: &loci, lockedLoci: locked)
+    }
+
+    // Apply mutations
+    var mutations: [String] = []
+    let hasMutations = mutationRate > 0 || locusRates != nil || directionalTargets != nil
+
+    if hasMutations {
+        applyMutations(
+            to: &loci.eLocus, bLocus: &loci.bLocus, sLocus: &loci.sLocus,
+            cLocus: &loci.cLocus, rLocus: &loci.rLocus, dLocus: &loci.dLocus,
+            mutations: &mutations,
+            mutationRate: mutationRate,
+            locusRates: locusRates,
+            directionalTargets: directionalTargets,
+            directionalRate: directionalRate
+        )
+    }
+
+    let genotype = Genotype(
+        eLocus: loci.eLocus, bLocus: loci.bLocus, sLocus: loci.sLocus,
+        cLocus: loci.cLocus, rLocus: loci.rLocus, dLocus: loci.dLocus
+    )
+
+    return BreedResult(genotype: genotype, mutations: mutations)
+}
+
+/// Mutable collection of all 6 inherited loci before mutation.
+private struct InheritedLoci {
+    var eLocus: AllelePair
+    var bLocus: AllelePair
+    var sLocus: AllelePair
+    var cLocus: AllelePair
+    var rLocus: AllelePair
+    var dLocus: AllelePair
+}
+
+/// Mendelian inheritance with optional Selective Advantage bias, plus lethal-roan reroll.
+private func inheritAllLoci(
+    _ parent1: Genotype,
+    _ parent2: Genotype,
+    preferences prefs: AllelePreferences
+) -> InheritedLoci {
+    let eLocus = inheritAlleleWithPreference(parent1.eLocus, parent2.eLocus,
         preference: prefs.eLocus, dominant: "E", recessive: "e")
-    var bLocus = inheritAlleleWithPreference(parent1.bLocus, parent2.bLocus,
+    let bLocus = inheritAlleleWithPreference(parent1.bLocus, parent2.bLocus,
         preference: prefs.bLocus, dominant: "B", recessive: "b")
-    var sLocus = inheritAlleleWithPreference(parent1.sLocus, parent2.sLocus,
+    let sLocus = inheritAlleleWithPreference(parent1.sLocus, parent2.sLocus,
         preference: prefs.sLocus, dominant: "S", recessive: "s")
-    var cLocus = inheritAlleleWithPreference(parent1.cLocus, parent2.cLocus,
+    let cLocus = inheritAlleleWithPreference(parent1.cLocus, parent2.cLocus,
         preference: prefs.cLocus, dominant: "C", recessive: "ch")
-    var rLocus = inheritAlleleWithPreference(parent1.rLocus, parent2.rLocus,
-        preference: prefs.rLocus, dominant: "R", recessive: "r")
-    var dLocus = inheritAlleleWithPreference(parent1.dLocus, parent2.dLocus,
+    let dLocus = inheritAlleleWithPreference(parent1.dLocus, parent2.dLocus,
         preference: prefs.dLocus, dominant: "D", recessive: "d")
 
     // Check for lethal roan combination (RR) -- reroll with bias preserved.
     // With dominant roan preference, RR is likely (~81%); reroll biased up
     // to 10 times, then fall back to unbiased to guarantee termination.
+    var rLocus = inheritAlleleWithPreference(parent1.rLocus, parent2.rLocus,
+        preference: prefs.rLocus, dominant: "R", recessive: "r")
     var roanAttempts = 0
     while rLocus.isHomozygous("R") {
         roanAttempts += 1
@@ -154,51 +200,32 @@ func breed(
         }
     }
 
-    // Genetic Imprinting: force one allele from the locked parent's genotype
-    if let locked = lockedLoci {
-        for (locusName, parentGeno) in locked {
-            let parentPair = parentGeno.allelePair(forLocus: locusName)
-            let forcedAllele = Bool.random() ? parentPair.first : parentPair.second
-            switch locusName {
-            case "eLocus": eLocus = AllelePair(first: forcedAllele, second: eLocus.second)
-            case "bLocus": bLocus = AllelePair(first: forcedAllele, second: bLocus.second)
-            case "sLocus": sLocus = AllelePair(first: forcedAllele, second: sLocus.second)
-            case "cLocus": cLocus = AllelePair(first: forcedAllele, second: cLocus.second)
-            case "rLocus":
-                let candidate = AllelePair(first: forcedAllele, second: rLocus.second)
-                if !candidate.isHomozygous("R") { rLocus = candidate }
-            case "dLocus": dLocus = AllelePair(first: forcedAllele, second: dLocus.second)
-            default: break
-            }
+    return InheritedLoci(
+        eLocus: eLocus, bLocus: bLocus, sLocus: sLocus,
+        cLocus: cLocus, rLocus: rLocus, dLocus: dLocus
+    )
+}
+
+/// Apply genetic imprinting by forcing one allele from each locked parent's genotype.
+private func applyGeneticImprinting(
+    loci: inout InheritedLoci,
+    lockedLoci: [(locusName: String, parentGenotype: Genotype)]
+) {
+    for (locusName, parentGeno) in lockedLoci {
+        let parentPair = parentGeno.allelePair(forLocus: locusName)
+        let forcedAllele = Bool.random() ? parentPair.first : parentPair.second
+        switch locusName {
+        case "eLocus": loci.eLocus = AllelePair(first: forcedAllele, second: loci.eLocus.second)
+        case "bLocus": loci.bLocus = AllelePair(first: forcedAllele, second: loci.bLocus.second)
+        case "sLocus": loci.sLocus = AllelePair(first: forcedAllele, second: loci.sLocus.second)
+        case "cLocus": loci.cLocus = AllelePair(first: forcedAllele, second: loci.cLocus.second)
+        case "rLocus":
+            let candidate = AllelePair(first: forcedAllele, second: loci.rLocus.second)
+            if !candidate.isHomozygous("R") { loci.rLocus = candidate }
+        case "dLocus": loci.dLocus = AllelePair(first: forcedAllele, second: loci.dLocus.second)
+        default: break
         }
     }
-
-    // Apply mutations
-    var mutations: [String] = []
-    let hasMutations = mutationRate > 0 || locusRates != nil || directionalTargets != nil
-
-    if hasMutations {
-        applyMutations(
-            to: &eLocus, bLocus: &bLocus, sLocus: &sLocus,
-            cLocus: &cLocus, rLocus: &rLocus, dLocus: &dLocus,
-            mutations: &mutations,
-            mutationRate: mutationRate,
-            locusRates: locusRates,
-            directionalTargets: directionalTargets,
-            directionalRate: directionalRate
-        )
-    }
-
-    let genotype = Genotype(
-        eLocus: eLocus,
-        bLocus: bLocus,
-        sLocus: sLocus,
-        cLocus: cLocus,
-        rLocus: rLocus,
-        dLocus: dLocus
-    )
-
-    return BreedResult(genotype: genotype, mutations: mutations)
 }
 
 // Apply per-locus mutations to the inherited loci and record descriptions.

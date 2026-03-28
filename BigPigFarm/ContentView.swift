@@ -254,7 +254,7 @@ struct ContentView: View {
                 // Player cancelled — resume the engine that was paused on open
                 engine.resume()
             }
-        }) {
+        }, content: {
             PigShowView(
                 gameState: gameState,
                 onPrestigeConfirmed: { breakdown in
@@ -262,7 +262,7 @@ struct ContentView: View {
                     showPigShow = false
                 }
             )
-        }
+        })
         .onChange(of: showPigShow) { _, isShowing in
             if isShowing {
                 // Pause engine so scoring stats freeze during the multi-step flow

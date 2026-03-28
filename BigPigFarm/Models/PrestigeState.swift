@@ -90,13 +90,15 @@ struct PrestigeState: Codable, Sendable {
     var previousPigdexEntries: Set<String> = []
 
     /// Cumulative statistics across all farms.
-    var lifetimeStats: LifetimeStats = LifetimeStats()
+    var lifetimeStats = LifetimeStats()
 
     /// Consecutive visit tracking.
-    var visitStreak: VisitStreak = VisitStreak()
+    var visitStreak = VisitStreak()
 
+    // swiftlint:disable inclusive_language
     /// Biome mastery progress across all farms.
-    var biomeMastery: BiomeMastery = BiomeMastery()
+    var biomeMastery = BiomeMastery()
+    // swiftlint:enable inclusive_language
 
     /// Perk IDs carried across farms via Keepsake Slot upgrade.
     var keepsakePerks: [String] = []
@@ -178,6 +180,7 @@ struct PrestigeState: Codable, Sendable {
         case previousPigdexEntries = "previous_pigdex_entries"
         case lifetimeStats = "lifetime_stats"
         case visitStreak = "visit_streak"
+        // swiftlint:disable:next inclusive_language
         case biomeMastery = "biome_mastery"
         case keepsakePerks = "keepsake_perks"
         case activeReunionBoost = "active_reunion_boost"
