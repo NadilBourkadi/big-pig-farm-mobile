@@ -68,14 +68,14 @@ extension FarmScene {
     func checkTreatArrivals() {
         guard !pendingTreatNodes.isEmpty else { return }
         // Collect removals to avoid mutating dictionary during iteration.
-        var toRemove: [UUID] = []
+        var resolved: [(UUID, TreatNode)] = []
         for (pigID, treatNode) in pendingTreatNodes {
             guard let pig = gameState.getGuineaPig(pigID) else {
-                toRemove.append(pigID)
+                resolved.append((pigID, treatNode))
                 continue
             }
             guard pig.behaviorState != .seekingTreat else { continue }
-            toRemove.append(pigID)
+            resolved.append((pigID, treatNode))
             // Check if pig arrived (near treat) vs cancelled (critical need override)
             let treatGridPos = treatNode.gridPosition.gridPosition
             let pigGridPos = pig.position.gridPosition
@@ -85,6 +85,25 @@ extension FarmScene {
                 _ = treatNode.animatePickup {}
             }
         }
-        for id in toRemove { pendingTreatNodes.removeValue(forKey: id) }
+        for (id, _) in resolved { pendingTreatNodes.removeValue(forKey: id) }
+
+        // Remove orphaned treat nodes — all dispatched pigs resolved (arrived, cancelled, or died)
+        if !resolved.isEmpty {
+            let stillPendingNodes = Set(pendingTreatNodes.values.map { ObjectIdentifier($0) })
+            var cleaned = Set<ObjectIdentifier>()
+            for (_, treatNode) in resolved {
+                let oid = ObjectIdentifier(treatNode)
+                guard !stillPendingNodes.contains(oid), cleaned.insert(oid).inserted else { continue }
+                guard treatNode.parent != nil else { continue }
+                // Force-remove treat with fade-out (no more pigs arriving)
+                treatNode.run(SKAction.sequence([
+                    SKAction.group([
+                        SKAction.scale(to: 0, duration: 0.3),
+                        SKAction.fadeOut(withDuration: 0.3),
+                    ]),
+                    SKAction.removeFromParent(),
+                ]))
+            }
+        }
     }
 }
