@@ -110,7 +110,12 @@ Extract these fields from the agent output:
 ```
 bd create "<TITLE>" -t task -p <PRIORITY>
 bd update <id> --description "<BEAD_DESCRIPTION>"
+bd update <id> --claim
 ```
+
+**CRITICAL — CLAIM IMMEDIATELY.** The `--claim` after creation prevents another agent's `/implement`
+from auto-selecting and stealing this bead in the window between creation and implementation.
+Without the claim, parallel agents race on the new bead.
 
 Then invoke `Skill("implement")` with the new bead ID as the argument.
 
@@ -121,7 +126,12 @@ Then invoke `Skill("implement")` with the new bead ID as the argument.
 ```
 bd create "<TITLE>" -t task -p <PRIORITY>
 bd update <id> --description "<BEAD_DESCRIPTION>"
+bd update <id> --claim
 ```
+
+**CRITICAL — CLAIM IMMEDIATELY.** Even for COMPLEX beads, claim on creation to prevent another
+agent from picking it up before the user has reviewed the triage output. The user can reassign
+if they want a different agent to implement it.
 
 Present to the user:
 - Bead ID and title
