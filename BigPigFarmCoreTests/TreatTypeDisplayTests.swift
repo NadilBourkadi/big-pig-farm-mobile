@@ -6,10 +6,10 @@ import Testing
 struct TreatTypeDisplayTests {
 
     @Test func spriteAssetNameMatchesRawValue() {
-        #expect(TreatType.freshVeggies.spriteAssetName == "Sprites/Treats/treat_fresh_veggies")
-        #expect(TreatType.fruitSlices.spriteAssetName == "Sprites/Treats/treat_fruit_slices")
-        #expect(TreatType.herbBundle.spriteAssetName == "Sprites/Treats/treat_herb_bundle")
-        #expect(TreatType.haySampler.spriteAssetName == "Sprites/Treats/treat_hay_sampler")
+        #expect(TreatType.leafyGreens.spriteAssetName == "Sprites/Treats/treat_leafy_greens")
+        #expect(TreatType.cucumber.spriteAssetName == "Sprites/Treats/treat_cucumber")
+        #expect(TreatType.strawberries.spriteAssetName == "Sprites/Treats/treat_strawberries")
+        #expect(TreatType.watermelon.spriteAssetName == "Sprites/Treats/treat_watermelon")
     }
 
     @Test func effectSummaryNonEmpty() {
@@ -19,10 +19,10 @@ struct TreatTypeDisplayTests {
     }
 
     @Test func effectSummaryContent() {
-        #expect(TreatType.freshVeggies.effectSummary.contains("hunger"))
-        #expect(TreatType.fruitSlices.effectSummary.contains("happiness"))
-        #expect(TreatType.herbBundle.effectSummary.contains("health"))
-        #expect(TreatType.haySampler.effectSummary.contains("social"))
+        #expect(TreatType.leafyGreens.effectSummary.contains("hunger"))
+        #expect(TreatType.cucumber.effectSummary.contains("happiness"))
+        #expect(TreatType.strawberries.effectSummary.contains("health"))
+        #expect(TreatType.watermelon.effectSummary.contains("social"))
     }
 
     @Test func systemImageNameNonEmpty() {
@@ -32,10 +32,10 @@ struct TreatTypeDisplayTests {
     }
 
     @Test func tierGatingValues() {
-        #expect(TreatType.freshVeggies.requiredTier == 1)
-        #expect(TreatType.fruitSlices.requiredTier == 2)
-        #expect(TreatType.herbBundle.requiredTier == 3)
-        #expect(TreatType.haySampler.requiredTier == 4)
+        #expect(TreatType.leafyGreens.requiredTier == 1)
+        #expect(TreatType.cucumber.requiredTier == 2)
+        #expect(TreatType.strawberries.requiredTier == 3)
+        #expect(TreatType.watermelon.requiredTier == 4)
     }
 
     @Test func treatTypesAreDistinct() {

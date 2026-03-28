@@ -1,17 +1,17 @@
 {
   "images": [
     {
-      "filename": "treat_fresh_veggies@1x.png",
+      "filename": "treat_strawberries@1x.png",
       "idiom": "universal",
       "scale": "1x"
     },
     {
-      "filename": "treat_fresh_veggies@2x.png",
+      "filename": "treat_strawberries@2x.png",
       "idiom": "universal",
       "scale": "2x"
     },
     {
-      "filename": "treat_fresh_veggies@3x.png",
+      "filename": "treat_strawberries@3x.png",
       "idiom": "universal",
       "scale": "3x"
     }

@@ -1,17 +1,17 @@
 {
   "images": [
     {
-      "filename": "treat_herb_bundle@1x.png",
+      "filename": "treat_leafy_greens@1x.png",
       "idiom": "universal",
       "scale": "1x"
     },
     {
-      "filename": "treat_herb_bundle@2x.png",
+      "filename": "treat_leafy_greens@2x.png",
       "idiom": "universal",
       "scale": "2x"
     },
     {
-      "filename": "treat_herb_bundle@3x.png",
+      "filename": "treat_leafy_greens@3x.png",
       "idiom": "universal",
       "scale": "3x"
     }

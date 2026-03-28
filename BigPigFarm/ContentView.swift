@@ -112,7 +112,7 @@ struct ContentView: View {
     @State private var isTreatMode = false
 
     /// The treat type to place on the next tap.
-    @State private var selectedTreatType: TreatType = .freshVeggies
+    @State private var selectedTreatType: TreatType = .leafyGreens
 
     /// Whether the Pig Show flow is presented.
     @State private var showPigShow = false
@@ -334,7 +334,7 @@ extension ContentView {
         selectedPig = nil
         isEditMode = false
         isTreatMode = false
-        selectedTreatType = .freshVeggies
+        selectedTreatType = .leafyGreens
         farmScene.isEditMode = false
         farmScene.isTreatPlacementMode = false
         farmScene.selectedFacilityID = nil

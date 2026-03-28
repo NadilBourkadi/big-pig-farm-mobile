@@ -288,45 +288,45 @@ import Foundation
 }
 
 @Test func treatTypeRawValues() {
-    #expect(TreatType.freshVeggies.rawValue == "fresh_veggies")
-    #expect(TreatType.fruitSlices.rawValue == "fruit_slices")
-    #expect(TreatType.herbBundle.rawValue == "herb_bundle")
-    #expect(TreatType.haySampler.rawValue == "hay_sampler")
+    #expect(TreatType.leafyGreens.rawValue == "leafy_greens")
+    #expect(TreatType.cucumber.rawValue == "cucumber")
+    #expect(TreatType.strawberries.rawValue == "strawberries")
+    #expect(TreatType.watermelon.rawValue == "watermelon")
 }
 
-@Test func treatTypeFreshVeggiesEffects() {
-    let info = TreatType.freshVeggies.info
+@Test func treatTypeLeafyGreensEffects() {
+    let info = TreatType.leafyGreens.info
     #expect(info.hungerBoost == 30)
     #expect(info.happinessBoost == 10)
     #expect(info.healthBoost == 0)
     #expect(info.requiredTier == 1)
 }
 
-@Test func treatTypeFruitSlicesEffects() {
-    let info = TreatType.fruitSlices.info
+@Test func treatTypeCucumberEffects() {
+    let info = TreatType.cucumber.info
     #expect(info.happinessBoost == 25)
     #expect(info.breedingChanceBoost == 0.05)
     #expect(info.breedingBoostDurationHours == 2)
     #expect(info.requiredTier == 2)
 }
 
-@Test func treatTypeHerbBundleEffects() {
-    let info = TreatType.herbBundle.info
+@Test func treatTypeStrawberriesEffects() {
+    let info = TreatType.strawberries.info
     #expect(info.healthBoost == 15)
     #expect(info.needDecayReduction == 0.20)
     #expect(info.needDecayDurationHours == 2)
     #expect(info.requiredTier == 3)
 }
 
-@Test func treatTypeHaySamplerEffects() {
-    let info = TreatType.haySampler.info
+@Test func treatTypeWatermelonEffects() {
+    let info = TreatType.watermelon.info
     #expect(info.socialBoost == 20)
     #expect(info.socialRadius == 4)
     #expect(info.requiredTier == 4)
 }
 
 @Test func treatTypeCodableRoundTrip() throws {
-    let original = TreatType.herbBundle
+    let original = TreatType.strawberries
     let data = try JSONEncoder().encode(original)
     let decoded = try JSONDecoder().decode(TreatType.self, from: data)
     #expect(decoded == original)

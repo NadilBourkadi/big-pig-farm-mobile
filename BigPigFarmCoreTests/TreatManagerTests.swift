@@ -34,14 +34,14 @@ import Foundation
     state.addGuineaPig(pig)
 
     let target = Position(x: 5.0, y: 5.0) // on top of pig
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: target, state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: target, state: state)
 
     #expect(fed.count == 1)
     #expect(fed.contains(pig.id))
     #expect(state.remainingTreatsThisVisit == 1)
 
     let updated = state.getGuineaPig(pig.id)!
-    #expect(updated.needs.hunger == 50.0 + TreatType.freshVeggies.info.hungerBoost)
+    #expect(updated.needs.hunger == 50.0 + TreatType.leafyGreens.info.hungerBoost)
 }
 
 @Test @MainActor func deliverTreatSkipsPigsOutsideRadius() {
@@ -57,7 +57,7 @@ import Foundation
     state.addGuineaPig(farPig)
 
     let target = Position(x: 5.0, y: 5.0)
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: target, state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: target, state: state)
 
     #expect(fed.count == 1)
     #expect(fed.contains(nearPig.id))
@@ -75,7 +75,7 @@ import Foundation
         state.addGuineaPig(pig)
     }
 
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: target, state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: target, state: state)
     #expect(fed.count == GameConfig.Prestige.treatsPerScatter) // 4
 }
 
@@ -87,10 +87,10 @@ import Foundation
     pig.position = Position(x: 5.0, y: 5.0)
     state.addGuineaPig(pig)
 
-    _ = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    _ = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
     #expect(state.remainingTreatsThisVisit == 2)
 
-    _ = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    _ = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
     #expect(state.remainingTreatsThisVisit == 1)
 }
 
@@ -102,7 +102,7 @@ import Foundation
     pig.position = Position(x: 5.0, y: 5.0)
     state.addGuineaPig(pig)
 
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
     #expect(fed.isEmpty)
 }
 
@@ -114,14 +114,14 @@ import Foundation
     pig.position = Position(x: 50.0, y: 50.0)
     state.addGuineaPig(pig)
 
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
     #expect(fed.isEmpty)
     #expect(state.remainingTreatsThisVisit == 2) // not decremented
 }
 
 // MARK: - Treat Effects
 
-@Test @MainActor func freshVeggiesBoostsHungerAndHappiness() {
+@Test @MainActor func leafyGreensBoostsHungerAndHappiness() {
     let state = GameState()
     state.remainingTreatsThisVisit = 1
 
@@ -131,14 +131,14 @@ import Foundation
     pig.needs.happiness = 60.0
     state.addGuineaPig(pig)
 
-    _ = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    _ = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
 
     let updated = state.getGuineaPig(pig.id)!
-    #expect(updated.needs.hunger == 40.0 + TreatType.freshVeggies.info.hungerBoost)
-    #expect(updated.needs.happiness == 60.0 + TreatType.freshVeggies.info.happinessBoost)
+    #expect(updated.needs.hunger == 40.0 + TreatType.leafyGreens.info.hungerBoost)
+    #expect(updated.needs.happiness == 60.0 + TreatType.leafyGreens.info.happinessBoost)
 }
 
-@Test @MainActor func haySamplerBoostsSocial() {
+@Test @MainActor func watermelonBoostsSocial() {
     let state = GameState()
     state.remainingTreatsThisVisit = 1
 
@@ -147,10 +147,10 @@ import Foundation
     pig.needs.social = 30.0
     state.addGuineaPig(pig)
 
-    _ = TreatManager.deliverTreat(type: .haySampler, at: Position(x: 5.0, y: 5.0), state: state)
+    _ = TreatManager.deliverTreat(type: .watermelon, at: Position(x: 5.0, y: 5.0), state: state)
 
     let updated = state.getGuineaPig(pig.id)!
-    #expect(updated.needs.social == 30.0 + TreatType.haySampler.info.socialBoost)
+    #expect(updated.needs.social == 30.0 + TreatType.watermelon.info.socialBoost)
 }
 
 @Test @MainActor func treatEffectsClampsTo100() {
@@ -162,7 +162,7 @@ import Foundation
     pig.needs.hunger = 95.0
     state.addGuineaPig(pig)
 
-    _ = TreatManager.deliverTreat(type: .freshVeggies, at: Position(x: 5.0, y: 5.0), state: state)
+    _ = TreatManager.deliverTreat(type: .leafyGreens, at: Position(x: 5.0, y: 5.0), state: state)
 
     let updated = state.getGuineaPig(pig.id)!
     #expect(updated.needs.hunger == 100.0)
@@ -183,7 +183,7 @@ import Foundation
         pigs.append(pig)
     }
 
-    let fed = TreatManager.deliverTreat(type: .freshVeggies, at: target, state: state)
+    let fed = TreatManager.deliverTreat(type: .leafyGreens, at: target, state: state)
     #expect(fed.count == 4) // treatsPerScatter = 4
 
     // The closest 4 should be fed, the farthest should not

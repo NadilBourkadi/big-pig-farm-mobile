@@ -81,7 +81,7 @@ class FarmScene: SKScene {
     // MARK: - Treat Mode
 
     var isTreatPlacementMode: Bool = false
-    var selectedTreatType: TreatType = .freshVeggies
+    var selectedTreatType: TreatType = .leafyGreens
     let treatLayer = SKNode()
 
     /// Called when a treat is placed (treat count changed).
