@@ -112,7 +112,7 @@ struct TreatSeekingDecisionTests {
 @MainActor
 struct TreatArrivalTests {
 
-    @Test("Pig at treat position with empty path is detected as arrived")
+    @Test("Pig at treat position with empty path transitions to idle")
     func testArrivalDetected() {
         let state = makeGameState()
         let controller = makeController(state: state)
@@ -129,12 +129,9 @@ struct TreatArrivalTests {
         #expect(updatedPig.behaviorState == .idle)
         #expect(updatedPig.targetTreatGridPosition == nil)
         #expect(updatedPig.targetPosition == nil)
-
-        let arrivals = controller.drainTreatArrivals()
-        #expect(arrivals.contains(pig.id))
     }
 
-    @Test("Pig near treat (manhattan distance 1) is detected as arrived")
+    @Test("Pig near treat (manhattan distance 1) transitions to idle")
     func testNearbyArrival() {
         let state = makeGameState()
         let controller = makeController(state: state)
@@ -149,11 +146,10 @@ struct TreatArrivalTests {
         controller.update(pig: &updatedPig, gameMinutes: 0.3)
 
         #expect(updatedPig.behaviorState == .idle)
-        let arrivals = controller.drainTreatArrivals()
-        #expect(arrivals.contains(pig.id))
+        #expect(updatedPig.targetTreatGridPosition == nil)
     }
 
-    @Test("Pig far from treat with empty path re-pathfinds")
+    @Test("Pig far from treat with empty path gets new path")
     func testRePathfindsWhenFar() {
         let state = makeGameState()
         let controller = makeController(state: state)
@@ -167,28 +163,10 @@ struct TreatArrivalTests {
         var updatedPig = pig
         controller.update(pig: &updatedPig, gameMinutes: 0.3)
 
-        // Should still be seeking and have a new path
-        #expect(updatedPig.behaviorState == .seekingTreat || !updatedPig.path.isEmpty
-                || updatedPig.behaviorState == .idle) // idle if unreachable
-    }
-
-    @Test("drainTreatArrivals returns empty on second call")
-    func testDrainClearsArrivals() {
-        let state = makeGameState()
-        let controller = makeController(state: state)
-        var pig = makePig(x: 10.0, y: 8.0)
-        pig.behaviorState = .seekingTreat
-        pig.targetTreatGridPosition = GridPosition(x: 10, y: 8)
-        pig.path = []
-        state.addGuineaPig(pig)
-
-        var updatedPig = pig
-        controller.update(pig: &updatedPig, gameMinutes: 0.3)
-
-        let first = controller.drainTreatArrivals()
-        let second = controller.drainTreatArrivals()
-        #expect(!first.isEmpty)
-        #expect(second.isEmpty)
+        // On a starter grid, (5,5) → (15,10) is reachable.
+        // Pig should still be seeking with a freshly computed path.
+        #expect(updatedPig.behaviorState == .seekingTreat)
+        #expect(!updatedPig.path.isEmpty)
     }
 
     @Test("Lost treat target resets pig to idle")

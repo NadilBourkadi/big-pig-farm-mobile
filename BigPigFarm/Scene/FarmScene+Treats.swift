@@ -66,25 +66,24 @@ extension FarmScene {
     /// Called from syncPigs() once per simulation tick.
     func checkTreatArrivals() {
         guard !pendingTreatNodes.isEmpty else { return }
+        // Collect removals to avoid mutating dictionary during iteration.
+        var toRemove: [UUID] = []
         for (pigID, treatNode) in pendingTreatNodes {
             guard let pig = gameState.getGuineaPig(pigID) else {
-                // Pig died — clean up
-                pendingTreatNodes.removeValue(forKey: pigID)
+                toRemove.append(pigID)
                 continue
             }
             guard pig.behaviorState != .seekingTreat else { continue }
-            // Pig is no longer seeking — check if it arrived (near treat) or was cancelled
-            pendingTreatNodes.removeValue(forKey: pigID)
+            toRemove.append(pigID)
+            // Check if pig arrived (near treat) vs cancelled (critical need override)
             let treatGridPos = treatNode.gridPosition.gridPosition
             let pigGridPos = pig.position.gridPosition
-            if pigGridPos.manhattanDistance(to: treatGridPos) <= 2 {
-                // Arrived — play visual effects
-                if let pigNode = pigNodes[pigID] {
-                    pigNode.playHeartParticle()
-                }
+            if pigGridPos.manhattanDistance(to: treatGridPos) <= 1 {
+                pigNodes[pigID]?.playHeartParticle()
                 HapticManager.treatConsumed()
                 _ = treatNode.animatePickup {}
             }
         }
+        for id in toRemove { pendingTreatNodes.removeValue(forKey: id) }
     }
 }
