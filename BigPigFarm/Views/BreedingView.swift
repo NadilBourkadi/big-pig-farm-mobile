@@ -5,9 +5,9 @@ import SwiftUI
 // MARK: - BreedingTab
 
 /// Tab selection for the breeding screen.
-enum BreedingTab: String, Sendable {
-    case program
-    case pair
+enum BreedingTab: String, CaseIterable, Sendable {
+    case program = "Program"
+    case pair = "Pair"
 }
 
 // MARK: - BreedingView
@@ -21,17 +21,23 @@ struct BreedingView: View {
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $selectedTab) {
-                ProgramTab(gameState: gameState)
-                    .tabItem { Label("Program", systemImage: "gearshape.2") }
-                    .tag(BreedingTab.program)
-                BreedingPairTab(gameState: gameState)
-                    .tabItem { Label("Pair", systemImage: "arrow.triangle.2.circlepath") }
-                    .tag(BreedingTab.pair)
+            Group {
+                switch selectedTab {
+                case .program: ProgramTab(gameState: gameState)
+                case .pair: BreedingPairTab(gameState: gameState)
+                }
             }
             .navigationTitle("Breeding")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("Breeding section", selection: $selectedTab) {
+                        ForEach(BreedingTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 ToolbarItem(placement: .navigationBarLeading) {
                     breedingStatusBanner
                 }
