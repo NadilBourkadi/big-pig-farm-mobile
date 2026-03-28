@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - AlmanacTab
 
 /// The three tabs available in the almanac.
-enum AlmanacTab: String, Sendable {
+enum AlmanacTab: String, CaseIterable, Sendable {
     case pigdex = "Pigdex"
     case contracts = "Contracts"
     case log = "Log"
@@ -24,20 +24,24 @@ struct AlmanacView: View {
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $selectedTab) {
-                PigdexTab(gameState: gameState)
-                    .tabItem { Label("Pigdex", systemImage: "book.fill") }
-                    .tag(AlmanacTab.pigdex)
-                ContractsTab(gameState: gameState)
-                    .tabItem { Label("Contracts", systemImage: "doc.text.fill") }
-                    .tag(AlmanacTab.contracts)
-                EventLogTab(gameState: gameState)
-                    .tabItem { Label("Log", systemImage: "bell.fill") }
-                    .tag(AlmanacTab.log)
+            Group {
+                switch selectedTab {
+                case .pigdex: PigdexTab(gameState: gameState)
+                case .contracts: ContractsTab(gameState: gameState)
+                case .log: EventLogTab(gameState: gameState)
+                }
             }
-            .navigationTitle(selectedTab.rawValue)
+            .navigationTitle("Almanac")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("Almanac section", selection: $selectedTab) {
+                        ForEach(AlmanacTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         showingSettings = true

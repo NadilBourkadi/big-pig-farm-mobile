@@ -27,23 +27,25 @@ struct ShopView: View {
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $selectedTab) {
-                FacilitiesTab(gameState: gameState)
-                    .tabItem { Label("Facilities", systemImage: "square.grid.2x2") }
-                    .tag(ShopTab.facilities)
-                PerksTab(gameState: gameState)
-                    .tabItem { Label("Perks", systemImage: "star.fill") }
-                    .tag(ShopTab.perks)
-                FarmTab(gameState: gameState)
-                    .tabItem { Label("Farm", systemImage: "arrow.up.circle.fill") }
-                    .tag(ShopTab.farm)
-                PigsTab(gameState: gameState)
-                    .tabItem { Label("Pigs", systemImage: "pawprint.fill") }
-                    .tag(ShopTab.pigs)
+            Group {
+                switch selectedTab {
+                case .facilities: FacilitiesTab(gameState: gameState)
+                case .perks: PerksTab(gameState: gameState)
+                case .farm: FarmTab(gameState: gameState)
+                case .pigs: PigsTab(gameState: gameState)
+                }
             }
-            .navigationTitle(selectedTab.rawValue)
+            .navigationTitle("Shop")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Picker("Shop section", selection: $selectedTab) {
+                        ForEach(ShopTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }
                 }
