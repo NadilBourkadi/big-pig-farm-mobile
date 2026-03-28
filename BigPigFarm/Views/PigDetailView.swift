@@ -4,9 +4,14 @@ import SwiftUI
 
 /// Shows detailed stats, genetics, and lineage for a single pig.
 struct PigDetailView: View {
-    let gameState: GameState
-    let pig: GuineaPig
+    @State var viewModel: PigDetailViewModel
     @State private var showFullLog = false
+
+    init(gameState: GameState, pig: GuineaPig) {
+        _viewModel = State(initialValue: PigDetailViewModel(gameState: gameState, pig: pig))
+    }
+
+    private var pig: GuineaPig { viewModel.pig }
 
     var body: some View {
         ScrollView {
@@ -18,7 +23,7 @@ struct PigDetailView: View {
                 personalitySection
                 breedingSection
                 familySection
-                if hasGeneticsLab {
+                if viewModel.hasGeneticsLab {
                     geneticsSection
                 }
                 aiStateSection
@@ -28,10 +33,6 @@ struct PigDetailView: View {
         }
         .navigationTitle(pig.name)
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var hasGeneticsLab: Bool {
-        !gameState.getFacilitiesByType(.geneticsLab).isEmpty
     }
 }
 
@@ -70,13 +71,13 @@ private extension PigDetailView {
 
 private extension PigDetailView {
     var basicInfoSection: some View {
-        let breakdown = Market.calculatePigValueBreakdown(pig: pig, state: gameState)
+        let breakdown = viewModel.valueBreakdown
         return VStack(alignment: .leading, spacing: 6) {
             SectionHeader(title: "Basic Info")
-            InfoRow(label: "Age", value: ageDescription)
+            InfoRow(label: "Age", value: viewModel.ageDescription)
             InfoRow(label: "Phenotype", value: pig.phenotype.displayName)
-            InfoRow(label: "Area", value: areaName)
-            InfoRow(label: "Birth Area", value: birthAreaName)
+            InfoRow(label: "Area", value: viewModel.areaName)
+            InfoRow(label: "Birth Area", value: viewModel.birthAreaName)
             if let biome = pig.preferredBiome {
                 InfoRow(label: "Preferred Biome", value: biome.capitalized)
             }
@@ -85,27 +86,6 @@ private extension PigDetailView {
                 InfoRow(label: "Origin", value: origin)
             }
         }
-    }
-
-    var ageDescription: String {
-        let days = Int(pig.ageDays)
-        switch pig.ageGroup {
-        case .baby: return "\(days)d (Baby)"
-        case .adult: return "\(days)d (Adult)"
-        case .senior: return "\(days)d (Senior)"
-        }
-    }
-
-    var areaName: String {
-        guard let id = pig.currentAreaId,
-              let area = gameState.farm.getAreaByID(id) else { return "Unknown" }
-        return area.name
-    }
-
-    var birthAreaName: String {
-        guard let id = pig.birthAreaId,
-              let area = gameState.farm.getAreaByID(id) else { return "Unknown" }
-        return area.name
     }
 }
 
@@ -121,7 +101,7 @@ private extension PigDetailView {
             NeedBar(value: pig.needs.happiness / 100.0, label: "Happiness")
             NeedBar(value: pig.needs.health / 100.0, label: "Health")
             NeedBar(value: pig.needs.social / 100.0, label: "Social")
-            NeedBar(value: (100.0 - pig.needs.boredom) / 100.0, label: "Fun")  // Boredom is inverse of fun
+            NeedBar(value: (100.0 - pig.needs.boredom) / 100.0, label: "Fun")
         }
     }
 }
@@ -161,15 +141,9 @@ private extension PigDetailView {
     var familySection: some View {
         VStack(alignment: .leading, spacing: 6) {
             SectionHeader(title: "Family")
-            InfoRow(label: "Mother", value: parentName(id: pig.motherId))
-            InfoRow(label: "Father", value: parentName(id: pig.fatherId))
+            InfoRow(label: "Mother", value: viewModel.parentName(id: pig.motherId))
+            InfoRow(label: "Father", value: viewModel.parentName(id: pig.fatherId))
         }
-    }
-
-    func parentName(id: UUID?) -> String {
-        guard let id else { return "Unknown (adopted/starter)" }
-        if let parent = gameState.getGuineaPig(id) { return parent.name }
-        return "Unknown (no longer on farm)"
     }
 }
 
@@ -224,13 +198,8 @@ private extension PigDetailView {
 // MARK: - Activity Log
 
 private extension PigDetailView {
-    /// Read the behavior log live from gameState so it updates in real-time.
-    var liveLog: [String] {
-        gameState.getGuineaPig(pig.id)?.behaviorLog ?? pig.behaviorLog
-    }
-
     var activityLogSection: some View {
-        let log = liveLog
+        let log = viewModel.liveLog
         return VStack(alignment: .leading, spacing: 6) {
             SectionHeader(title: "Recent Activity")
             if log.isEmpty {
