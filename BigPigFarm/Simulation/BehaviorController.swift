@@ -21,6 +21,8 @@ final class BehaviorController {
     private var stuckPositions: [UUID: GridPosition] = [:]
     private var stuckTimers: [UUID: Double] = [:]
     private var unreachableNeeds: [UUID: [String: Int]] = [:]
+    /// Remaining hesitation delay for shy pigs approaching treats (game-minutes).
+    private var shyTreatDelays: [UUID: Double] = [:]
 
     init(gameState: GameState) {
         self.gameState = gameState
@@ -86,6 +88,7 @@ final class BehaviorController {
         stuckPositions.removeValue(forKey: pigId)
         stuckTimers.removeValue(forKey: pigId)
         unreachableNeeds.removeValue(forKey: pigId)
+        shyTreatDelays.removeValue(forKey: pigId)
         facilityManager.cleanupPig(pigId)
         guard let gameState else { return }
         for var pig in gameState.getPigsList() where pig.courtingPartnerId == pigId {
@@ -101,6 +104,7 @@ final class BehaviorController {
         stuckPositions.removeAll()
         stuckTimers.removeAll()
         unreachableNeeds.removeAll()
+        shyTreatDelays.removeAll()
         facilityManager.resetAll()
     }
 
@@ -218,6 +222,15 @@ extension BehaviorController {
     }
 }
 
+// MARK: - Shy treat delay access
+
+extension BehaviorController {
+    /// Remaining shy hesitation delay for a pig (game-minutes), or nil if not hesitating.
+    func getShyTreatDelay(_ pigId: UUID) -> Double? {
+        shyTreatDelays[pigId]
+    }
+}
+
 // MARK: - Per-tick Behavior Update
 
 extension BehaviorController {
@@ -225,7 +238,7 @@ extension BehaviorController {
     /// advance the courtship timer when adjacent to a partner, and consume
     /// resources from any facility the pig is currently using.
     private func updateCurrentBehavior(pig: inout GuineaPig, gameMinutes: Double) {
-        checkTreatArrival(pig: &pig)
+        checkTreatArrival(pig: &pig, gameMinutes: gameMinutes)
 
         // Arrived at targeted facility (wandering, path consumed, facility target set)
         if pig.behaviorState == .wandering, pig.path.isEmpty, pig.targetFacilityId != nil {
@@ -281,15 +294,29 @@ extension BehaviorController {
     }
 
     /// Handle treat-seeking arrival: detect arrival, re-pathfind, or give up.
-    private func checkTreatArrival(pig: inout GuineaPig) {
+    /// Shy pigs hesitate for `shyTreatReactionDelay` game-minutes before pathfinding.
+    private func checkTreatArrival(pig: inout GuineaPig, gameMinutes: Double) {
         guard pig.behaviorState == .seekingTreat, pig.path.isEmpty else { return }
         guard let treatTarget = pig.targetTreatGridPosition else {
             // Lost target — reset to idle
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetDescription = nil
+            shyTreatDelays.removeValue(forKey: pig.id)
             return
         }
+
+        // Shy reaction delay: pig hesitates before starting to seek
+        if pig.hasTrait(.shy) {
+            if shyTreatDelays[pig.id] == nil {
+                shyTreatDelays[pig.id] = GameConfig.Behavior.shyTreatReactionDelay
+            }
+            if let remaining = shyTreatDelays[pig.id], remaining > 0 {
+                shyTreatDelays[pig.id] = remaining - gameMinutes
+                return
+            }
+        }
+
         let pigGrid = pig.position.gridPosition
         if pigGrid.manhattanDistance(to: treatTarget) <= 1 {
             // Apply treat stat effects now that the pig has arrived
@@ -301,6 +328,7 @@ extension BehaviorController {
             pig.targetTreatType = nil
             pig.targetPosition = nil
             pig.targetDescription = nil
+            shyTreatDelays.removeValue(forKey: pig.id)
             resetDecisionTimer(pig.id)
         } else {
             // Path consumed but not at target — re-pathfind
@@ -312,6 +340,7 @@ extension BehaviorController {
                 pig.targetTreatType = nil
                 pig.targetPosition = nil
                 pig.targetDescription = nil
+                shyTreatDelays.removeValue(forKey: pig.id)
             }
         }
     }

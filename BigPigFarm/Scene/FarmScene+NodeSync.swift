@@ -27,6 +27,13 @@ extension FarmScene {
             if let node = pigNodes[id] {
                 node.isSelected = (id == selectedPigID)
                 updateIndicator(for: node, pig: pig)
+
+                // Playful treat bounce: animate while seeking, stop otherwise
+                if pig.behaviorState == .seekingTreat, pig.hasTrait(.playful) {
+                    node.startTreatBounce()
+                } else {
+                    node.stopTreatBounce()
+                }
             }
         }
 

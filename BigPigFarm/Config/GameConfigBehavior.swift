@@ -111,6 +111,21 @@ extension GameConfig {
 
         static let tiredSpeedMult: Double = 0.5
         static let babySpeedMult: Double = 0.7
+
+        // MARK: - Treat movement personality modifiers
+
+        /// Greedy pigs rush to food: +50% speed when seeking treats.
+        static let greedyTreatSpeedMult: Double = 1.5
+        /// Brave explorers move slightly faster toward treats.
+        static let braveTreatSpeedMult: Double = 1.2
+        /// Lazy pigs are sluggish: −30% speed when seeking treats.
+        static let lazyTreatSpeedMult: Double = 0.7
+        /// Shy pigs hesitate before starting to move toward a treat (game-minutes).
+        static let shyTreatReactionDelay: Double = 2.0
+        /// Playful pigs bounce vertically while seeking treats (scene points amplitude).
+        static let playfulTreatBounceAmplitude: Double = 3.0
+        /// Full bounce cycle period in seconds.
+        static let playfulTreatBouncePeriod: Double = 0.3
         static let dodgeMaxStep: Double = 1.0
         static let waypointReached: Double = 0.1
 
