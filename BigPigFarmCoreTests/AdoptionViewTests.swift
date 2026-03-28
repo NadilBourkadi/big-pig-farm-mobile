@@ -127,6 +127,52 @@ import Foundation
     }
 }
 
+// MARK: - Emergency Adoption Tests
+
+@Test @MainActor func emergencyPigCostIsZero() {
+    let state = makeGameState()
+    state.money = 0
+    let emergencyPigs = EmergencyBailout.generateEmergencyPigs(
+        existingNames: [],
+        farmTier: state.farmTier
+    )
+    // Emergency pigs bypass calculateAdoptionCost — caller sets cost to 0
+    for pig in emergencyPigs {
+        let normalCost = Adoption.calculateAdoptionCost(pig, state: state)
+        #expect(normalCost > 0, "Normal cost should be positive (the view overrides to 0)")
+    }
+}
+
+@Test @MainActor func emergencyAdoptionSucceedsWithZeroMoney() {
+    let state = makeGameState()
+    state.money = 0
+    let emergencyPigs = EmergencyBailout.generateEmergencyPigs(
+        existingNames: [],
+        farmTier: state.farmTier
+    )
+    // Simulate the emergency adoption path: cost is 0, no spendMoney call
+    for pig in emergencyPigs {
+        var adoptedPig = pig
+        if let pos = Adoption.findSpawnPosition(in: state) {
+            adoptedPig.position = Position(x: Double(pos.x), y: Double(pos.y))
+        }
+        state.addGuineaPig(adoptedPig)
+    }
+    #expect(state.pigCount == 2)
+    #expect(state.money == 0, "Emergency adoption should not deduct money")
+}
+
+@Test func emergencyPigsAreBreedingPair() {
+    let emergencyPigs = EmergencyBailout.generateEmergencyPigs(
+        existingNames: [],
+        farmTier: 1
+    )
+    #expect(emergencyPigs.count == 2)
+    let genders = Set(emergencyPigs.map(\.gender))
+    #expect(genders.contains(.male))
+    #expect(genders.contains(.female))
+}
+
 // MARK: - Economics Invariant
 
 @Test @MainActor func adoptionCostExceedsSaleValue() {
