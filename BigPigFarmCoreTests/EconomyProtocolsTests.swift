@@ -218,28 +218,28 @@ final class StubContractGeneratorContext: ContractGeneratorContext {
 
 @Test @MainActor func currencyAddMoneyWithStub() {
     let stub = StubCurrencyContext(money: 500)
-    Currency.addMoney(state: stub, amount: 100)
+    stub.addMoney(100)
     #expect(stub.money == 600)
 }
 
 @Test @MainActor func currencySpendMoneyWithStub() {
     let stub = StubCurrencyContext(money: 500)
-    let success = Currency.spendMoney(state: stub, amount: 200)
+    let success = stub.spendMoney(200)
     #expect(success)
     #expect(stub.money == 300)
 }
 
 @Test @MainActor func currencySpendMoneyInsufficientWithStub() {
     let stub = StubCurrencyContext(money: 50)
-    let success = Currency.spendMoney(state: stub, amount: 100)
+    let success = stub.spendMoney(100)
     #expect(!success)
     #expect(stub.money == 50)
 }
 
 @Test @MainActor func currencyCanAffordWithStub() {
     let stub = StubCurrencyContext(money: 100)
-    #expect(Currency.canAfford(state: stub, amount: 100))
-    #expect(!Currency.canAfford(state: stub, amount: 101))
+    #expect(stub.money >= 100)
+    #expect(!(stub.money >= 101))
 }
 
 @Test @MainActor func adoptionEligibilityWithStub() {

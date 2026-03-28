@@ -68,31 +68,31 @@ import Foundation
     #expect(Currency.formatCurrency(1500) == "Sq1.5K")
 }
 
-// MARK: - Currency: Money Management
+// MARK: - CurrencyContext: Money Management
 
 @Test @MainActor func canAffordReturnsTrueWhenSufficient() {
     let state = makeGameState()
     state.money = 100
-    #expect(Currency.canAfford(state: state, amount: 100))
+    #expect(state.money >= 100)
 }
 
 @Test @MainActor func canAffordReturnsFalseWhenInsufficient() {
     let state = makeGameState()
     state.money = 50
-    #expect(!Currency.canAfford(state: state, amount: 100))
+    #expect(!(state.money >= 100))
 }
 
 @Test @MainActor func addMoneyIncreasesBalance() {
     let state = makeGameState()
     state.money = 0
-    Currency.addMoney(state: state, amount: 200)
+    state.addMoney(200)
     #expect(state.money == 200)
 }
 
 @Test @MainActor func spendMoneyDeductsWhenAffordable() {
     let state = makeGameState()
     state.money = 100
-    let result = Currency.spendMoney(state: state, amount: 50)
+    let result = state.spendMoney(50)
     #expect(result)
     #expect(state.money == 50)
 }
@@ -100,7 +100,7 @@ import Foundation
 @Test @MainActor func spendMoneyReturnsFalseWhenInsufficient() {
     let state = makeGameState()
     state.money = 30
-    let result = Currency.spendMoney(state: state, amount: 50)
+    let result = state.spendMoney(50)
     #expect(!result)
     #expect(state.money == 30)
 }

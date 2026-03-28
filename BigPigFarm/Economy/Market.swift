@@ -140,7 +140,7 @@ enum Market {
 
         _ = state.removeGuineaPig(pig.id)
         state.totalPigsSold += 1
-        Currency.addMoney(state: state, amount: result.total)
+        state.addMoney(result.total)
 
         if contractBonus > 0 {
             state.logEvent(

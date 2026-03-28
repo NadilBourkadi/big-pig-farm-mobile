@@ -143,7 +143,7 @@ enum Shop {
     ) -> Bool {
         guard item.requiredTier <= state.farmTier else { return false }
         // Spend money first so the grid placement cannot succeed without payment.
-        guard Currency.spendMoney(state: state, amount: item.cost) else { return false }
+        guard state.spendMoney(item.cost) else { return false }
 
         if let facilityType = item.facilityType, let position {
             var facility = Facility.create(type: facilityType, x: position.x, y: position.y)
@@ -153,7 +153,7 @@ enum Shop {
             }
             if !state.addFacility(facility) {
                 // Grid placement failed — refund the cost.
-                Currency.addMoney(state: state, amount: item.cost)
+                state.addMoney(item.cost)
                 return false
             }
         }
@@ -167,7 +167,7 @@ enum Shop {
     static func sellFacility(state: any ShopContext, facility: Facility) -> Int {
         let refund = getFacilityCost(facilityType: facility.facilityType)
         _ = state.removeFacility(facility.id)
-        Currency.addMoney(state: state, amount: refund)
+        state.addMoney(refund)
         return refund
     }
 
@@ -211,7 +211,7 @@ enum Shop {
         guard let upgrade = getNextTierUpgrade(state: state) else { return false }
         let reqs = checkTierRequirements(state: state, upgrade: upgrade)
         guard reqs.values.allSatisfy({ $0 }) else { return false }
-        guard Currency.spendMoney(state: state, amount: upgrade.cost) else { return false }
+        guard state.spendMoney(upgrade.cost) else { return false }
         state.farmTier = upgrade.tier
         state.farm.tier = upgrade.tier
         state.logEvent("Farm upgraded to Tier \(upgrade.tier): \(upgrade.name)!", eventType: "purchase")
@@ -295,9 +295,9 @@ enum Shop {
     static func purchaseNewRoom(state: any ShopContext, biome: BiomeType) -> Bool {
         guard getFarmUpgradeInfo(state: state) != nil else { return false }
         let totalCost = getRoomTotalCost(state: state, biome: biome)
-        guard Currency.spendMoney(state: state, amount: totalCost) else { return false }
+        guard state.spendMoney(totalCost) else { return false }
         guard let result = GridExpansion.addRoom(&state.farm, biome: biome) else {
-            Currency.addMoney(state: state, amount: totalCost)
+            state.addMoney(totalCost)
             return false
         }
         if result.offsetX != 0 || result.offsetY != 0 || !result.roomDeltas.isEmpty {
