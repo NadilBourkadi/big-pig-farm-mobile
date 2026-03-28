@@ -143,6 +143,7 @@
 - [x] Replace embedded TabView in sheets with segmented picker controls (bead pq64)
 - [x] Remove Currency.addMoney/spendMoney/canAfford pass-through wrappers (bead bjsl)
 - [x] Standardize Buy button width to 52pt across all Shop tabs (bead i0o)
+- [x] Upgrade AdoptionView detail sheet to reuse PigDetailView shared components (bead rw4i)
 
 ---
 
