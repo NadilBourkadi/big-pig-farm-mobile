@@ -250,6 +250,7 @@ final class CollisionHandler {
             rescued.path = []
             rescued.targetPosition = nil
             rescued.targetFacilityId = nil
+            rescued.targetTreatGridPosition = nil
             rescued.behaviorState = .idle
 
             if let areaId = pig.currentAreaId,

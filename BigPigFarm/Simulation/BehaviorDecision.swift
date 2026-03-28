@@ -45,6 +45,7 @@ enum BehaviorDecision {
         }
         #endif
         if shouldKeepTraveling(controller: controller, pig: &pig) { return }
+        if handleSeekingTreatGuard(controller: controller, pig: &pig) { return }
         cleanupTargetState(controller: controller, pig: &pig)
         if handleSleepGuard(pig: &pig) { return }
         if handleCourtGuard(controller: controller, pig: &pig) { return }
@@ -78,6 +79,27 @@ enum BehaviorDecision {
             pig.path = []; pig.targetPosition = nil; pig.targetFacilityId = nil
         }
         return false
+    }
+
+    // MARK: - Phase 1b — Guard: Seeking Treat
+
+    /// Returns true if the pig is seeking a treat (stays in state unless critical needs override).
+    @MainActor
+    private static func handleSeekingTreatGuard(
+        controller: BehaviorController, pig: inout GuineaPig
+    ) -> Bool {
+        guard pig.behaviorState == .seekingTreat else { return false }
+        let criticalNeed = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
+            || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
+        if criticalNeed {
+            pig.behaviorState = .idle
+            pig.path = []
+            pig.targetPosition = nil
+            pig.targetTreatGridPosition = nil
+            pig.targetDescription = nil
+            return true
+        }
+        return true // Keep seeking treat
     }
 
     // MARK: - Phase 2 — Target Cleanup

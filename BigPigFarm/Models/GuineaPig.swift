@@ -47,6 +47,7 @@ enum BehaviorState: String, Codable, CaseIterable, Sendable {
     case sleeping
     case socializing
     case courting
+    case seekingTreat = "seeking_treat"
 }
 
 // MARK: - Personality
@@ -143,6 +144,9 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     var partnerGenotype: Genotype?
     var partnerName: String?
     var lastBirthAge: Double?
+
+    // Treat seeking
+    var targetTreatGridPosition: GridPosition?
 
     // Courtship
     var courtingPartnerId: UUID?
@@ -253,6 +257,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         case .sleeping: "sleeping"
         case .socializing: "happy"
         case .courting: "happy"
+        case .seekingTreat: "walking"
         }
     }
 
@@ -333,6 +338,7 @@ struct GuineaPig: Identifiable, Codable, Sendable {
         case partnerName = "partner_name"
         case lastBirthAge = "last_birth_age"
         case courtingPartnerId = "courting_partner_id"
+        case targetTreatGridPosition = "target_treat_grid_position"
         case courtingInitiator = "courting_initiator"
         case courtingTimer = "courting_timer"
         case motherId = "mother_id"

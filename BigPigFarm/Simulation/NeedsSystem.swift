@@ -334,7 +334,7 @@ enum NeedsSystem {
             pig.needs.happiness += GameConfig.Needs.socialHappinessBoost * hours
             pig.needs.social += GameConfig.Needs.socialRecovery * hours
 
-        case .idle, .wandering, .courting:
+        case .idle, .wandering, .courting, .seekingTreat:
             break
         }
     }

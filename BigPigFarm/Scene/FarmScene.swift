@@ -90,6 +90,9 @@ class FarmScene: SKScene {
     /// Called when all treats are exhausted (auto-exit treat mode).
     var onTreatsExhausted: (() -> Void)?
 
+    /// Maps pig ID → TreatNode for arrival visual effects.
+    var pendingTreatNodes: [UUID: TreatNode] = [:]
+
     // MARK: - Edit Mode
 
     var isEditMode: Bool = false

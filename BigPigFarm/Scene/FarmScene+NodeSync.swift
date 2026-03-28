@@ -29,6 +29,8 @@ extension FarmScene {
                 updateIndicator(for: node, pig: pig)
             }
         }
+
+        checkTreatArrivals()
     }
 
     // MARK: - Facility Sync
