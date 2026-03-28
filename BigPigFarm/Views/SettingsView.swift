@@ -94,6 +94,14 @@ private extension SettingsView {
             ), in: 1...4) {
                 Label("Farm Tier: \(gameState.farmTier)", systemImage: "star.fill")
             }
+
+            Button {
+                var state = CoachMarkState.load()
+                state.resetAll()
+                state.save()
+            } label: {
+                Label("Reset Coach Marks", systemImage: "lightbulb.slash")
+            }
         } header: {
             Text("Debug")
         } footer: {
