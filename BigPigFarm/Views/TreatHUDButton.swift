@@ -65,7 +65,7 @@ struct TreatHUDButton: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
             )
-            .foregroundStyle(isTreatMode ? .yellow : Color(red: 0.9, green: 0.84, blue: 0.72))
+            .foregroundStyle(isTreatMode ? .yellow : Color(red: 0.95, green: 0.9, blue: 0.82))
             .opacity(treatCount > 0 ? 1.0 : 0.4)
         }
         .disabled(treatCount <= 0)
