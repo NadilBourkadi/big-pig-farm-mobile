@@ -229,6 +229,11 @@ extension BehaviorController {
     func getShyTreatDelay(_ pigId: UUID) -> Double? {
         shyTreatDelays[pigId]
     }
+
+    /// Clear shy treat delay for a pig — call from any exit path out of `.seekingTreat`.
+    func clearShyTreatDelay(_ pigId: UUID) {
+        shyTreatDelays.removeValue(forKey: pigId)
+    }
 }
 
 // MARK: - Per-tick Behavior Update
@@ -312,8 +317,13 @@ extension BehaviorController {
                 shyTreatDelays[pig.id] = GameConfig.Behavior.shyTreatReactionDelay
             }
             if let remaining = shyTreatDelays[pig.id], remaining > 0 {
-                shyTreatDelays[pig.id] = remaining - gameMinutes
-                return
+                let newRemaining = remaining - gameMinutes
+                if newRemaining > 0 {
+                    shyTreatDelays[pig.id] = newRemaining
+                    return
+                }
+                // Delay expired this tick — clear entry and fall through to pathfind
+                shyTreatDelays.removeValue(forKey: pig.id)
             }
         }
 
