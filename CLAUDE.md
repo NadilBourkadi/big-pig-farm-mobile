@@ -318,7 +318,22 @@ bd update <id> --claim              # 2. Atomic claim (sets status + assignee)
 bd show <id>                        # 3. Post-check: verify you own it
 ```
 
-If `--claim` fails (another agent claimed it first), pick the next task. **Never use `bd update <id> --status in_progress` directly** — it has no race protection.
+If `--claim` fails (another agent claimed it first), **skip the task and pick the next ready candidate automatically** — do not ask the user. Claim races are routine in parallel sessions. **Never use `bd update <id> --status in_progress` directly** — it has no race protection.
+
+### Dolt lock recovery
+
+If any `bd` command fails with `dolt access lock timeout`, another `bd` process is holding an exclusive lock on `.beads/dolt-access.lock`. Recover automatically:
+
+```bash
+# 1. Find the holder
+lsof /Users/nadilbourkadi/Dev/big-pig-farm-mobile/.beads/dolt-access.lock
+# 2. Check if it's a hung process (etime > 1 minute is suspicious)
+ps -p <PID> -o pid,ppid,etime,command
+# 3. Kill it and retry your command
+kill <PID>
+```
+
+Do not ask the user — stale locks from crashed or hung `bd` processes are routine in parallel sessions. Kill the holder, retry, and move on.
 
 ### Inter-agent communication
 
