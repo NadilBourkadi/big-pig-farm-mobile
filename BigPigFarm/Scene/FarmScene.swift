@@ -122,6 +122,14 @@ class FarmScene: SKScene {
     var frameCount: Int = 0
     private var lastSyncedTick: UInt64 = 0
 
+    // MARK: - Accessibility
+
+    /// Tick counter for throttling accessibility element rebuilds.
+    var lastAccessibilitySyncTick: UInt64 = 0
+
+    /// Minimum ticks between accessibility element rebuilds (10 TPS / 5 = every 0.5s).
+    static let accessibilitySyncInterval: UInt64 = 5
+
     // MARK: - Init
 
     init(gameState: GameState) {
@@ -211,6 +219,8 @@ extension FarmScene {
             lastSyncedTick = currentTick
             syncFacilities()
             syncPigs()
+            // Internally throttled to every 5 ticks, even in edit mode.
+            syncAccessibilityElements()
         }
 
         // Only track a selected pig when the viewport is small enough that the
