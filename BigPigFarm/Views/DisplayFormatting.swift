@@ -45,20 +45,13 @@ func formatFacilityBonuses(_ facilityType: FacilityType) -> String {
 // MARK: - Color Mapping
 
 /// Map a BaseColor to the nearest SwiftUI Color for display.
+///
+/// Colors are defined as named colorsets in the asset catalog (`Colors/PigColor<Name>`)
+/// with light/dark variants. Dark-mode values match `PigPalettes` fur hex colors for
+/// visual consistency with sprites; light-mode values are adjusted for contrast on
+/// white backgrounds.
 func pigColorSwiftUI(_ baseColor: BaseColor) -> Color {
-    switch baseColor {
-    // RGB 0,0,0 is invisible on dark material backgrounds (.ultraThinMaterial, .regularMaterial).
-    // 0.15 brightness reads as "black" phenotypically while having enough contrast against
-    // the ~30% brightness dark-grey materials used in list rows and detail panels.
-    case .black: return Color(white: 0.15)
-    case .chocolate: return .brown
-    case .golden: return .yellow
-    case .cream: return Color(red: 1.0, green: 0.95, blue: 0.8)
-    case .blue: return Color(red: 0.4, green: 0.5, blue: 0.6)
-    case .lilac: return Color(red: 0.7, green: 0.5, blue: 0.7)
-    case .saffron: return .orange
-    case .smoke: return .gray
-    }
+    Color("PigColor\(baseColor.rawValue.capitalized)")
 }
 
 // MARK: - Gender Display
