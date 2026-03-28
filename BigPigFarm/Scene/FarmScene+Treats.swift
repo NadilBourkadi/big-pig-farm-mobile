@@ -53,6 +53,7 @@ extension FarmScene {
             if pig.behaviorState == .sleeping || pig.behaviorState == .courting { continue }
             pig.behaviorState = .seekingTreat
             pig.targetTreatGridPosition = treatGridPos
+            pig.targetTreatType = selectedTreatType
             pig.targetPosition = Position(x: Double(treatGridPos.x), y: Double(treatGridPos.y))
             pig.targetDescription = "going to treat"
             pig.path = [] // BehaviorController computes path on next tick

@@ -120,6 +120,7 @@ enum BehaviorMovement {
         pig.targetPosition = nil
         pig.targetFacilityId = nil
         pig.targetTreatGridPosition = nil
+        pig.targetTreatType = nil
         pig.targetDescription = nil
         pig.behaviorState = .idle
         if let areaId = pig.currentAreaId,
@@ -277,6 +278,7 @@ private extension BehaviorMovement {
         pig.targetPosition = nil
         pig.targetFacilityId = nil
         pig.targetTreatGridPosition = nil
+        pig.targetTreatType = nil
         pig.targetDescription = nil
         controller.resetBlockedState(pig.id)
         controller.clearStuckState(pig.id)

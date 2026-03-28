@@ -119,6 +119,7 @@ struct TreatArrivalTests {
         var pig = makePig(x: 10.0, y: 8.0)
         pig.behaviorState = .seekingTreat
         pig.targetTreatGridPosition = GridPosition(x: 10, y: 8)
+        pig.targetTreatType = .leafyGreens
         pig.targetPosition = Position(x: 10.0, y: 8.0)
         pig.path = [] // Path consumed — pig is at target
         state.addGuineaPig(pig)
@@ -128,7 +129,52 @@ struct TreatArrivalTests {
 
         #expect(updatedPig.behaviorState == .idle)
         #expect(updatedPig.targetTreatGridPosition == nil)
+        #expect(updatedPig.targetTreatType == nil)
         #expect(updatedPig.targetPosition == nil)
+    }
+
+    @Test("Treat stat effects are applied on arrival, not on placement")
+    func testEffectsAppliedOnArrival() {
+        let state = makeGameState()
+        let controller = makeController(state: state)
+        var pig = makePig(x: 10.0, y: 8.0)
+        pig.needs.hunger = 50.0
+        pig.needs.happiness = 50.0
+        pig.behaviorState = .seekingTreat
+        pig.targetTreatGridPosition = GridPosition(x: 10, y: 8)
+        pig.targetTreatType = .leafyGreens
+        pig.path = []
+        state.addGuineaPig(pig)
+
+        var updatedPig = pig
+        controller.update(pig: &updatedPig, gameMinutes: 0.3)
+
+        let hungerBoost = TreatType.leafyGreens.info.hungerBoost
+        let happinessBoost = TreatType.leafyGreens.info.happinessBoost
+        #expect(updatedPig.needs.hunger > 50.0)
+        #expect(updatedPig.needs.hunger == min(100, 50.0 + hungerBoost))
+        #expect(updatedPig.needs.happiness == min(100, 50.0 + happinessBoost))
+    }
+
+    @Test("Cancelled treat-seeking pig does not get stat effects")
+    func testCancelledPigNoEffects() {
+        let state = makeGameState()
+        let controller = makeController(state: state)
+        var pig = makePig(x: 5.0, y: 5.0)
+        pig.needs.hunger = 10.0 // Critical — will cancel seeking
+        pig.needs.happiness = 50.0
+        pig.behaviorState = .seekingTreat
+        pig.targetTreatGridPosition = GridPosition(x: 15, y: 10)
+        pig.targetTreatType = .leafyGreens
+        pig.path = [GridPosition(x: 10, y: 8)]
+        state.addGuineaPig(pig)
+
+        var updatedPig = pig
+        controller.update(pig: &updatedPig, gameMinutes: 0.3)
+
+        // Pig should have cancelled — happiness should NOT have the treat boost
+        #expect(updatedPig.behaviorState != .seekingTreat)
+        #expect(updatedPig.needs.happiness <= 50.0) // No boost (may have decayed slightly)
     }
 
     @Test("Pig near treat (manhattan distance 1) transitions to idle")

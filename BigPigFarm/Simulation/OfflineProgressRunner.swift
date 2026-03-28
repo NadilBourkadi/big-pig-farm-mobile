@@ -230,6 +230,7 @@ enum OfflineProgressRunner {
             pig.targetPosition = nil
             pig.targetFacilityId = nil
             pig.targetTreatGridPosition = nil
+            pig.targetTreatType = nil
             pig.targetDescription = nil
             pig.courtingPartnerId = nil
             pig.courtingInitiator = false
