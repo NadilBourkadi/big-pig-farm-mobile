@@ -1,86 +1,8 @@
-// ContentViewTests — Tests for FarmSceneCoordinator and setupNewGame bootstrapping.
+// ContentViewTests — Tests for setupNewGame bootstrapping.
+// FarmSceneCoordinator tests moved to ContentViewModelTests.swift.
 import Testing
 import Foundation
 @testable import BigPigFarm
-
-// MARK: - FarmSceneCoordinator Tests
-
-@Suite("FarmSceneCoordinator")
-@MainActor
-struct FarmSceneCoordinatorTests {
-
-    let state = GameState()
-    var coord: FarmSceneCoordinator { FarmSceneCoordinator(gameState: state) }
-    var scene: FarmScene { FarmScene(gameState: state) }
-
-    @Test("Pig selected triggers onPigSelected callback with correct ID")
-    func pigSelectedCallbackFired() {
-        let coordinator = coord
-        let farmScene = scene
-        var capturedID: UUID?
-        coordinator.onPigSelected = { capturedID = $0 }
-        let testID = UUID()
-        coordinator.farmScene(farmScene, didSelectPig: testID)
-        #expect(capturedID == testID)
-    }
-
-    @Test("Pig deselected triggers onPigDeselected callback")
-    func pigDeselectedCallbackFired() {
-        let coordinator = coord
-        let farmScene = scene
-        var called = false
-        coordinator.onPigDeselected = { called = true }
-        coordinator.farmSceneDidDeselectPig(farmScene)
-        #expect(called)
-    }
-
-    @Test("Pig selected with no callback registered does not crash")
-    func pigSelectedNoCallbackNoCrash() {
-        coord.farmScene(scene, didSelectPig: UUID())
-    }
-
-    @Test("Pig deselected with no callback registered does not crash")
-    func pigDeselectedNoCallbackNoCrash() {
-        coord.farmSceneDidDeselectPig(scene)
-    }
-
-    @Test("Facility selected does not crash (edit mode — no sheet)")
-    func facilitySelectedDoesNotCrash() {
-        coord.farmScene(scene, didSelectFacility: UUID())
-    }
-
-    @Test("Removing facility that exists refunds its cost")
-    func facilityRemovedRefundsCost() {
-        let initialMoney = state.money
-        let facility = Facility.create(type: .foodBowl, x: 3, y: 3)
-        _ = state.addFacility(facility)
-        let coordinator = FarmSceneCoordinator(gameState: state)
-
-        coordinator.farmScene(scene, didRemoveFacility: facility.id)
-
-        let refund = Shop.getFacilityCost(facilityType: .foodBowl)
-        #expect(state.money == initialMoney + refund)
-        #expect(state.facilities[facility.id] == nil)
-    }
-
-    @Test("Removing facility logs event")
-    func facilityRemovedLogsEvent() {
-        let facility = Facility.create(type: .foodBowl, x: 3, y: 3)
-        _ = state.addFacility(facility)
-        let coordinator = FarmSceneCoordinator(gameState: state)
-
-        coordinator.farmScene(scene, didRemoveFacility: facility.id)
-
-        #expect(state.events.contains { $0.eventType == "purchase" && $0.message.contains("Removed") })
-    }
-
-    @Test("Removing facility that does not exist is a no-op")
-    func facilityRemovedNotFoundIsNoOp() {
-        let initialMoney = state.money
-        coord.farmScene(scene, didRemoveFacility: UUID())
-        #expect(state.money == initialMoney)
-    }
-}
 
 // MARK: - SetupNewGame Tests
 
