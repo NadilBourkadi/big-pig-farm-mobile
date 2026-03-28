@@ -27,43 +27,69 @@ struct PigListView: View {
     @State private var sortAscending = true
     @State private var selectedPig: GuineaPig?
     @State private var pigToSell: GuineaPig?
+    @State private var isSelecting = false
+    @State private var editModeSelection: Set<UUID> = []
+    @State private var showBatchSellConfirmation = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            List {
+            List(selection: $editModeSelection) {
                 ForEach(sortedPigs) { pig in
-                    PigRow(pig: pig)
+                    PigListRow(pig: pig)
                         .contentShape(Rectangle())
-                        .onTapGesture { selectedPig = pig }
+                        .onTapGesture {
+                            if !isSelecting { selectedPig = pig }
+                        }
                         .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) { pigToSell = pig } label: {
-                                Label("Sell", systemImage: "dollarsign.circle.fill")
+                            if !isSelecting {
+                                Button(role: .destructive) { pigToSell = pig } label: {
+                                    Label("Sell", systemImage: "dollarsign.circle.fill")
+                                }
+                                Button { onFollowPig(pig.id); dismiss() } label: {
+                                    Label("Follow", systemImage: "location.fill")
+                                }
+                                .tint(.blue)
                             }
-                            Button { onFollowPig(pig.id); dismiss() } label: {
-                                Label("Follow", systemImage: "location.fill")
-                            }
-                            .tint(.blue)
                         }
                         .swipeActions(edge: .leading) {
-                            Button {
-                                toggleBreedingLock(pig.id)
-                            } label: {
-                                Label(
-                                    pig.breedingLocked ? "Unlock" : "Lock",
-                                    systemImage: pig.breedingLocked ? "lock.open.fill" : "lock.fill"
-                                )
+                            if !isSelecting {
+                                Button {
+                                    toggleBreedingLock(pig.id)
+                                } label: {
+                                    Label(
+                                        pig.breedingLocked ? "Unlock" : "Lock",
+                                        systemImage: pig.breedingLocked ? "lock.open.fill" : "lock.fill"
+                                    )
+                                }
+                                .tint(pig.breedingLocked ? .green : .orange)
                             }
-                            .tint(pig.breedingLocked ? .green : .orange)
                         }
                 }
             }
             .listStyle(.plain)
+            .environment(\.editMode, isSelecting ? .constant(.active) : .constant(.inactive))
             .navigationTitle("Pigs (\(gameState.pigCount))")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { sortMenu }
+                ToolbarItem(placement: .topBarLeading) {
+                    if isSelecting {
+                        Button("Cancel") { exitEditMode() }
+                    } else {
+                        sortMenu
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
+                    HStack(spacing: 12) {
+                        if !isSelecting {
+                            Button("Select") { enterEditMode() }
+                        }
+                        Button("Done") { dismiss() }
+                    }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if isSelecting && !editModeSelection.isEmpty {
+                    batchSellBar
                 }
             }
             .pigDetailSheet(pig: $selectedPig, gameState: gameState)
@@ -80,7 +106,40 @@ struct PigListView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             }
+            .confirmationDialog(
+                batchSellConfirmationTitle,
+                isPresented: $showBatchSellConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Sell All", role: .destructive) { batchSell() }
+                Button("Cancel", role: .cancel) {}
+            }
         }
+    }
+
+    // MARK: - Batch Sell Bar
+
+    private var batchSellBar: some View {
+        let count = editModeSelection.count
+        let totalValue = batchSelectionTotalValue
+        return HStack {
+            Text("Sell \(count) pig\(count == 1 ? "" : "s")")
+                .font(.body.bold())
+            Spacer()
+            Button(role: .destructive) {
+                showBatchSellConfirmation = true
+            } label: {
+                Text(Currency.formatCurrency(totalValue))
+                    .font(.body.bold())
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.red, in: Capsule())
+                    .foregroundStyle(.white)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
     }
 
     // MARK: - Sorted Pigs
@@ -130,6 +189,28 @@ struct PigListView: View {
         }
     }
 
+    private func batchSell() {
+        var anyContractBonus = false
+        for pigID in editModeSelection {
+            guard let pig = gameState.getGuineaPig(pigID) else { continue }
+            let result = Market.sellPig(state: gameState, pig: pig)
+            if result.contractBonus > 0 { anyContractBonus = true }
+        }
+        HapticManager.pigSold()
+        if anyContractBonus { HapticManager.contractCompleted() }
+        exitEditMode()
+    }
+
+    private func enterEditMode() {
+        editModeSelection = []
+        isSelecting = true
+    }
+
+    private func exitEditMode() {
+        isSelecting = false
+        editModeSelection = []
+    }
+
     private func toggleBreedingLock(_ pigID: UUID) {
         guard var pig = gameState.getGuineaPig(pigID) else { return }
         pig.breedingLocked.toggle()
@@ -142,6 +223,19 @@ struct PigListView: View {
         guard let pig = pigToSell else { return "Sell pig?" }
         let value = Market.calculatePigValue(pig: pig, state: gameState)
         return "Sell \(pig.name) for \(Currency.formatCurrency(value))?"
+    }
+
+    private var batchSellConfirmationTitle: String {
+        let count = editModeSelection.count
+        let totalValue = batchSelectionTotalValue
+        return "Sell \(count) pig\(count == 1 ? "" : "s") for \(Currency.formatCurrency(totalValue))?"
+    }
+
+    private var batchSelectionTotalValue: Int {
+        editModeSelection.reduce(0) { total, pigID in
+            guard let pig = gameState.getGuineaPig(pigID) else { return total }
+            return total + Market.calculatePigValue(pig: pig, state: gameState)
+        }
     }
 
     private var sortMenu: some View {
@@ -168,51 +262,6 @@ struct PigListView: View {
                 .font(.caption)
                 .accessibilityLabel("Sort by \(sortBy.rawValue)")
         }
-    }
-}
-
-// MARK: - PigRow
-
-/// A single row in the pig list displaying key stats at a glance.
-private struct PigRow: View {
-    let pig: GuineaPig
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(pigColorSwiftUI(pig.phenotype.baseColor))
-                .frame(width: 12, height: 12)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(pig.name)
-                        .font(.body.bold())
-                    RarityBadge(rarity: pig.phenotype.rarity)
-                    if pig.breedingLocked {
-                        Image(systemName: "lock.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                    }
-                }
-                HStack(spacing: 8) {
-                    Text(pig.phenotype.baseColor.rawValue.capitalized)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("\(Int(pig.ageDays))d")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(pig.gender.displaySymbol)
-                        .font(.caption)
-                        .foregroundStyle(pig.gender.displayColor)
-                }
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                NeedBar(value: pig.needs.happiness / 100.0, label: "")
-                    .frame(width: 64)
-                BreedingStatusLabel(pig: pig)
-            }
-        }
-        .padding(.vertical, 2)
     }
 }
 
