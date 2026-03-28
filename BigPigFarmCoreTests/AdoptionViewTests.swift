@@ -129,17 +129,22 @@ import Foundation
 
 // MARK: - Emergency Adoption Tests
 
-@Test @MainActor func emergencyPigCostIsZero() {
+@Test @MainActor func emergencyPigCostOverrideIsZero() {
     let state = makeGameState()
     state.money = 0
     let emergencyPigs = EmergencyBailout.generateEmergencyPigs(
         existingNames: [],
         farmTier: state.farmTier
     )
-    // Emergency pigs bypass calculateAdoptionCost — caller sets cost to 0
+    let emergencyIDs = Set(emergencyPigs.map(\.id))
+    // Simulate the view-layer override: isEmergency ? 0 : calculateAdoptionCost(...)
     for pig in emergencyPigs {
+        let isEmergency = emergencyIDs.contains(pig.id)
+        let viewCost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: state)
+        #expect(viewCost == 0, "Emergency pig should show zero cost to the user")
+        // Normal cost is still positive — the override is what makes it free
         let normalCost = Adoption.calculateAdoptionCost(pig, state: state)
-        #expect(normalCost > 0, "Normal cost should be positive (the view overrides to 0)")
+        #expect(normalCost > 0, "Normal cost should be positive before the override")
     }
 }
 

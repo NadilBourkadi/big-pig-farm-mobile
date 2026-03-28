@@ -59,6 +59,7 @@ private extension AdoptionDetailView {
                 pigID: pig.id
             )
             .frame(width: 120, height: 120)
+            .accessibilityLabel("\(pig.phenotype.displayName) guinea pig portrait")
             Spacer()
         }
     }
@@ -115,6 +116,7 @@ private extension AdoptionDetailView {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
+                        .accessibilityHidden(true)
                     Text("Adopt \(pig.name)")
                 }
                 .frame(maxWidth: .infinity)
