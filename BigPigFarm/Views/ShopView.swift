@@ -67,13 +67,23 @@ private struct FacilitiesTab: View {
         Shop.getShopItems(category: .facilities, farmTier: gameState.farmTier)
     }
 
+    private var itemsByTier: [(tier: Int, items: [ShopItem])] {
+        Dictionary(grouping: items, by: \.requiredTier)
+            .sorted { $0.key < $1.key }
+            .map { (tier: $0.key, items: $0.value) }
+    }
+
     var body: some View {
         List {
-            ForEach(items, id: \.id) { item in
-                FacilityRow(item: item, gameState: gameState, onError: showError)
+            ForEach(itemsByTier, id: \.tier) { group in
+                Section("Tier \(group.tier)") {
+                    ForEach(group.items, id: \.id) { item in
+                        FacilityRow(item: item, gameState: gameState, onError: showError)
+                    }
+                }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
         .alert("Purchase Failed", isPresented: $showingAlert) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -101,14 +111,9 @@ private struct FacilityRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(item.name)
-                        .font(.body.bold())
-                        .foregroundStyle(isLocked ? .secondary : .primary)
-                    if isLocked {
-                        StatusBadge(label: "Tier \(item.requiredTier)", color: .orange)
-                    }
-                }
+                Text(item.name)
+                    .font(.body.bold())
+                    .foregroundStyle(isLocked ? .secondary : .primary)
                 Text(item.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -46,7 +46,7 @@ struct BiomeSelectView: View {
                         .opacity(available ? 1.0 : 0.4)
                     }
                 }
-                .listStyle(.insetGrouped)
+                .listStyle(.plain)
 
                 if let highlighted = highlightedBiome, let info = biomes[highlighted] {
                     let (_, lockReason) = biomeStatus(highlighted)
