@@ -69,6 +69,7 @@ enum BehaviorDecision {
         if let facility = controller.gameState.getFacility(targetId) {
             let consumable: Set<FacilityType> = [.foodBowl, .waterBottle, .hayRack, .feastTable]
             if consumable.contains(facility.facilityType), facility.isEmpty {
+                pig.logBehavior("\(facility.name) became empty, seeking alternative")
                 controller.facilityManager.addFailedFacility(pig.id, facility.id)
                 pig.path = []; pig.targetPosition = nil; pig.targetFacilityId = nil
             } else {
@@ -76,6 +77,7 @@ enum BehaviorDecision {
             }
         } else {
             // Facility was removed
+            pig.logBehavior("Target facility removed, seeking alternative")
             pig.path = []; pig.targetPosition = nil; pig.targetFacilityId = nil
         }
         return false
@@ -121,12 +123,14 @@ enum BehaviorDecision {
     private static func handleSleepGuard(pig: inout GuineaPig) -> Bool {
         guard pig.behaviorState == .sleeping else { return false }
         if pig.needs.energy >= Double(GameConfig.Needs.satisfactionThreshold) {
+            pig.logBehavior("Woke up (energy full)")
             pig.behaviorState = .idle; pig.targetDescription = nil; return true
         }
         let criticalHunger = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
         let criticalThirst = pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
         if criticalHunger || criticalThirst,
            pig.needs.energy >= Double(GameConfig.Behavior.emergencyWakeEnergy) {
+            pig.logBehavior("Woke up (hunger/thirst critical)")
             pig.behaviorState = .idle; pig.targetDescription = nil; return true
         }
         return true // Keep sleeping
@@ -141,11 +145,13 @@ enum BehaviorDecision {
         guard let partnerId = pig.courtingPartnerId,
               let partner = controller.gameState.getGuineaPig(partnerId),
               partner.behaviorState == .courting else {
+            pig.logBehavior("Courtship cancelled (partner unavailable)")
             Breeding.clearCourtship(pig: &pig); return true
         }
         let criticalNeed = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
             || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
         if criticalNeed {
+            pig.logBehavior("Courtship interrupted (critical need)")
             if var updatedPartner = controller.gameState.getGuineaPig(partnerId) {
                 Breeding.clearCourtship(pig: &updatedPartner)
                 controller.gameState.updateGuineaPig(updatedPartner)
@@ -168,12 +174,14 @@ enum BehaviorDecision {
         let satisfactionThreshold = Double(GameConfig.Needs.satisfactionThreshold)
         if pig.behaviorState == .eating {
             if pig.needs.hunger < satisfactionThreshold { return true }
+            pig.logBehavior("Finished eating, wandering away")
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
             return true
         }
         if pig.behaviorState == .drinking {
             if pig.needs.thirst < satisfactionThreshold { return true }
+            pig.logBehavior("Finished drinking, wandering away")
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
             return true
@@ -193,15 +201,22 @@ enum BehaviorDecision {
         let satisfactionThreshold = Double(GameConfig.Needs.satisfactionThreshold)
         if pig.behaviorState == .playing {
             if pig.needs.boredom > Double(GameConfig.Behavior.boredomKeepPlaying) {
-                if criticalNeed { pig.behaviorState = .idle; pig.targetDescription = nil } else { return true }
+                if criticalNeed {
+                    pig.logBehavior("Stopped playing (hunger/thirst critical)")
+                    pig.behaviorState = .idle; pig.targetDescription = nil
+                } else { return true }
             }
         }
         if pig.behaviorState == .socializing {
             if pig.needs.social < satisfactionThreshold {
-                if criticalNeed { pig.behaviorState = .idle; pig.targetDescription = nil } else { return true }
+                if criticalNeed {
+                    pig.logBehavior("Stopped socializing (hunger/thirst critical)")
+                    pig.behaviorState = .idle; pig.targetDescription = nil
+                } else { return true }
             }
         }
         if pig.behaviorState == .playing || pig.behaviorState == .socializing {
+            pig.logBehavior("Finished \(pig.behaviorState.rawValue), wandering away")
             if pig.behaviorState == .socializing { trackSocialAffinity(controller: controller, pig: pig) }
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
@@ -221,17 +236,23 @@ enum BehaviorDecision {
         switch urgentNeed {
         case "energy" where pig.needs.energy < sleepThreshold:
             if pig.needs.happiness < criticalThreshold, pig.needs.energy >= criticalThreshold {
+                pig.logBehavior("Unhappy (\(Int(pig.needs.happiness))%), prioritizing play over sleep")
                 BehaviorSeeking.seekPlay(controller: controller, pig: &pig)
             } else {
+                pig.logBehavior("Tired (energy=\(Int(pig.needs.energy))), seeking sleep")
                 BehaviorSeeking.seekSleep(controller: controller, pig: &pig)
             }
             return true
         case "hunger", "thirst":
+            let needValue = BehaviorSeeking.getNeedValue(pig, need: urgentNeed)
+            pig.logBehavior("Need \(urgentNeed) (\(Int(needValue))%), seeking facility")
             BehaviorSeeking.seekFacilityForNeed(controller: controller, pig: &pig, need: urgentNeed)
             return true
         case "happiness":
+            pig.logBehavior("Unhappy (\(Int(pig.needs.happiness))%), seeking play")
             BehaviorSeeking.seekPlay(controller: controller, pig: &pig); return true
         case "social" where !pig.hasTrait(.shy):
+            pig.logBehavior("Lonely, seeking social interaction")
             BehaviorSeeking.seekSocialInteraction(controller: controller, pig: &pig); return true
         default:
             return false
@@ -246,15 +267,19 @@ enum BehaviorDecision {
         controller: BehaviorController, pig: inout GuineaPig
     ) -> Bool {
         if pig.needs.boredom > Double(GameConfig.Behavior.boredomPlayThreshold) {
+            pig.logBehavior("Bored (\(Int(pig.needs.boredom))), seeking play")
             BehaviorSeeking.seekPlay(controller: controller, pig: &pig); return true
         }
         if pig.hasTrait(.lazy), Double.random(in: 0..<1) < GameConfig.Behavior.lazySleepChance {
+            pig.logBehavior("Feeling lazy, going to sleep")
             BehaviorSeeking.seekSleep(controller: controller, pig: &pig); return true
         }
         if pig.hasTrait(.playful), Double.random(in: 0..<1) < GameConfig.Behavior.playfulPlayChance {
+            pig.logBehavior("Feeling playful, seeking play")
             BehaviorSeeking.seekPlay(controller: controller, pig: &pig); return true
         }
         if pig.hasTrait(.social), Double.random(in: 0..<1) < GameConfig.Behavior.socialSocializeChance {
+            pig.logBehavior("Feeling social, seeking friends")
             BehaviorSeeking.seekSocialInteraction(controller: controller, pig: &pig); return true
         }
         return false
@@ -277,6 +302,7 @@ enum BehaviorDecision {
     @MainActor
     private static func handleDefaultWander(controller: BehaviorController, pig: inout GuineaPig) {
         if Double.random(in: 0..<1) < GameConfig.Behavior.wanderChance {
+            pig.logBehavior("Nothing urgent, wandering")
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
             return
@@ -293,9 +319,11 @@ enum BehaviorDecision {
             return dx * dx + dy * dy <= driftRadius * driftRadius
         }
         if hasNearbyPig {
+            pig.logBehavior("Too close to another pig, drifting away")
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
         } else {
+            pig.logBehavior("Nothing urgent, idling")
             pig.behaviorState = .idle
             pig.targetPosition = nil; pig.targetFacilityId = nil
             pig.targetDescription = nil; pig.path = []
@@ -354,6 +382,7 @@ private func behaviorTryCampfireAttraction(controller: BehaviorController, pig: 
         ) else { continue }
         var trimmedPath = path
         if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
+        pig.logBehavior("Drawn to \(campfire.name) at night")
         pig.path = trimmedPath
         pig.behaviorState = .wandering
         pig.targetFacilityId = campfire.id

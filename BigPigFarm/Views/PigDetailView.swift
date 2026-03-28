@@ -6,6 +6,7 @@ import SwiftUI
 struct PigDetailView: View {
     let gameState: GameState
     let pig: GuineaPig
+    @State private var showFullLog = false
 
     var body: some View {
         ScrollView {
@@ -21,6 +22,7 @@ struct PigDetailView: View {
                     geneticsSection
                 }
                 aiStateSection
+                activityLogSection
             }
             .padding()
         }
@@ -214,6 +216,47 @@ private extension PigDetailView {
             }
             if !pig.path.isEmpty {
                 InfoRow(label: "Path steps", value: "\(pig.path.count)")
+            }
+        }
+    }
+}
+
+// MARK: - Activity Log
+
+private extension PigDetailView {
+    /// Read the behavior log live from gameState so it updates in real-time.
+    var liveLog: [String] {
+        gameState.getGuineaPig(pig.id)?.behaviorLog ?? pig.behaviorLog
+    }
+
+    var activityLogSection: some View {
+        let log = liveLog
+        return VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("Recent Activity")
+            if log.isEmpty {
+                Text("(no activity yet)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                let limit = showFullLog ? 30 : 10
+                let entries = Array(log.suffix(limit).reversed())
+                ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("\u{2022}")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(entry)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+                if log.count > 10 {
+                    Button(showFullLog ? "Show less" : "Show all (\(min(log.count, 30)))") {
+                        withAnimation { showFullLog.toggle() }
+                    }
+                    .font(.caption)
+                }
             }
         }
     }
