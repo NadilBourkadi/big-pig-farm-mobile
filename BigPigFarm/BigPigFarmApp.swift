@@ -34,31 +34,8 @@ struct BigPigFarmApp: App {
         if !isNewGame && state.lastSave == nil {
             state.lastSave = state.sessionStart
         }
-        let behaviorController = BehaviorController(gameState: state)
-        let sim = SimulationRunner(
-            state: state,
-            behaviorController: behaviorController,
-            saveManager: sm
-        )
-        sim.onPigSold = { _, _, contractBonus, _ in
-            HapticManager.pigSold()
-            if contractBonus > 0 {
-                HapticManager.contractCompleted()
-            }
-        }
-        sim.onBirth = { _ in
-            HapticManager.birth()
-        }
-        sim.onPigdexDiscovery = {
-            HapticManager.pigdexDiscovery()
-        }
-        let eng = GameEngine(state: state)
-        eng.registerTickCallback { [weak sim] minutes in
-            sim?.tick(gameMinutes: minutes)
-        }
-        eng.onPrestigeReset = { [sm] in
-            try? sm.savePrestigeState(state.prestigeState)
-        }
+
+        let (sim, eng) = Self.buildSimulationAndEngine(state: state, saveManager: sm)
         if isNewGame {
             setupNewGame(state: state)
         }
@@ -81,6 +58,40 @@ struct BigPigFarmApp: App {
         server.start()
         _debugServer = State(initialValue: server)
         #endif
+    }
+
+    /// Build and wire the SimulationRunner and GameEngine from a loaded state.
+    @MainActor
+    private static func buildSimulationAndEngine(
+        state: GameState,
+        saveManager: SaveManager
+    ) -> (SimulationRunner, GameEngine) {
+        let behaviorController = BehaviorController(gameState: state)
+        let sim = SimulationRunner(
+            state: state,
+            behaviorController: behaviorController,
+            saveManager: saveManager
+        )
+        sim.onPigSold = { _, _, contractBonus, _ in
+            HapticManager.pigSold()
+            if contractBonus > 0 {
+                HapticManager.contractCompleted()
+            }
+        }
+        sim.onBirth = { _ in
+            HapticManager.birth()
+        }
+        sim.onPigdexDiscovery = {
+            HapticManager.pigdexDiscovery()
+        }
+        let eng = GameEngine(state: state)
+        eng.registerTickCallback { [weak sim] minutes in
+            sim?.tick(gameMinutes: minutes)
+        }
+        eng.onPrestigeReset = { [saveManager] in
+            try? saveManager.savePrestigeState(state.prestigeState)
+        }
+        return (sim, eng)
     }
 
     var body: some Scene {

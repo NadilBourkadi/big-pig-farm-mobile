@@ -224,6 +224,11 @@ enum GameConfig {
         ]
     }
 
+}
+
+// MARK: - GameConfig (AutoArrange, Prestige, NewFarmer)
+
+extension GameConfig {
     enum AutoArrange {
         static let horizontalGap: Int = 2
         static let verticalGap: Int = 3
@@ -273,9 +278,11 @@ enum GameConfig {
         static let treatPouchBonusTreats: Int = 2
 
         // Biome mastery
+        // swiftlint:disable inclusive_language
         static let biomeMasteryThreshold: Int = 10
         static let biomeMasteryCostReduction: Double = 0.25
         static let biomeMasteryMutationBoost: Double = 0.02
+        // swiftlint:enable inclusive_language
 
         // Petting
         static let petHappinessBoost: Double = 10.0

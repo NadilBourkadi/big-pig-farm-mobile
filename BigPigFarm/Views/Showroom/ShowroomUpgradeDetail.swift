@@ -129,7 +129,6 @@ private extension ShowroomUpgradeDetail {
 // MARK: - Compound Impact Text
 
 extension ShowroomUpgradeDetail {
-    // swiftlint:disable:next cyclomatic_complexity
     /// Human-readable compound impact text for each upgrade.
     var compoundImpactText: String {
         let cfg = GameConfig.Prestige.self

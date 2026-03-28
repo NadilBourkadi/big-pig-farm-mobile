@@ -20,8 +20,8 @@ struct RosetteInput: Sendable {
 enum RosetteCalculator {
     /// Calculate total Rosettes earned from a prestige run.
     static func calculate(_ input: RosetteInput) -> Int {
-        let b = breakdown(input)
-        return b.total
+        let result = breakdown(input)
+        return result.total
     }
 
     /// Breakdown of Rosette calculation for display on the Pig Show screen.

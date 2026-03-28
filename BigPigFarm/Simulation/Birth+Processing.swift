@@ -5,7 +5,6 @@ extension Birth {
 
     // MARK: - Birth Processing
 
-    // swiftlint:disable function_body_length
     /// Process a birth for a pig whose pregnancy has reached term.
     /// Returns true if babies were born, false if pregnancy was cancelled.
     @MainActor
@@ -25,6 +24,46 @@ extension Birth {
             return false
         }
 
+        let litterSize = computeLitterSize(gameState: gameState)
+        if litterSize <= 0 {
+            cancelPregnancy(mother: mother, gameState: gameState, reason: "farm is at capacity")
+            return false
+        }
+
+        let birthContext = BirthContext(
+            mother: mother, father: father, fatherGenotype: fatherGenotype,
+            fatherName: fatherName, fatherId: fatherId, litterSize: litterSize,
+            gameState: gameState
+        )
+
+        let babiesBorn = generateLitter(context: birthContext)
+
+        applyBreedingFilter(gameState: gameState, babies: babiesBorn)
+        resetMother(mother, gameState: gameState)
+
+        logBirthEvents(
+            mother: mother, babiesBorn: babiesBorn, litterSize: litterSize,
+            fatherName: fatherName, fatherGenotype: fatherGenotype,
+            birthArea: gameState.farm.getAreaAt(Int(mother.position.x), Int(mother.position.y)),
+            gameState: gameState
+        )
+        return true
+    }
+
+    /// Context object holding all parameters needed to generate a litter.
+    private struct BirthContext {
+        let mother: GuineaPig
+        let father: GuineaPig?
+        let fatherGenotype: Genotype
+        let fatherName: String
+        let fatherId: UUID?
+        let litterSize: Int
+        let gameState: GameState
+    }
+
+    /// Compute the final litter size accounting for upgrades and capacity.
+    @MainActor
+    private static func computeLitterSize(gameState: GameState) -> Int {
         let prestige = gameState.prestigeState
         var maxLitter = GameConfig.Breeding.maxLitterSize
         if gameState.hasUpgrade("litter_boost") { maxLitter += 1 }
@@ -37,11 +76,15 @@ extension Birth {
            Double.random(in: 0.0..<1.0) < GameConfig.Prestige.twinSparkChance {
             litterSize += 1
         }
-        litterSize = min(litterSize, gameState.capacity - gameState.pigCount)
-        if litterSize <= 0 {
-            cancelPregnancy(mother: mother, gameState: gameState, reason: "farm is at capacity")
-            return false
-        }
+        return min(litterSize, gameState.capacity - gameState.pigCount)
+    }
+
+    /// Generate all babies for the litter, applying prestige upgrades.
+    @MainActor
+    private static func generateLitter(context: BirthContext) -> [GuineaPig] {
+        let gameState = context.gameState
+        let mother = context.mother
+        let prestige = gameState.prestigeState
 
         let hasLab = !gameState.getFacilitiesByType(.geneticsLab).isEmpty
         let hasAccelerator = gameState.hasUpgrade("genetic_accelerator")
@@ -54,33 +97,20 @@ extension Birth {
         var existingNames = Set(gameState.getPigsList().map(\.name))
         var babiesBorn: [GuineaPig] = []
 
-        // Genetic Imprinting: collect locked loci from parents
-        var lockedLoci: [(locusName: String, parentGenotype: Genotype)]?
-        if prestige.hasUpgrade(.geneticImprinting) {
-            var locked: [(locusName: String, parentGenotype: Genotype)] = []
-            if let locus = mother.imprintedLocus {
-                locked.append((locus, mother.genotype))
-            }
-            if let father, let locus = father.imprintedLocus {
-                locked.append((locus, father.genotype))
-            }
-            if !locked.isEmpty { lockedLoci = locked }
-        }
-
-        // Selective Advantage: collect allele preferences
+        let lockedLoci = collectLockedLoci(
+            mother: mother, father: context.father, prestige: prestige
+        )
         let allelePreferences: AllelePreferences? = prestige.hasUpgrade(.selectiveAdvantage)
             ? prestige.allelePreferences : nil
-
-        // Phenotype Recall: collect all known phenotype keys for potential override
         let phenotypeRecallActive = prestige.hasUpgrade(.phenotypeRecall)
         let allPigdexKeys: [String] = phenotypeRecallActive
             ? Array(Set(gameState.pigdex.discovered.keys)
                 .union(gameState.prestigeState.previousPigdexEntries))
             : []
 
-        for _ in 0..<litterSize {
+        for _ in 0..<context.litterSize {
             var breedResult = breed(
-                mother.genotype, fatherGenotype,
+                mother.genotype, context.fatherGenotype,
                 mutationRate: params.mutationRate,
                 locusRates: params.locusRates,
                 directionalTargets: params.directionalTargets,
@@ -89,51 +119,99 @@ extension Birth {
                 allelePreferences: allelePreferences
             )
 
-            // Phenotype Recall: 15% chance to override genotype with a Pigdex phenotype
-            if phenotypeRecallActive,
-               !allPigdexKeys.isEmpty,
-               Double.random(in: 0.0..<1.0) < GameConfig.Prestige.phenotypeRecallChance,
-               let targetKey = allPigdexKeys.randomElement(),
-               let recalledGenotype = canonicalGenotype(forPhenotypeKey: targetKey) {
-                breedResult = BreedResult(genotype: recalledGenotype, mutations: breedResult.mutations)
-            }
-            let gender: Gender = Bool.random() ? .male : .female
-            let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
-            let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
-            existingNames.insert(name)
-
-            var baby = GuineaPig.create(
-                name: name, gender: gender, genotype: breedResult.genotype,
-                position: Position(
-                    x: mother.position.x + Double.random(in: -1.0...1.0),
-                    y: mother.position.y + Double.random(in: -1.0...1.0)
-                ),
-                ageDays: 0.0,
-                motherId: mother.id, fatherId: fatherId,
-                motherName: mother.name, fatherName: fatherName
+            breedResult = applyPhenotypeRecall(
+                result: breedResult, active: phenotypeRecallActive, pigdexKeys: allPigdexKeys
             )
-            baby.birthAreaId = birthAreaId
-            baby.currentAreaId = birthAreaId
-            baby.preferredBiome = birthArea?.biome.rawValue ?? mother.preferredBiome
 
-            gameState.addGuineaPig(baby)
-            gameState.totalPigsBorn += 1
+            let baby = createBaby(
+                breedResult: breedResult, mother: mother, fatherId: context.fatherId,
+                fatherName: context.fatherName, birthArea: birthArea, birthAreaId: birthAreaId,
+                existingNames: &existingNames, gameState: gameState
+            )
             babiesBorn.append(baby)
-
-            if !breedResult.mutations.isEmpty {
-                let desc = breedResult.mutations.joined(separator: ", ")
-                gameState.logEvent("\(baby.name) was born with a mutation! (\(desc))", eventType: "mutation")
-            }
-            registerPigInPigdex(gameState: gameState, pig: baby)
-
-            if let biome = birthArea?.biome {
-                gameState.prestigeState.biomeMastery.recordBirth(in: biome)
-            }
         }
 
-        applyBreedingFilter(gameState: gameState, babies: babiesBorn)
-        resetMother(mother, gameState: gameState)
+        return babiesBorn
+    }
 
+    /// Collect locked loci for Genetic Imprinting.
+    @MainActor
+    private static func collectLockedLoci(
+        mother: GuineaPig, father: GuineaPig?, prestige: PrestigeState
+    ) -> [(locusName: String, parentGenotype: Genotype)]? {
+        guard prestige.hasUpgrade(.geneticImprinting) else { return nil }
+        var locked: [(locusName: String, parentGenotype: Genotype)] = []
+        if let locus = mother.imprintedLocus {
+            locked.append((locus, mother.genotype))
+        }
+        if let father, let locus = father.imprintedLocus {
+            locked.append((locus, father.genotype))
+        }
+        return locked.isEmpty ? nil : locked
+    }
+
+    /// Apply Phenotype Recall override if active and triggered.
+    private static func applyPhenotypeRecall(
+        result: BreedResult, active: Bool, pigdexKeys: [String]
+    ) -> BreedResult {
+        guard active, !pigdexKeys.isEmpty,
+              Double.random(in: 0.0..<1.0) < GameConfig.Prestige.phenotypeRecallChance,
+              let targetKey = pigdexKeys.randomElement(),
+              let recalledGenotype = canonicalGenotype(forPhenotypeKey: targetKey) else {
+            return result
+        }
+        return BreedResult(genotype: recalledGenotype, mutations: result.mutations)
+    }
+
+    /// Create a single baby pig, register it in the game state and pigdex.
+    @MainActor
+    private static func createBaby(
+        breedResult: BreedResult, mother: GuineaPig, fatherId: UUID?,
+        fatherName: String, birthArea: FarmArea?, birthAreaId: UUID?,
+        existingNames: inout Set<String>, gameState: GameState
+    ) -> GuineaPig {
+        let gender: Gender = Bool.random() ? .male : .female
+        let prefixGender: PigNames.PrefixGender = gender == .male ? .male : .female
+        let name = PigNames.generateUniqueName(existingNames: existingNames, gender: prefixGender)
+        existingNames.insert(name)
+
+        var baby = GuineaPig.create(
+            name: name, gender: gender, genotype: breedResult.genotype,
+            position: Position(
+                x: mother.position.x + Double.random(in: -1.0...1.0),
+                y: mother.position.y + Double.random(in: -1.0...1.0)
+            ),
+            ageDays: 0.0,
+            motherId: mother.id, fatherId: fatherId,
+            motherName: mother.name, fatherName: fatherName
+        )
+        baby.birthAreaId = birthAreaId
+        baby.currentAreaId = birthAreaId
+        baby.preferredBiome = birthArea?.biome.rawValue ?? mother.preferredBiome
+
+        gameState.addGuineaPig(baby)
+        gameState.totalPigsBorn += 1
+
+        if !breedResult.mutations.isEmpty {
+            let desc = breedResult.mutations.joined(separator: ", ")
+            gameState.logEvent("\(baby.name) was born with a mutation! (\(desc))", eventType: "mutation")
+        }
+        registerPigInPigdex(gameState: gameState, pig: baby)
+
+        if let biome = birthArea?.biome {
+            gameState.prestigeState.biomeMastery.recordBirth(in: biome)
+        }
+
+        return baby
+    }
+
+    /// Log birth events to the game log and debug logger.
+    @MainActor
+    private static func logBirthEvents(
+        mother: GuineaPig, babiesBorn: [GuineaPig], litterSize: Int,
+        fatherName: String, fatherGenotype: Genotype,
+        birthArea: FarmArea?, gameState: GameState
+    ) {
         let babyNames = babiesBorn.map(\.name).joined(separator: ", ")
         gameState.logEvent(
             "\(mother.name) gave birth to \(litterSize) piglet(s): \(babyNames)",
@@ -170,81 +248,9 @@ extension Birth {
             )
         }
         #endif
-        return true
     }
-    // swiftlint:enable function_body_length
 
-    // MARK: - Mutation Parameters
-
-    /// Compute per-locus mutation rates and directional targets based on biome and perks.
-    @MainActor
-    static func computeMutationParameters(
-        mother: GuineaPig,
-        hasLab: Bool,
-        hasAccelerator: Bool,
-        gameState: GameState
-    ) -> MutationParameters {
-        let prestige = gameState.prestigeState
-        var rate = hasLab ? GameConfig.Genetics.mutationRateWithLab : GameConfig.Genetics.mutationRate
-        if hasAccelerator { rate *= 2.0 }
-
-        // Mutation Catalyst: base mutation rate -> 5%
-        if prestige.hasUpgrade(.mutationCatalyst) {
-            rate = max(rate, GameConfig.Prestige.mutationCatalystRate)
-        }
-
-        // Premium Genetics: rare+ phenotypes 1.5x more likely (via mutation rate boost)
-        if prestige.hasUpgrade(.premiumGenetics) {
-            rate *= GameConfig.Prestige.premiumGeneticsRarityMultiplier
-        }
-
-        // Legendary Lineage: legendary phenotypes 2x more likely (stacks with Premium)
-        if prestige.hasUpgrade(.legendaryLineage) {
-            rate *= GameConfig.Prestige.legendaryLineageMultiplier
-        }
-
-        let motherBiome = gameState.farm.getBiomeAt(Int(mother.position.x), Int(mother.position.y))
-        var locusRates: [String: Double]?
-        var directionalTargets: [String: String]?
-        var directionalRate: Double = 0.0
-
-        if let biomeType = motherBiome, let biomeInfo = biomes[biomeType] {
-            if !biomeInfo.mutationBoostLoci.isEmpty {
-                var rates: [String: Double] = [:]
-                for (locus, boost) in biomeInfo.mutationBoostLoci where boost > 0 {
-                    rates[locus] = rate + boost
-                }
-                // Biome Intuition: multiply the boost (locusRate - rate) by the multiplier.
-                // Precondition: locusRate >= rate (all biome boosts are positive).
-                if prestige.hasUpgrade(.biomeIntuition) {
-                    for (locus, locusRate) in rates {
-                        rates[locus] = rate + (locusRate - rate) * GameConfig.Prestige.biomeIntuitionMultiplier
-                    }
-                }
-                if !rates.isEmpty { locusRates = rates }
-            }
-            if !biomeInfo.directionalAlleles.isEmpty {
-                directionalTargets = biomeInfo.directionalAlleles
-                directionalRate = hasLab
-                    ? GameConfig.Genetics.directionalMutationRateWithLab
-                    : GameConfig.Genetics.directionalMutationRate
-                if hasAccelerator { directionalRate *= 2.0 }
-                // Biome Intuition: double directional mutation rate
-                if prestige.hasUpgrade(.biomeIntuition) {
-                    directionalRate *= GameConfig.Prestige.biomeIntuitionMultiplier
-                }
-                // Biome mastery: flat +2% added AFTER biomeIntuition (does not compound with intuition)
-                directionalRate += prestige.biomeMastery.signatureMutationBoost(for: biomeType)
-            }
-        }
-
-        return MutationParameters(
-            mutationRate: rate,
-            locusRates: locusRates,
-            directionalTargets: directionalTargets,
-            directionalRate: directionalRate
-        )
-    }
+    // Mutation parameter computation is in Birth+Mutations.swift.
 
     // MARK: - Mother Reset
 

@@ -9,6 +9,7 @@ enum ShowroomTier: Int, Codable, CaseIterable, Sendable {
     case newcomer = 1
     case apprentice = 2
     case expert = 3
+    // swiftlint:disable:next inclusive_language
     case master = 4
 
     /// Human-readable tier name for display in the Showroom UI.

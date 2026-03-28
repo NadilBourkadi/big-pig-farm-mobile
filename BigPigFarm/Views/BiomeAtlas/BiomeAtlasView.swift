@@ -5,8 +5,10 @@ struct BiomeAtlasView: View {
     let gameState: GameState
     @Environment(\.dismiss) private var dismiss
 
+    // swiftlint:disable inclusive_language
     private var mastery: BiomeMastery { gameState.prestigeState.biomeMastery }
     private var masteredCount: Int { mastery.masteredBiomes.count }
+    // swiftlint:enable inclusive_language
 
     var body: some View {
         NavigationStack {

@@ -71,7 +71,7 @@ enum ParticleEffects {
     private static func makeHeartTexture() -> SKTexture {
         let size = CGSize(width: 16, height: 16)
         let renderer = UIGraphicsImageRenderer(size: size)
-        let image = renderer.image { ctx in
+        let image = renderer.image { _ in
             let rect = CGRect(origin: .zero, size: size)
             let path = UIBezierPath()
             let center = CGPoint(x: rect.midX, y: rect.midY)
