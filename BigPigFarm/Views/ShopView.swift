@@ -16,23 +16,24 @@ enum ShopTab: String, CaseIterable, Sendable {
 
 /// The main shop view with tabs for facilities, perks, farm upgrades, and pig adoption.
 struct ShopView: View {
-    let gameState: GameState
+    @State var viewModel: ShopViewModel
     @State private var selectedTab: ShopTab
     @Environment(\.dismiss) private var dismiss
 
     init(gameState: GameState, initialTab: ShopTab = .facilities) {
-        self.gameState = gameState
+        _viewModel = State(initialValue: ShopViewModel(gameState: gameState))
         _selectedTab = State(initialValue: initialTab)
     }
 
     var body: some View {
+        @Bindable var viewModel = viewModel
         NavigationStack {
             Group {
                 switch selectedTab {
-                case .facilities: FacilitiesTab(gameState: gameState)
-                case .perks: PerksTab(gameState: gameState)
-                case .farm: FarmTab(gameState: gameState)
-                case .pigs: PigsTab(gameState: gameState)
+                case .facilities: FacilitiesTab(viewModel: viewModel)
+                case .perks: PerksTab(viewModel: viewModel)
+                case .farm: FarmTab(viewModel: viewModel)
+                case .pigs: PigsTab(gameState: viewModel.gameState)
                 }
             }
             .navigationTitle("Shop")
@@ -50,8 +51,13 @@ struct ShopView: View {
                     Button("Done") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarLeading) {
-                    CurrencyLabel(amount: gameState.money)
+                    CurrencyLabel(amount: viewModel.gameState.money)
                 }
+            }
+            .alert("Purchase Failed", isPresented: $viewModel.showingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.alertMessage)
             }
         }
     }
@@ -60,42 +66,20 @@ struct ShopView: View {
 // MARK: - FacilitiesTab
 
 /// Shop tab listing all 17 purchasable facility types, sorted by tier.
-private struct FacilitiesTab: View {
-    let gameState: GameState
-    @State private var alertMessage: String = ""
-    @State private var showingAlert = false
-
-    private var items: [ShopItem] {
-        Shop.getShopItems(category: .facilities, farmTier: gameState.farmTier)
-    }
-
-    private var itemsByTier: [(tier: Int, items: [ShopItem])] {
-        Dictionary(grouping: items, by: \.requiredTier)
-            .sorted { $0.key < $1.key }
-            .map { (tier: $0.key, items: $0.value) }
-    }
+struct FacilitiesTab: View {
+    let viewModel: ShopViewModel
 
     var body: some View {
         List {
-            ForEach(itemsByTier, id: \.tier) { group in
+            ForEach(viewModel.facilityItemsByTier, id: \.tier) { group in
                 Section("Tier \(group.tier)") {
                     ForEach(group.items, id: \.id) { item in
-                        FacilityRow(item: item, gameState: gameState, onError: showError)
+                        FacilityRow(item: item, viewModel: viewModel)
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .alert("Purchase Failed", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertMessage)
-        }
-    }
-
-    private func showError(_ message: String) {
-        alertMessage = message
-        showingAlert = true
     }
 }
 
@@ -104,10 +88,9 @@ private struct FacilitiesTab: View {
 /// A single row in the Facilities tab, showing item info and a purchase button.
 private struct FacilityRow: View {
     let item: ShopItem
-    let gameState: GameState
-    let onError: (String) -> Void
+    let viewModel: ShopViewModel
 
-    private var canAfford: Bool { gameState.money >= item.cost }
+    private var canAfford: Bool { viewModel.gameState.money >= item.cost }
     private var isLocked: Bool { !item.unlocked }
 
     var body: some View {
@@ -128,7 +111,9 @@ private struct FacilityRow: View {
             VStack(spacing: 6) {
                 CurrencyLabel(amount: item.cost)
                     .foregroundStyle(canAfford && !isLocked ? .yellow : .secondary)
-                Button(action: purchase) {
+                Button {
+                    viewModel.purchaseFacility(item)
+                } label: {
                     Text(isLocked ? "Locked" : "Buy")
                         .font(.caption.bold())
                         .frame(width: 52)
@@ -143,23 +128,6 @@ private struct FacilityRow: View {
         }
         .padding(.vertical, 4)
         .opacity(isLocked ? 0.6 : 1.0)
-    }
-
-    @MainActor
-    private func purchase() {
-        guard let facilityType = item.facilityType else { return }
-        let position = Shop.findPlacementPosition(for: facilityType, in: gameState)
-        guard position != nil else {
-            onError("No space available for \(item.name). Try selling or moving other facilities.")
-            HapticManager.error()
-            return
-        }
-        if Shop.purchaseItem(state: gameState, item: item, position: position) {
-            HapticManager.purchase()
-        } else {
-            onError("Could not purchase \(item.name).")
-            HapticManager.error()
-        }
     }
 }
 

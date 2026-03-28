@@ -6,20 +6,11 @@ import SwiftUI
 
 /// Displays all available one-time upgrade perks, grouped by category.
 struct PerksTab: View {
-    let gameState: GameState
-    @State private var alertMessage: String = ""
-    @State private var showingAlert = false
-
-    private var perksByCategory: [(String, [UpgradeDefinition])] {
-        let available = Shop.getAvailablePerks(farmTier: gameState.farmTier)
-            .filter(\.implemented)
-        let grouped = Dictionary(grouping: available, by: \.category)
-        return grouped.sorted { $0.key < $1.key }
-    }
+    let viewModel: ShopViewModel
 
     var body: some View {
         Group {
-            if perksByCategory.isEmpty {
+            if viewModel.perksByCategory.isEmpty {
                 VStack(spacing: 8) {
                     Text("No perks unlocked yet.")
                         .foregroundStyle(.secondary)
@@ -30,10 +21,10 @@ struct PerksTab: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    ForEach(perksByCategory, id: \.0) { category, perks in
+                    ForEach(viewModel.perksByCategory, id: \.0) { category, perks in
                         Section(category) {
                             ForEach(perks, id: \.id) { perk in
-                                PerkRow(perk: perk, gameState: gameState, onError: showError)
+                                PerkRow(perk: perk, viewModel: viewModel)
                             }
                         }
                     }
@@ -41,16 +32,6 @@ struct PerksTab: View {
                 .listStyle(.insetGrouped)
             }
         }
-        .alert("Purchase Failed", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertMessage)
-        }
-    }
-
-    private func showError(_ message: String) {
-        alertMessage = message
-        showingAlert = true
     }
 }
 
@@ -58,11 +39,10 @@ struct PerksTab: View {
 
 private struct PerkRow: View {
     let perk: UpgradeDefinition
-    let gameState: GameState
-    let onError: (String) -> Void
+    let viewModel: ShopViewModel
 
-    private var isOwned: Bool { gameState.purchasedUpgrades.contains(perk.id) }
-    private var canAfford: Bool { gameState.money >= perk.cost }
+    private var isOwned: Bool { viewModel.isPerkOwned(perk.id) }
+    private var canAfford: Bool { viewModel.gameState.money >= perk.cost }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -83,28 +63,22 @@ private struct PerkRow: View {
                 } else {
                     CurrencyLabel(amount: perk.cost)
                         .foregroundStyle(canAfford ? .yellow : .secondary)
-                    Button(action: purchase) {
+                    Button {
+                        viewModel.purchasePerk(perk)
+                    } label: {
                         Text("Buy")
                             .font(.caption.bold())
                             .frame(width: 52)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canAfford)
-                    .accessibilityLabel("Buy \(perk.name) for \(Currency.formatCurrency(perk.cost))")
+                    .accessibilityLabel(
+                        "Buy \(perk.name) for \(Currency.formatCurrency(perk.cost))"
+                    )
                 }
             }
         }
         .padding(.vertical, 4)
-    }
-
-    @MainActor
-    private func purchase() {
-        if Shop.purchasePerk(perkID: perk.id, state: gameState) {
-            HapticManager.purchase()
-        } else {
-            onError("Could not purchase \(perk.name).")
-            HapticManager.error()
-        }
     }
 }
 
@@ -112,42 +86,27 @@ private struct PerkRow: View {
 
 /// Displays the tier upgrade section and room expansion section.
 struct FarmTab: View {
-    let gameState: GameState
-    @State private var showingBiomePicker = false
-    @State private var alertMessage: String = ""
-    @State private var showingAlert = false
-
-    private var nextTier: TierUpgrade? { Shop.getNextTierUpgrade(state: gameState) }
-    private var tierRequirements: [String: Bool] {
-        guard let tier = nextTier else { return [:] }
-        return Shop.checkTierRequirements(state: gameState, upgrade: tier)
-    }
-    private var allRequirementsMet: Bool { tierRequirements.values.allSatisfy { $0 } }
-    private var roomInfo: RoomUpgradeInfo? { Shop.getFarmUpgradeInfo(state: gameState) }
+    let viewModel: ShopViewModel
 
     var body: some View {
+        @Bindable var viewModel = viewModel
         List {
             tierUpgradeSection
-            if roomInfo != nil {
+            if viewModel.roomInfo != nil {
                 roomExpansionSection
             }
         }
         .listStyle(.insetGrouped)
-        .sheet(isPresented: $showingBiomePicker) {
+        .sheet(isPresented: $viewModel.showingBiomePicker) {
             BiomeSelectView(
-                farmTier: gameState.farmTier,
-                existingBiomes: Set(gameState.farm.areas.map(\.biome))
+                farmTier: viewModel.gameState.farmTier,
+                existingBiomes: Set(viewModel.gameState.farm.areas.map(\.biome))
             ) { biome in
                 if let biome {
-                    purchaseRoom(biome: biome)
+                    viewModel.purchaseRoom(biome: biome)
                 }
-                showingBiomePicker = false
+                viewModel.showingBiomePicker = false
             }
-        }
-        .alert("Purchase Failed", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertMessage)
         }
     }
 
@@ -155,7 +114,7 @@ struct FarmTab: View {
 
     private var tierUpgradeSection: some View {
         Section("Farm Tier") {
-            if let tier = nextTier {
+            if let tier = viewModel.nextTier {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Text("Tier \(tier.tier): \(tier.name)")
@@ -166,37 +125,39 @@ struct FarmTab: View {
                     Divider()
                     RequirementRow(
                         label: "Pigs Born",
-                        current: gameState.totalPigsBorn,
+                        current: viewModel.gameState.totalPigsBorn,
                         required: tier.requiredPigsBorn,
-                        met: tierRequirements["pigs_born"] ?? false
+                        met: viewModel.tierRequirements["pigs_born"] ?? false
                     )
                     RequirementRow(
                         label: "Pigdex",
-                        current: gameState.pigdex.discoveredCount,
+                        current: viewModel.gameState.pigdex.discoveredCount,
                         required: tier.requiredPigdex,
-                        met: tierRequirements["pigdex"] ?? false
+                        met: viewModel.tierRequirements["pigdex"] ?? false
                     )
                     if tier.requiredContracts > 0 {
                         RequirementRow(
                             label: "Contracts",
-                            current: gameState.contractBoard.completedContracts,
+                            current: viewModel.gameState.contractBoard.completedContracts,
                             required: tier.requiredContracts,
-                            met: tierRequirements["contracts"] ?? false
+                            met: viewModel.tierRequirements["contracts"] ?? false
                         )
                     }
                     RequirementRow(
                         label: "Funds",
-                        current: gameState.money,
+                        current: viewModel.gameState.money,
                         required: tier.cost,
-                        met: tierRequirements["money"] ?? false,
+                        met: viewModel.tierRequirements["money"] ?? false,
                         formatter: Currency.formatCurrency
                     )
-                    Button(action: upgradeTier) {
+                    Button {
+                        viewModel.upgradeTier()
+                    } label: {
                         Text("Upgrade to Tier \(tier.tier)")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!allRequirementsMet)
+                    .disabled(!viewModel.allRequirementsMet)
                 }
                 .padding(.vertical, 4)
             } else {
@@ -210,15 +171,17 @@ struct FarmTab: View {
 
     private var roomExpansionSection: some View {
         Section("Room Expansion") {
-            if let info = roomInfo {
+            if let info = viewModel.roomInfo {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(info.name)
                                 .font(.body.bold())
-                            Text("\(info.width)×\(info.height) cells · Capacity: \(info.capacity) pigs")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            Text(
+                                "\(info.width)×\(info.height) cells · Capacity: \(info.capacity) pigs"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         }
                         Spacer()
                         CurrencyLabel(amount: info.cost)
@@ -227,39 +190,15 @@ struct FarmTab: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                     Button(
-                        action: { showingBiomePicker = true },
+                        action: { viewModel.showingBiomePicker = true },
                         label: { Text("Buy New Room").frame(maxWidth: .infinity) }
                     )
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
-                    .disabled(gameState.money < info.cost)
+                    .disabled(viewModel.gameState.money < info.cost)
                 }
                 .padding(.vertical, 4)
             }
-        }
-    }
-
-    // MARK: - Actions
-
-    @MainActor
-    private func upgradeTier() {
-        if Shop.purchaseTierUpgrade(state: gameState) {
-            HapticManager.purchase()
-        } else {
-            alertMessage = "Farm tier upgrade failed. Check requirements."
-            showingAlert = true
-            HapticManager.error()
-        }
-    }
-
-    @MainActor
-    private func purchaseRoom(biome: BiomeType) {
-        if Shop.purchaseNewRoom(state: gameState, biome: biome) {
-            HapticManager.purchase()
-        } else {
-            alertMessage = "Room purchase failed. Check your funds."
-            showingAlert = true
-            HapticManager.error()
         }
     }
 }
