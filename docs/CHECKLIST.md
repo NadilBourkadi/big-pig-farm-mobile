@@ -146,6 +146,7 @@
 - [x] Upgrade AdoptionView detail sheet to reuse PigDetailView shared components (bead rw4i)
 - [x] Define adaptive pig colors in asset catalog for light/dark mode (bead 5tee)
 - [x] Add SF Symbol icons to PigListView swipe actions (bead 3vc)
+- [x] Add Economy layer to CLAUDE.md architecture diagram (bead do6)
 
 ---
 
