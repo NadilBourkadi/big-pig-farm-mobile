@@ -12,18 +12,18 @@ struct TreatNodeTests {
     @Test("Initializes with correct treat type")
     @MainActor func initializesWithType() {
         let node = TreatNode(
-            type: .freshVeggies,
+            type: .leafyGreens,
             scenePosition: CGPoint(x: 100, y: 100),
             gridPosition: Position(x: 5, y: 5)
         )
-        #expect(node.treatType == .freshVeggies)
+        #expect(node.treatType == .leafyGreens)
         #expect(node.gridPosition == Position(x: 5, y: 5))
     }
 
     @Test("Has correct zPosition between facilities and pigs")
     @MainActor func correctZPosition() {
         let node = TreatNode(
-            type: .herbBundle,
+            type: .cucumber,
             scenePosition: .zero,
             gridPosition: Position()
         )
@@ -78,7 +78,7 @@ struct FarmSceneTreatModeTests {
 struct StreakIndicatorTests {
 
     @Test("Displays with active streak")
-    func displaysWithActiveStreak() {
+    @MainActor func displaysWithActiveStreak() {
         var streak = VisitStreak()
         streak.currentStreak = 3
         streak.lastVisitDate = Date()
@@ -87,7 +87,7 @@ struct StreakIndicatorTests {
     }
 
     @Test("Hidden when streak is zero")
-    func hiddenWhenZero() {
+    @MainActor func hiddenWhenZero() {
         let streak = VisitStreak()
         let indicator = StreakIndicator(streak: streak)
         #expect(indicator.streak.currentStreak == 0)
@@ -100,7 +100,7 @@ struct StreakIndicatorTests {
 struct ReunionBoostIndicatorTests {
 
     @Test("Displays with active boost")
-    @MainActor func displaysWithActiveBoost() {
+    @MainActor func displaysWithActiveBoost() throws {
         let boost = ReunionBoost.standard()
         let indicator = ReunionBoostIndicator(boost: boost)
         let unwrapped = try #require(indicator.boost)
@@ -108,13 +108,13 @@ struct ReunionBoostIndicatorTests {
     }
 
     @Test("Nil boost produces hidden indicator")
-    func nilBoostHidden() {
+    @MainActor func nilBoostHidden() {
         let indicator = ReunionBoostIndicator(boost: nil)
         #expect(indicator.boost == nil)
     }
 
     @Test("Expired boost produces hidden indicator")
-    @MainActor func expiredBoostHidden() {
+    @MainActor func expiredBoostHidden() throws {
         let boost = ReunionBoost.standard(at: Date().addingTimeInterval(-2000))
         let indicator = ReunionBoostIndicator(boost: boost)
         let unwrapped = try #require(indicator.boost)
