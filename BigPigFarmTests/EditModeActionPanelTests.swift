@@ -1,48 +1,8 @@
-/// EditModeActionPanelTests — Tests for edit mode action panel logic, callbacks,
-/// and the drag/remove/auto-arrange call sequences.
+/// EditModeActionPanelTests — Tests for FarmScene drag/remove state and auto-arrange.
+/// Coordinator facility callback tests moved to ContentViewModelTests.swift.
 import Testing
 import Foundation
 @testable import BigPigFarm
-
-// MARK: - Coordinator Facility Selection Callbacks
-
-@Suite("FarmSceneCoordinator facility callbacks")
-@MainActor
-struct CoordinatorFacilityCallbackTests {
-
-    let state = GameState()
-    var coord: FarmSceneCoordinator { FarmSceneCoordinator(gameState: state) }
-    var scene: FarmScene { FarmScene(gameState: state) }
-
-    @Test("Selecting a facility fires onFacilitySelected with its ID")
-    func facilitySelectedFiresCallback() {
-        let coordinator = coord
-        var capturedID: UUID?
-        coordinator.onFacilitySelected = { capturedID = $0 }
-        let facilityID = UUID()
-        coordinator.farmScene(scene, didSelectFacility: facilityID)
-        #expect(capturedID == facilityID)
-    }
-
-    @Test("Deselecting a facility fires onFacilitySelected with nil")
-    func facilityDeselectedFiresCallbackWithNil() {
-        let coordinator = coord
-        var capturedID: UUID? = UUID()   // start non-nil
-        coordinator.onFacilitySelected = { capturedID = $0 }
-        coordinator.farmSceneDidDeselectFacility(scene)
-        #expect(capturedID == nil)
-    }
-
-    @Test("No onFacilitySelected callback registered does not crash on select")
-    func facilitySelectedNoCallbackNoCrash() {
-        coord.farmScene(scene, didSelectFacility: UUID())
-    }
-
-    @Test("No onFacilitySelected callback registered does not crash on deselect")
-    func facilityDeselectedNoCallbackNoCrash() {
-        coord.farmSceneDidDeselectFacility(scene)
-    }
-}
 
 // MARK: - FarmScene Drag State
 
