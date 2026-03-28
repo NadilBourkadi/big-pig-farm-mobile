@@ -24,7 +24,7 @@
 - [x] Test `SpriteView` performance with 50+ animated nodes (during Phase 3)
 - [ ] Evaluate `CADisplayLink` vs `Timer` for tick loop precision (during Phase 1)
 - [ ] Measure JSON save/load performance with 200+ pigs (during Phase 5)
-- [ ] Test Swift 6 strict concurrency with SpriteKit scene updates (during Phase 3)
+- [x] Test Swift 6 strict concurrency with SpriteKit scene updates (during Phase 3)
 
 ---
 

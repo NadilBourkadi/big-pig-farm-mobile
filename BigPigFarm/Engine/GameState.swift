@@ -7,6 +7,13 @@ import Observation
 
 /// The central game state, observed by both SwiftUI and SpriteKit layers.
 ///
+/// ## Concurrency Strategy
+///
+/// The entire simulation uses a single-actor (`@MainActor`) model. The Timer
+/// (`GameEngine`), SpriteKit render loop (`FarmScene.update`), and SwiftUI views
+/// all run on the main thread. Only file I/O (auto-save) and debug logging
+/// (`DebugLogger`) touch background threads, using value-type copies.
+///
 /// `@unchecked Sendable` is safe because every stored property is only ever
 /// read or written while isolated to `@MainActor`. Do NOT add `nonisolated`
 /// methods that access mutable state.
