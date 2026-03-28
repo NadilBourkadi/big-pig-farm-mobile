@@ -303,10 +303,10 @@ struct ContentViewModelSceneSyncTests {
         let state = GameState()
         state.farm = FarmGrid.createStarter()
         let vm = makeViewModel(gameState: state)
-        vm.selectedTreatType = .carrotStick
+        vm.selectedTreatType = .cucumber
 
         vm.syncTreatType()
 
-        #expect(vm.scene.selectedTreatType == .carrotStick)
+        #expect(vm.scene.selectedTreatType == .cucumber)
     }
 }
