@@ -330,10 +330,10 @@
     },
     "treat": {
       "fresh_veggies": {
-        "stem": "#2d5a1e",
-        "leaf": "#4caf50",
-        "skin": "#66bb6a",
-        "flesh": "#a5d6a7"
+        "tip": "#2e7d32",
+        "leaf": "#43a047",
+        "mid": "#66bb6a",
+        "vein": "#a5d6a7"
       },
       "fruit_slices": {
         "stem": "#5d4037",
@@ -8093,49 +8093,49 @@
         "pixels": [
           [
             null,
+            "tip",
             null,
-            "stem",
-            "stem",
             null,
+            "tip",
             null
           ],
           [
-            null,
+            "tip",
             "leaf",
-            "skin",
-            "skin",
             "leaf",
-            null
+            "tip",
+            "leaf",
+            "tip"
           ],
           [
             "leaf",
-            "skin",
-            "flesh",
-            "flesh",
-            "skin",
+            "mid",
+            "mid",
+            "leaf",
+            "mid",
             "leaf"
           ],
           [
             "leaf",
-            "skin",
-            "flesh",
-            "flesh",
-            "skin",
+            "mid",
+            "vein",
+            "mid",
+            "mid",
             "leaf"
           ],
           [
             null,
-            "skin",
-            "skin",
-            "flesh",
-            "skin",
+            "leaf",
+            "mid",
+            "mid",
+            "leaf",
             null
           ],
           [
             null,
             null,
-            "skin",
-            "skin",
+            "leaf",
+            "leaf",
             null,
             null
           ]

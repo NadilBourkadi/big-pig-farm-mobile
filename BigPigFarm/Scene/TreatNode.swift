@@ -12,7 +12,7 @@ class TreatNode: SKSpriteNode {
         self.gridPosition = gridPosition
 
         let texture = Self.textureForType(type)
-        let nodeSize = CGSize(width: 12, height: 12)
+        let nodeSize = CGSize(width: 24, height: 24)
         super.init(texture: texture, color: .clear, size: nodeSize)
 
         position = scenePosition
