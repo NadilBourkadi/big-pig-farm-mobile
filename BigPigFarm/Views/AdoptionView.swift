@@ -52,17 +52,32 @@ struct AdoptionView: View {
             }
         }
         .sheet(item: $selectedPig) { pig in
+            let isEmergency = emergencyPigIDs.contains(pig.id)
+            let cost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: gameState)
+            let canAfford = isEmergency || gameState.money >= cost
+
             NavigationStack {
-                adoptionDetail(pig: pig)
-                    .navigationTitle(pig.name)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button("Done") { selectedPig = nil }
-                        }
+                AdoptionDetailView(
+                    pig: pig,
+                    cost: cost,
+                    canAfford: canAfford,
+                    isFree: isEmergency,
+                    pigCount: gameState.pigCount,
+                    capacity: gameState.capacity,
+                    isAtCapacity: gameState.isAtCapacity,
+                    onAdopt: { adoptPig(pig) }
+                )
+                .navigationTitle(pig.name)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { selectedPig = nil }
                     }
+                }
             }
-            .presentationDetents([.medium])
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
         }
         .toolbar {
             ToolbarItem(placement: .bottomBar) {
@@ -177,59 +192,6 @@ extension AdoptionView {
 // MARK: - AdoptionView Actions
 
 extension AdoptionView {
-    /// Detail panel for the selected adoption pig.
-    ///
-    /// Maps from: shop.py _update_detail() adoption pig branch.
-    private func adoptionDetail(pig: GuineaPig) -> some View {
-        let isEmergency = emergencyPigIDs.contains(pig.id)
-        let cost = isEmergency ? 0 : Adoption.calculateAdoptionCost(pig, state: gameState)
-        let canAfford = isEmergency || gameState.money >= cost
-
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(pig.name).font(.headline)
-                if isEmergency {
-                    StatusBadge(label: "Free", color: .green)
-                }
-                Spacer()
-                if !isEmergency {
-                    CurrencyLabel(amount: cost)
-                }
-            }
-
-            HStack {
-                Text("\(pig.gender.displaySymbol) \(pig.gender.displayLabel)")
-                    .font(.caption)
-                    .foregroundStyle(pig.gender.displayColor)
-                Text("Color: \(pig.phenotype.displayName)")
-                    .font(.caption)
-            }
-
-            HStack {
-                Text("Rarity: \(pig.phenotype.rarity.rawValue.capitalized)")
-                    .font(.caption)
-                let traits = pig.personality.map { $0.rawValue.capitalized }
-                Text("Traits: \(traits.joined(separator: ", "))")
-                    .font(.caption)
-            }
-
-            if let tag = pig.originTag {
-                Text("Bloodline: \(tag)")
-                    .font(.caption)
-                    .foregroundStyle(.purple)
-            }
-
-            Text("Farm: \(gameState.pigCount)/\(gameState.capacity) pigs")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Button("Adopt \(pig.name)") { adoptPig(pig) }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canAfford || gameState.isAtCapacity)
-        }
-        .padding()
-    }
-
     /// Adopt the selected pig.
     ///
     /// Maps from: shop.py _adopt_pig()
