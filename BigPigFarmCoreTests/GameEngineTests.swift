@@ -38,6 +38,16 @@ import Foundation
     #expect(!engine.isRunning)
 }
 
+@Test @MainActor func timerToleranceSetForPowerSavings() {
+    let engine = GameEngine(state: GameState())
+    #expect(engine.timerTolerance == nil)
+    engine.start()
+    let expectedTolerance = (1.0 / Double(GameConfig.Simulation.ticksPerSecond)) * 0.2
+    #expect(engine.timerTolerance == expectedTolerance)
+    engine.stop()
+    #expect(engine.timerTolerance == nil)
+}
+
 // MARK: - Pause / Resume
 
 @Test @MainActor func pauseSetsFlag() {

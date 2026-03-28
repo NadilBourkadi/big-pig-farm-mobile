@@ -43,6 +43,8 @@ final class GameEngine {
                 self?.timerFired()
             }
         }
+        // 20% of tick interval — acceptable drift for power coalescing; no visible effect at 10 TPS
+        newTimer.tolerance = interval * 0.2
         RunLoop.main.add(newTimer, forMode: .common)
         timer = newTimer
     }
@@ -280,6 +282,9 @@ final class GameEngine {
     // MARK: - Properties
 
     var isRunning: Bool { timer != nil }
+
+    /// Timer tolerance in seconds. Returns nil when the engine is stopped.
+    var timerTolerance: Double? { timer?.tolerance }
 
     // MARK: - Tick Processing
 
