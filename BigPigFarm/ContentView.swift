@@ -114,6 +114,9 @@ struct ContentView: View {
     /// The treat type to place on the next tap.
     @State private var selectedTreatType: TreatType = .leafyGreens
 
+    /// Tracks which onboarding coach marks have been dismissed (UserDefaults-backed).
+    @State private var coachMarkState = CoachMarkState.load()
+
     /// Whether the Pig Show flow is presented.
     @State private var showPigShow = false
 
@@ -185,6 +188,7 @@ struct ContentView: View {
                 }
                 Spacer()
                 ToastOverlayView(notificationManager: notificationManager)
+                CoachMarkOverlayView(gameState: gameState, coachState: $coachMarkState)
                 if isEditMode {
                     EditModeActionPanel(
                         selectedFacilityID: editModeSelectedFacilityID,
@@ -341,6 +345,8 @@ extension ContentView {
         farmScene.draggedFacilityID = nil
         editModeSelectedFacilityID = nil
         isDraggingFacility = false
+        coachMarkState.resetAll()
+        coachMarkState.save()
         onResetFarm()
     }
 
