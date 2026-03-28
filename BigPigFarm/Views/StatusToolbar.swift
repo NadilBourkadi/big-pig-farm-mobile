@@ -120,33 +120,17 @@ private extension StatusToolbar {
     }
 
     var refillButton: some View {
-        Button(action: onRefillTapped) {
-            VStack(spacing: 2) {
-                Image(systemName: "drop.fill")
-                    .font(.subheadline)
-                    .frame(minHeight: 18)
-                if gameState.hasFacilitiesToRefill {
-                    Text(Currency.formatCurrency(gameState.totalRefillCost))
-                        .font(.caption2)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .foregroundStyle(gameState.canAffordRefill ? .green : .red)
-                } else {
-                    Text("Refill")
-                        .font(.caption2)
-                }
-            }
-            .padding(.horizontal, 4)
-            .frame(maxWidth: .infinity, minHeight: 42)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(red: 0.3, green: 0.22, blue: 0.14).opacity(0.6))
-            )
-            .foregroundStyle(Color(red: 0.95, green: 0.9, blue: 0.82))
-        }
-        .buttonStyle(.plain)
-        .disabled(!gameState.isRefillEnabled)
-        .opacity(gameState.isRefillEnabled ? 1.0 : 0.4)
+        HUDButton(
+            systemImage: "drop.fill",
+            label: "Refill",
+            secondary: gameState.hasFacilitiesToRefill
+                ? (Currency.formatCurrency(gameState.totalRefillCost),
+                   gameState.canAffordRefill ? .green : .red)
+                : nil,
+            isDisabled: !gameState.isRefillEnabled,
+            fillWidth: true,
+            action: onRefillTapped
+        )
     }
 }
 

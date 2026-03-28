@@ -57,4 +57,35 @@ struct HUDButtonTests {
         #expect(button.systemImage == "cart.fill")
         #expect(button.label == "Shop")
     }
+
+    @Test("Default secondary is nil")
+    func defaultSecondaryNil() {
+        let button = HUDButton(systemImage: "star", label: "Test", action: {})
+        #expect(button.secondary == nil)
+    }
+
+    @Test("secondary tuple can be set")
+    func secondarySet() {
+        let button = HUDButton(
+            systemImage: "drop.fill",
+            label: "Refill",
+            secondary: ("50", .green),
+            action: {}
+        )
+        #expect(button.secondary?.label == "50")
+        #expect(button.secondary?.color == .green)
+        #expect(button.label == "Refill")
+    }
+
+    @Test("secondary with red color for unaffordable cost")
+    func secondaryRedColor() {
+        let button = HUDButton(
+            systemImage: "drop.fill",
+            label: "Refill",
+            secondary: ("100", .red),
+            action: {}
+        )
+        #expect(button.secondary?.label == "100")
+        #expect(button.secondary?.color == .red)
+    }
 }

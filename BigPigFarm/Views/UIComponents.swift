@@ -224,6 +224,7 @@ struct SectionHeader: View {
 struct HUDButton: View {
     let systemImage: String
     let label: String
+    var secondary: (label: String, color: Color)?
     var isActive: Bool = false
     var isDisabled: Bool = false
     var fillWidth: Bool = false
@@ -235,10 +236,18 @@ struct HUDButton: View {
                 Image(systemName: systemImage)
                     .font(.subheadline)
                     .frame(minHeight: 18)
-                Text(label)
-                    .font(.caption2)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                if let secondary {
+                    Text(secondary.label)
+                        .font(.caption2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .foregroundStyle(secondary.color)
+                } else {
+                    Text(label)
+                        .font(.caption2)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
             }
             .padding(.horizontal, 4)
             .frame(maxWidth: fillWidth ? .infinity : nil, minHeight: 42)
@@ -251,7 +260,7 @@ struct HUDButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
-        .accessibilityLabel(label)
+        .accessibilityLabel(secondary.map { "\(label): \($0.label)" } ?? label)
     }
 }
 
