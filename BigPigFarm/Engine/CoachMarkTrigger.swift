@@ -15,7 +15,7 @@ enum CoachMarkAnchor: Sendable {
 
 // MARK: - CoachMarkTrigger
 
-enum CoachMarkTrigger {
+enum CoachMarkTrigger: Sendable {
 
     /// Returns the highest-priority unshown coach mark, or nil.
     ///
