@@ -13,6 +13,9 @@ final class BehaviorController {
     /// Drained by SimulationRunner after each tick.
     private var completedCourtships: [(UUID, UUID)] = []
 
+    /// Pig IDs that arrived at a treat this tick. Drained by SimulationRunner.
+    private var treatArrivals: [UUID] = []
+
     // MARK: - Per-pig tracking state
 
     private var lastGridGeneration: Int = 0
@@ -129,6 +132,12 @@ final class BehaviorController {
         defer { completedCourtships.removeAll() }
         return completedCourtships
     }
+
+    /// Return and clear all pig IDs that arrived at a treat this tick.
+    func drainTreatArrivals() -> [UUID] {
+        defer { treatArrivals.removeAll() }
+        return treatArrivals
+    }
 }
 
 // MARK: - Blocked timer access
@@ -224,6 +233,36 @@ extension BehaviorController {
     /// advance the courtship timer when adjacent to a partner, and consume
     /// resources from any facility the pig is currently using.
     private func updateCurrentBehavior(pig: inout GuineaPig, gameMinutes: Double) {
+        // Arrived at treat (seekingTreat, path consumed)
+        if pig.behaviorState == .seekingTreat, pig.path.isEmpty {
+            if let treatTarget = pig.targetTreatGridPosition {
+                let pigGrid = pig.position.gridPosition
+                if pigGrid.manhattanDistance(to: treatTarget) <= 1 {
+                    treatArrivals.append(pig.id)
+                    pig.behaviorState = .idle
+                    pig.targetTreatGridPosition = nil
+                    pig.targetPosition = nil
+                    pig.targetDescription = nil
+                    resetDecisionTimer(pig.id)
+                } else {
+                    // Path consumed but not at target — re-pathfind
+                    BehaviorMovement.setPathTo(controller: self, pig: &pig, target: treatTarget)
+                    if pig.path.isEmpty {
+                        // Unreachable — give up
+                        pig.behaviorState = .idle
+                        pig.targetTreatGridPosition = nil
+                        pig.targetPosition = nil
+                        pig.targetDescription = nil
+                    }
+                }
+            } else {
+                // Lost target — reset to idle
+                pig.behaviorState = .idle
+                pig.targetPosition = nil
+                pig.targetDescription = nil
+            }
+        }
+
         // Arrived at targeted facility (wandering, path consumed, facility target set)
         if pig.behaviorState == .wandering, pig.path.isEmpty, pig.targetFacilityId != nil {
             blockedTimers.removeValue(forKey: pig.id)
