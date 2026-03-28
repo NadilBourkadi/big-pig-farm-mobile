@@ -441,7 +441,7 @@ struct PreferenceAlignmentScoringTests {
 // MARK: - Test Helper
 
 /// Mirror of Breeding.preferenceAlignmentBonus (private static).
-/// KEEP IN SYNC with Breeding+AutoPair.swift if the scoring algorithm changes.
+/// KEEP IN SYNC with Breeding+ProgramAutoPair.swift if the scoring algorithm changes.
 func testPreferenceAlignmentBonus(
     _ male: Genotype,
     _ female: Genotype,
