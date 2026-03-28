@@ -9,14 +9,14 @@ struct StreakIndicator: View {
             HStack(spacing: 4) {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(.orange)
-                    .font(.system(size: 12))
+                    .font(.caption)
                 Text("Day \(streak.currentStreak)")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                 if streak.isStreakActive() {
                     TimelineView(.periodic(from: .now, by: 60)) { _ in
                         Text(countdownText)
-                            .font(.system(size: 9))
+                            .font(.caption2)
                             .foregroundStyle(.white.opacity(0.7))
                     }
                 }

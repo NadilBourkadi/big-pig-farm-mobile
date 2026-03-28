@@ -218,10 +218,10 @@ struct HUDButton: View {
         Button(action: action) {
             VStack(spacing: 2) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 16))
-                    .frame(height: 18)
+                    .font(.subheadline)
+                    .frame(minHeight: 18)
                 Text(label)
-                    .font(.system(size: 9))
+                    .font(.caption2)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }

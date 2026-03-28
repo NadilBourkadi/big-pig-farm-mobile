@@ -218,6 +218,7 @@ struct ContentView: View {
                     onSpeedTapped: { cycleSpeed() }
                 )
             }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
         .sheet(isPresented: $showShop) {
             ShopView(gameState: gameState, initialTab: shopInitialTab)
