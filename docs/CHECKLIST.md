@@ -120,6 +120,7 @@
 - [x] Show refill cost on disabled button / distinguish "all full" from "can't afford" (bead 86k)
 - [x] TestFlight build and testing (code-complete: PrivacyInfo, metadata, 1.0.0, 1187 tests passing, clean build; upload gated on paid Apple Developer account)
 - [x] Extract shared `HUDButton` component from duplicated toolbar/panel buttons (bead 42b)
+- [x] Refactor refill button to use shared `HUDButton` component (bead rv3p)
 - [x] Extract shared `InfoRow` component (duplicated in PigDetailView/AlmanacView with inconsistent fonts) (bead 1h1)
 - [x] Extract shared `StatusBadge` component from duplicated pill badges (bead 9r3)
 - [x] Fix gender display inconsistency: AdoptionView uses ♂/♀ in blue/pink matching PigListView (bead dfe)
