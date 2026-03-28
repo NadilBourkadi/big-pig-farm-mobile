@@ -25,6 +25,7 @@ extension FacilityManager {
         }
 
         // No suitable facility — go idle with cooldown to prevent re-seeking loop
+        pig.logBehavior("Arrived but nothing to do, idling")
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logArrivalFailed(pig: pig)
         #endif
@@ -57,12 +58,14 @@ extension FacilityManager {
 
     private func handleArrivalFood(pig: inout GuineaPig, facility: Facility) -> Bool {
         if !facility.isEmpty && pig.needs.hunger < Double(GameConfig.Needs.satisfactionThreshold) {
+            pig.logBehavior("Arrived at \(facility.name), eating")
             pig.behaviorState = .eating
             pig.targetPosition = nil
             pig.targetDescription = "eating at \(facility.name)"
             clearFailedFacilities(pig.id)
             return true
         } else if facility.isEmpty {
+            pig.logBehavior("\(facility.name) is empty")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
         }
@@ -71,12 +74,14 @@ extension FacilityManager {
 
     private func handleArrivalWater(pig: inout GuineaPig, facility: Facility) -> Bool {
         if !facility.isEmpty && pig.needs.thirst < Double(GameConfig.Needs.satisfactionThreshold) {
+            pig.logBehavior("Arrived at \(facility.name), drinking")
             pig.behaviorState = .drinking
             pig.targetPosition = nil
             pig.targetDescription = "drinking at \(facility.name)"
             clearFailedFacilities(pig.id)
             return true
         } else if facility.isEmpty {
+            pig.logBehavior("\(facility.name) is empty")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
         }
@@ -89,9 +94,11 @@ extension FacilityManager {
         pig.behaviorState = .sleeping
         pig.targetPosition = nil
         if pigsUsing < facility.info.capacity {
+            pig.logBehavior("Arrived at \(facility.name), sleeping")
             pig.targetDescription = "sleeping in \(facility.name)"
             clearFailedFacilities(pig.id)
         } else {
+            pig.logBehavior("\(facility.name) is full, sleeping nearby")
             pig.targetDescription = "sleeping near \(facility.name) (full)"
             addFailedFacility(pig.id, facility.id)
         }
@@ -100,6 +107,7 @@ extension FacilityManager {
 
     private func handleArrivalPlay(pig: inout GuineaPig, facility: Facility) -> Bool {
         if facility.facilityType == .therapyGarden && pig.needs.happiness >= 50 {
+            pig.logBehavior("Happiness recovered, skipping \(facility.name)")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
@@ -110,11 +118,13 @@ extension FacilityManager {
         }
         let pigsUsing = countPigsUsingFacility(facility, excludePig: pig)
         if pigsUsing < facility.info.capacity {
+            pig.logBehavior("Arrived at \(facility.name), playing")
             pig.behaviorState = .playing
             pig.targetPosition = nil
             pig.targetDescription = "playing at \(facility.name)"
             clearFailedFacilities(pig.id)
         } else {
+            pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
@@ -128,11 +138,13 @@ extension FacilityManager {
     private func handleArrivalCampfire(pig: inout GuineaPig, facility: Facility) -> Bool {
         let pigsUsing = countPigsUsingFacility(facility, excludePig: pig)
         if pigsUsing < facility.info.capacity {
+            pig.logBehavior("Arrived at \(facility.name), socializing")
             pig.behaviorState = .socializing
             pig.targetPosition = nil
             pig.targetDescription = "socializing at \(facility.name)"
             clearFailedFacilities(pig.id)
         } else {
+            pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
@@ -147,11 +159,13 @@ extension FacilityManager {
         guard pig.needs.energy < Double(GameConfig.Needs.satisfactionThreshold) else { return false }
         let pigsUsing = countPigsUsingFacility(facility, excludePig: pig)
         if pigsUsing < facility.info.capacity {
+            pig.logBehavior("Arrived at \(facility.name), soaking")
             pig.behaviorState = .sleeping
             pig.targetPosition = nil
             pig.targetDescription = "soaking in \(facility.name)"
             clearFailedFacilities(pig.id)
         } else {
+            pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
             setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle

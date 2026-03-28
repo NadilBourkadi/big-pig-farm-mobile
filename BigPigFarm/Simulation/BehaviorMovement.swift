@@ -125,15 +125,19 @@ enum BehaviorMovement {
         pig.behaviorState = .idle
         if let areaId = pig.currentAreaId,
            let safe = controller.gameState.farm.findRandomWalkableInArea(areaId) {
+            pig.logBehavior("Rescued from non-walkable cell")
             let oldPos = pig.position
             pig.position = Position(x: Double(safe.x), y: Double(safe.y))
             controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
             return
         }
         if let safe = controller.gameState.farm.findRandomWalkable() {
+            pig.logBehavior("Rescued from non-walkable cell")
             let oldPos = pig.position
             pig.position = Position(x: Double(safe.x), y: Double(safe.y))
             controller.collision.notifyPigMoved(id: pig.id, from: oldPos, to: pig.position)
+        } else {
+            pig.logBehavior("Stuck on non-walkable cell")
         }
     }
 }
@@ -291,9 +295,11 @@ private extension BehaviorMovement {
                 : GameConfig.Behavior.failedCooldownCycles
         )
         if description.contains("Hideout") || description.localizedCaseInsensitiveContains("sleep") {
+            pig.logBehavior("All hideouts blocked, sleeping where standing")
             pig.behaviorState = .sleeping
             pig.targetDescription = "sleeping (no hideout available)"
         } else {
+            pig.logBehavior("All facilities blocked, wandering away")
             pig.behaviorState = .idle
             startWandering(controller: controller, pig: &pig)
             controller.resetDecisionTimer(pig.id)

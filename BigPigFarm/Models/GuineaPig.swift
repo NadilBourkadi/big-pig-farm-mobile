@@ -179,6 +179,9 @@ struct GuineaPig: Identifiable, Codable, Sendable {
     // Genetic imprinting (Showroom upgrade)
     var imprintedLocus: String?
 
+    // Activity log (runtime only — not persisted)
+    var behaviorLog: [String] = []
+
     // MARK: - Computed Properties
 
     var ageGroup: AgeGroup {
@@ -266,6 +269,13 @@ struct GuineaPig: Identifiable, Codable, Sendable {
 
     func hasTrait(_ trait: Personality) -> Bool {
         personality.contains(trait)
+    }
+
+    mutating func logBehavior(_ message: String) {
+        behaviorLog.append(message)
+        if behaviorLog.count > GameConfig.Behavior.maxBehaviorLogEntries {
+            behaviorLog.removeFirst(behaviorLog.count - GameConfig.Behavior.maxBehaviorLogEntries)
+        }
     }
 
     /// Rarity-only base value estimate (no age/health/grooming/perk modifiers).

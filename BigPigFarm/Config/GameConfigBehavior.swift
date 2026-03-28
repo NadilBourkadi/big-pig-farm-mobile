@@ -127,5 +127,9 @@ extension GameConfig {
         static let overlapEpsilon: Double = 0.01
         static let separationPadding: Double = 0.1
         static let pathVectorEpsilon: Double = 0.01
+
+        // MARK: - Activity log
+
+        static let maxBehaviorLogEntries: Int = 30
     }
 }

@@ -29,6 +29,7 @@ enum BehaviorSeeking {
         }
 
         guard let facilityTypes = NeedsSystem.getTargetFacilityForNeed(need) else {
+            pig.logBehavior("No facility type for \(need), wandering")
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
             return
@@ -50,6 +51,7 @@ enum BehaviorSeeking {
                 pig.behaviorState = .wandering
                 pig.targetFacilityId = facility.id
                 pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.logBehavior("Going to \(facility.name)")
                 pig.targetDescription = "going to \(facility.name)"
                 #if (DEBUG || INTERNAL) && canImport(UIKit)
                 logSeekDispatch(pig: pig, need: need, facility: facility)
@@ -66,6 +68,7 @@ enum BehaviorSeeking {
         controller.setUnreachableBackoff(pig.id, need: need, cycles: cycles)
         // Match cooldown to backoff duration so the failed set outlives the backoff
         controller.facilityManager.setFailedCooldown(pig.id, cycles)
+        pig.logBehavior("No reachable \(need) facility, backing off")
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logSeekFailure(pig: pig, need: need, isCritical: isCritical, cycles: cycles)
         #endif
@@ -92,12 +95,14 @@ enum BehaviorSeeking {
                 pig.behaviorState = .wandering
                 pig.targetFacilityId = facility.id
                 pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.logBehavior("Going to \(facility.name) to sleep")
                 pig.targetDescription = "going to \(facility.name)"
                 return
             }
         }
 
         // No reachable hideout — sleep in place
+        pig.logBehavior("No reachable hideout, sleeping where standing")
         pig.path = []
         pig.targetPosition = nil
         pig.targetFacilityId = nil
@@ -127,6 +132,7 @@ enum BehaviorSeeking {
                 pig.behaviorState = .wandering
                 pig.targetFacilityId = facility.id
                 pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
+                pig.logBehavior("Going to \(facility.name) to play")
                 pig.targetDescription = "going to \(facility.name)"
                 return
             }
@@ -134,11 +140,13 @@ enum BehaviorSeeking {
 
         // Fallback: socialize if social need is low and pig is not shy
         if pig.needs.social < Double(GameConfig.Needs.highThreshold), !pig.hasTrait(.shy) {
+            pig.logBehavior("No play facility, seeking social instead")
             seekSocialInteraction(controller: controller, pig: &pig)
             return
         }
 
         // Last resort: playful wandering
+        pig.logBehavior("No play facility, wandering playfully")
         pig.targetDescription = nil
         BehaviorMovement.startWandering(controller: controller, pig: &pig)
         if Double.random(in: 0..<1) < GameConfig.Behavior.noPlayFacilityPlayChance {
@@ -157,6 +165,7 @@ enum BehaviorSeeking {
            seekCampfire(controller: controller, pig: &pig) { return }
 
         guard let target = findNearestSocialTarget(controller: controller, pig: pig) else {
+            pig.logBehavior("Can't reach friends, wandering")
             pig.targetFacilityId = nil
             pig.targetDescription = nil
             BehaviorMovement.startWandering(controller: controller, pig: &pig)
@@ -168,12 +177,14 @@ enum BehaviorSeeking {
         ) {
             BehaviorMovement.setPathTo(controller: controller, pig: &pig, target: adjacentPos)
             if !pig.path.isEmpty {
+                pig.logBehavior("Going to socialize with \(target.name)")
                 pig.behaviorState = .socializing
                 pig.targetFacilityId = nil
                 pig.targetDescription = "going to \(target.name)"
                 return
             }
         }
+        pig.logBehavior("Can't reach friends, wandering")
         pig.targetFacilityId = nil
         pig.targetDescription = nil
         BehaviorMovement.startWandering(controller: controller, pig: &pig)
@@ -197,6 +208,7 @@ enum BehaviorSeeking {
         ) else { return false }
         BehaviorMovement.setPathTo(controller: controller, pig: &pig, target: adjacentPos)
         if !pig.path.isEmpty {
+            pig.logBehavior("Walking to court \(partner.name)")
             pig.targetDescription = "courting \(partner.name)"
             return true
         }
@@ -249,6 +261,7 @@ enum BehaviorSeeking {
             ) else { continue }
             var trimmedPath = path
             if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
+            pig.logBehavior("Going to \(campfire.name) to socialize")
             pig.path = trimmedPath
             pig.behaviorState = .socializing
             pig.targetFacilityId = campfire.id

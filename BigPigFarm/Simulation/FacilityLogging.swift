@@ -19,6 +19,7 @@ extension FacilityManager {
                 if let result = findOpenInteractionPoint(pig: pig, facility: facility) {
                     var trimmedPath = result.path
                     if trimmedPath.first == pig.position.gridPosition { trimmedPath.removeFirst() }
+                    pig.logBehavior("Blocked, switching to \(facility.name)")
                     pig.path = trimmedPath
                     pig.targetPosition = Position(x: Double(result.point.x), y: Double(result.point.y))
                     pig.targetFacilityId = facility.id
