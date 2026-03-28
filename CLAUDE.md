@@ -41,6 +41,8 @@ Views (SwiftUI) + Scene (SpriteKit)
         ↓
     Simulation (AI, breeding, needs, collision)
         ↓
+    Economy (shop, market, contracts, adoption)
+        ↓
       Models (entities, genetics)
         ↓
       Config (constants, names)
