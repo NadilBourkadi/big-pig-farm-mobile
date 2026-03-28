@@ -104,11 +104,11 @@ extension FarmScene {
     ///
     /// Format: "Happiness 75%, Health 100%, Hunger 80%, Thirst 90%"
     func pigAccessibilityValue(for pig: GuineaPig) -> String {
-        let h = Int(pig.needs.happiness)
-        let hp = Int(pig.needs.health)
-        let hu = Int(pig.needs.hunger)
-        let t = Int(pig.needs.thirst)
-        return "Happiness \(h)%, Health \(hp)%, Hunger \(hu)%, Thirst \(t)%"
+        let happiness = Int(pig.needs.happiness)
+        let health = Int(pig.needs.health)
+        let hunger = Int(pig.needs.hunger)
+        let thirst = Int(pig.needs.thirst)
+        return "Happiness \(happiness)%, Health \(health)%, Hunger \(hunger)%, Thirst \(thirst)%"
     }
 
     // MARK: - Facility Labels

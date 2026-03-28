@@ -306,6 +306,11 @@ enum BehaviorSeeking {
         return nearest
     }
 
+}
+
+// MARK: - Need Value Lookup
+
+extension BehaviorSeeking {
     static func getNeedValue(_ pig: GuineaPig, need: String) -> Double {
         switch need {
         case "hunger":    return pig.needs.hunger
