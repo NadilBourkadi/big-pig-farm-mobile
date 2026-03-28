@@ -200,6 +200,21 @@ struct InfoRow: View {
     }
 }
 
+// MARK: - SectionHeader
+
+/// A styled section title for detail panels.
+///
+/// Shared across PigDetailView, AdoptionDetailView, and any future detail screens.
+struct SectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.headline)
+            .padding(.top, 4)
+    }
+}
+
 // MARK: - HUDButton
 
 /// Reusable icon-over-label button for HUD toolbars and action panels.

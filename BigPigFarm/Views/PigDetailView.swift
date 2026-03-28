@@ -72,7 +72,7 @@ private extension PigDetailView {
     var basicInfoSection: some View {
         let breakdown = Market.calculatePigValueBreakdown(pig: pig, state: gameState)
         return VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Basic Info")
+            SectionHeader(title: "Basic Info")
             InfoRow(label: "Age", value: ageDescription)
             InfoRow(label: "Phenotype", value: pig.phenotype.displayName)
             InfoRow(label: "Area", value: areaName)
@@ -114,7 +114,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var needsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Needs")
+            SectionHeader(title: "Needs")
             NeedBar(value: pig.needs.hunger / 100.0, label: "Hunger")
             NeedBar(value: pig.needs.thirst / 100.0, label: "Thirst")
             NeedBar(value: pig.needs.energy / 100.0, label: "Energy")
@@ -131,7 +131,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var personalitySection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Personality")
+            SectionHeader(title: "Personality")
             let traits = pig.personality.map { $0.rawValue.capitalized }.joined(separator: ", ")
             Text(traits.isEmpty ? "None" : traits)
                 .font(.body)
@@ -145,7 +145,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var breedingSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Breeding")
+            SectionHeader(title: "Breeding")
             InfoRow(label: "Status", value: formatBreedingStatus(pig, verbose: true))
             InfoRow(label: "Lock", value: pig.breedingLocked ? "Locked" : "Unlocked")
             if pig.isBaby {
@@ -160,7 +160,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var familySection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Family")
+            SectionHeader(title: "Family")
             InfoRow(label: "Mother", value: parentName(id: pig.motherId))
             InfoRow(label: "Father", value: parentName(id: pig.fatherId))
         }
@@ -178,7 +178,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var geneticsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Genetics (Lab Required)")
+            SectionHeader(title: "Genetics (Lab Required)")
             let genotype = pig.genotype
             locusRow("Extension (E)", genotype.eLocus)
             locusRow("Brown (B)", genotype.bLocus)
@@ -209,7 +209,7 @@ private extension PigDetailView {
 private extension PigDetailView {
     var aiStateSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Current Activity")
+            SectionHeader(title: "Current Activity")
             InfoRow(label: "State", value: pig.behaviorState.rawValue.capitalized)
             if let target = pig.targetPosition {
                 InfoRow(label: "Target", value: "(\(target.x), \(target.y))")
@@ -232,7 +232,7 @@ private extension PigDetailView {
     var activityLogSection: some View {
         let log = liveLog
         return VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("Recent Activity")
+            SectionHeader(title: "Recent Activity")
             if log.isEmpty {
                 Text("(no activity yet)")
                     .font(.caption)
@@ -255,17 +255,6 @@ private extension PigDetailView {
             }
         }
     }
-}
-
-// MARK: - Helpers
-
-private extension PigDetailView {
-    func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .padding(.top, 4)
-    }
-
 }
 
 // MARK: - Preview
