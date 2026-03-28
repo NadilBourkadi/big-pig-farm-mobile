@@ -140,6 +140,7 @@
 - [x] Add VoiceOver accessibility elements to SpriteKit farm scene (bead d8vl)
 - [x] Replace fixed-size HUD fonts with Dynamic Type scaled text styles (bead l8oc)
 - [x] Standardize list styles across ShopView tabs and BiomeSelectView (bead mg2g)
+- [x] Replace embedded TabView in sheets with segmented picker controls (bead pq64)
 
 ---
 
