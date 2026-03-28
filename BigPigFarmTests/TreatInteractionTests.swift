@@ -68,6 +68,8 @@ struct FarmSceneTreatModeTests {
     @MainActor func treatLayerZPosition() {
         let state = GameState()
         let scene = FarmScene(gameState: state)
+        // treatLayer.zPosition is set in didMove(to:), not init
+        scene.didMove(to: SKView(frame: .zero))
         #expect(scene.treatLayer.zPosition == 7)
     }
 }
