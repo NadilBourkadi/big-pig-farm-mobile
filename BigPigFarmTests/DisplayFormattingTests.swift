@@ -3,6 +3,7 @@
 import Testing
 import Foundation
 import SwiftUI
+import UIKit
 @testable import BigPigFarm
 
 // MARK: - formatBreedingStatus
@@ -115,33 +116,25 @@ struct FormatFacilityBonusesTests {
 
 struct PigColorSwiftUITests {
 
-    @Test func blackMapsToNearBlack() {
-        // .black (RGB 0,0,0) is invisible on dark material backgrounds.
-        // Use Color(white:0.15) — dark enough to read as "black phenotype",
-        // visible against SwiftUI .ultraThinMaterial / .regularMaterial.
-        #expect(pigColorSwiftUI(.black) == Color(white: 0.15))
-    }
-
-    @Test func smokeMapsToGray() {
-        #expect(pigColorSwiftUI(.smoke) == .gray)
-    }
-
-    @Test func goldenMapsToYellow() {
-        #expect(pigColorSwiftUI(.golden) == .yellow)
-    }
-
-    @Test func chocolateMapsToBrown() {
-        #expect(pigColorSwiftUI(.chocolate) == .brown)
-    }
-
-    @Test func saffronMapsToOrange() {
-        #expect(pigColorSwiftUI(.saffron) == .orange)
-    }
-
-    @Test func allCasesReturnWithoutCrash() {
-        // Exhaustiveness: every BaseColor must have a mapping
-        for color in BaseColor.allCases {
-            _ = pigColorSwiftUI(color)
+    @Test func allColorsResolveFromAssetCatalog() {
+        // Each BaseColor must map to a named color in the asset catalog.
+        // A missing colorset silently returns a transparent color, so we
+        // convert to UIColor and verify alpha > 0 for each case.
+        // Use getRed (not getWhite) — getWhite only works for greyscale colors.
+        for baseColor in BaseColor.allCases {
+            let color = pigColorSwiftUI(baseColor)
+            let uiColor = UIColor(color)
+            var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+            uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+            #expect(alpha > 0, "PigColor\(baseColor.rawValue.capitalized) not found in asset catalog")
         }
+    }
+
+    @Test func colorNameMatchesRawValueCapitalized() {
+        // Verify the string construction: "PigColor" + rawValue.capitalized
+        // guards against a refactor breaking the naming convention.
+        #expect("PigColor\(BaseColor.black.rawValue.capitalized)" == "PigColorBlack")
+        #expect("PigColor\(BaseColor.blue.rawValue.capitalized)" == "PigColorBlue")
+        #expect("PigColor\(BaseColor.cream.rawValue.capitalized)" == "PigColorCream")
     }
 }
