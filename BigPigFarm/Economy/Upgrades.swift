@@ -168,7 +168,7 @@ enum Upgrades {
         let cost = NewFarmerSpirit.adjustedPerkCost(
             def.cost, prestige: state.prestigeState, gameTime: state.gameTime
         )
-        guard Currency.spendMoney(state: state, amount: cost) else { return false }
+        guard state.spendMoney(cost) else { return false }
         state.purchasedUpgrades.insert(upgradeId)
         applyImmediateEffect(state: state, upgradeId: upgradeId)
         state.logEvent("Purchased upgrade: \(def.name)", eventType: "purchase")
