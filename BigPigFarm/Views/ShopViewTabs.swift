@@ -86,7 +86,7 @@ private struct PerkRow: View {
                     Button(action: purchase) {
                         Text("Buy")
                             .font(.caption.bold())
-                            .frame(width: 48)
+                            .frame(width: 52)
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(!canAfford)
