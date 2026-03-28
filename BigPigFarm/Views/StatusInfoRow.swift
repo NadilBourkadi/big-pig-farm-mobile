@@ -93,7 +93,7 @@ private extension StatusInfoRow {
     var populationLabel: some View {
         HStack(spacing: 2) {
             Image(systemName: "pawprint.fill")
-                .font(.system(size: 9))
+                .font(.caption2)
             Text("\(gameState.pigCount)/\(gameState.capacity)")
                 .font(.caption)
         }
@@ -103,7 +103,7 @@ private extension StatusInfoRow {
     func resourceIndicator(systemImage: String, level: Int) -> some View {
         HStack(spacing: 3) {
             Image(systemName: systemImage)
-                .font(.system(size: 11))
+                .font(.caption)
             Text("\(level)%")
                 .font(.caption)
         }

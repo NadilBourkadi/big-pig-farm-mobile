@@ -10,9 +10,9 @@ struct ReunionBoostIndicator: View {
                 HStack(spacing: 4) {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.yellow)
-                        .font(.system(size: 12))
+                        .font(.caption)
                     Text(remainingText(boost))
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.white)
                 }
                 .padding(.horizontal, 8)

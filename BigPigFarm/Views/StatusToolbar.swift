@@ -123,17 +123,17 @@ private extension StatusToolbar {
         Button(action: onRefillTapped) {
             VStack(spacing: 2) {
                 Image(systemName: "drop.fill")
-                    .font(.system(size: 16))
-                    .frame(height: 18)
+                    .font(.subheadline)
+                    .frame(minHeight: 18)
                 if gameState.hasFacilitiesToRefill {
                     Text(Currency.formatCurrency(gameState.totalRefillCost))
-                        .font(.system(size: 9))
+                        .font(.caption2)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .foregroundStyle(gameState.canAffordRefill ? .green : .red)
                 } else {
                     Text("Refill")
-                        .font(.system(size: 9))
+                        .font(.caption2)
                 }
             }
             .padding(.horizontal, 4)
