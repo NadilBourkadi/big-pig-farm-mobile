@@ -37,13 +37,22 @@ struct PigListView: View {
                         .contentShape(Rectangle())
                         .onTapGesture { selectedPig = pig }
                         .swipeActions(edge: .trailing) {
-                            Button("Sell", role: .destructive) { pigToSell = pig }
-                            Button("Follow") { onFollowPig(pig.id); dismiss() }
-                                .tint(.blue)
+                            Button(role: .destructive) { pigToSell = pig } label: {
+                                Label("Sell", systemImage: "dollarsign.circle.fill")
+                            }
+                            Button { onFollowPig(pig.id); dismiss() } label: {
+                                Label("Follow", systemImage: "location.fill")
+                            }
+                            .tint(.blue)
                         }
                         .swipeActions(edge: .leading) {
-                            Button(pig.breedingLocked ? "Unlock" : "Lock") {
+                            Button {
                                 toggleBreedingLock(pig.id)
+                            } label: {
+                                Label(
+                                    pig.breedingLocked ? "Unlock" : "Lock",
+                                    systemImage: pig.breedingLocked ? "lock.open.fill" : "lock.fill"
+                                )
                             }
                             .tint(pig.breedingLocked ? .green : .orange)
                         }
