@@ -85,10 +85,40 @@ private struct ProgramTab: View {
                 Text("Breeding Program")
             }
             if gameState.breedingProgram.enabled {
-                Section("Target Colors") { targetColorToggles }
-                Section("Target Patterns") { targetPatternToggles }
-                Section("Target Intensities") { targetIntensityToggles }
-                Section("Target Roan") { targetRoanToggles }
+                Section {
+                    targetColorToggles
+                } header: {
+                    Text("Target Colors")
+                } footer: {
+                    Text("Base fur color, determined by the E, B, and D gene loci.")
+                }
+                Section {
+                    targetPatternToggles
+                } header: {
+                    Text("Target Patterns")
+                } footer: {
+                    Text(
+                        "White spotting from the S locus. "
+                        + "Solid has no spots, Dutch partial, Dalmatian heavy."
+                    )
+                }
+                Section {
+                    targetIntensityToggles
+                } header: {
+                    Text("Target Intensities")
+                } footer: {
+                    Text(
+                        "Color dilution from the C locus. "
+                        + "Chinchilla lightens the coat, Himalayan restricts color to extremities."
+                    )
+                }
+                Section {
+                    targetRoanToggles
+                } header: {
+                    Text("Target Roan")
+                } footer: {
+                    Text("White hair intermixing from the R locus. Roan is dominant but lethal when homozygous.")
+                }
                 if gameState.prestigeState.hasUpgrade(.selectiveAdvantage) {
                     AllelePreferencesPanel(gameState: gameState)
                 }
@@ -143,7 +173,7 @@ extension ProgramTab {
 
     private var targetColorToggles: some View {
         ForEach(BaseColor.allCases, id: \.self) { color in
-            Toggle(color.rawValue.capitalized, isOn: Binding(
+            Toggle(isOn: Binding(
                 get: { gameState.breedingProgram.targetColors.contains(color) },
                 set: { on in
                     if on {
@@ -152,7 +182,15 @@ extension ProgramTab {
                         gameState.breedingProgram.targetColors.remove(color)
                     }
                 }
-            ))
+            )) {
+                Label {
+                    Text(color.rawValue.capitalized)
+                } icon: {
+                    Circle()
+                        .fill(pigColorSwiftUI(color))
+                        .frame(width: 12, height: 12)
+                }
+            }
         }
     }
 
