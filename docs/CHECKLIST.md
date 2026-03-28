@@ -114,6 +114,7 @@
 - [x] Implement auto-save (every 300 ticks)
 - [x] Add app icon
 - [x] Standardize PigDetailView sheet presentation across scene and list contexts (bead bdye)
+- [x] Add first-run onboarding coach marks for new players (bead edai)
 - [ ] Polish animations and transitions
 - [x] Add manual Refill All HUD button for food/water facilities (bead 4r8)
 - [x] Show refill cost on disabled button / distinguish "all full" from "can't afford" (bead 86k)
