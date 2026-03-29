@@ -24,7 +24,7 @@ parse_package_sources() {
             continue
         fi
         if $in_sources; then
-            if [[ "$line" =~ \] ]]; then
+            if [[ "$line" =~ ^[[:space:]]*\][[:space:]]*,?[[:space:]]*$ ]]; then
                 break
             fi
             local entry
@@ -87,7 +87,7 @@ while IFS= read -r entry; do
     fi
 done < <(parse_package_sources)
 
-sort -o "$pkg_list" "$pkg_list"
+LC_ALL=C sort -o "$pkg_list" "$pkg_list"
 
 # --- Build the actual set: platform-agnostic files on disk ---
 
@@ -98,7 +98,7 @@ find "$SRC" -name "*.swift" -type f | while IFS= read -r f; do
     if ! is_platform_dependent "$f"; then
         echo "${f#"$SRC"/}"
     fi
-done | sort > "$disk_list"
+done | LC_ALL=C sort > "$disk_list"
 
 # --- Compare ---
 
@@ -106,10 +106,12 @@ missing_file="$TMP_DIR/missing.txt"
 stale_file="$TMP_DIR/stale.txt"
 
 # Files on disk but not in Package.swift
-comm -23 "$disk_list" "$pkg_list" > "$missing_file"
+LC_ALL=C comm -23 "$disk_list" "$pkg_list" > "$missing_file"
 
-# Files in Package.swift but not on disk
-comm -13 "$disk_list" "$pkg_list" | while IFS= read -r relpath; do
+# Files in Package.swift but not on disk.
+# comm -13 also returns platform-dependent files (they're not in disk_list by design),
+# so we re-check existence to report only truly stale entries.
+LC_ALL=C comm -13 "$disk_list" "$pkg_list" | while IFS= read -r relpath; do
     if [[ ! -f "$SRC/$relpath" ]]; then
         echo "$relpath"
     fi
@@ -130,7 +132,7 @@ while IFS= read -r dir; do
     fi
 done < "$dir_includes"
 
-sort -o "$contaminated_file" "$contaminated_file"
+LC_ALL=C sort -o "$contaminated_file" "$contaminated_file"
 
 # --- Report ---
 
