@@ -10,8 +10,14 @@ extension FarmScene {
         let existingIDs = Set(pigNodes.keys)
 
         for removedID in existingIDs.subtracting(currentIDs) {
-            pigNodes[removedID]?.removeFromParent()
-            pigNodes.removeValue(forKey: removedID)
+            // Remove from tracking immediately so future syncs treat this pig as gone;
+            // the scene-graph node removes itself after the fade-out animation completes.
+            if let node = pigNodes.removeValue(forKey: removedID) {
+                node.run(.sequence([
+                    .group([.scale(to: 0, duration: 0.2), .fadeOut(withDuration: 0.2)]),
+                    .removeFromParent()
+                ]))
+            }
             indicatorTimers.removeValue(forKey: removedID)
         }
 
@@ -21,7 +27,12 @@ extension FarmScene {
             } else {
                 let node = PigNode(pig: pig, scene: self)
                 node.zPosition = 10
+                node.setScale(0)
                 pigLayer.addChild(node)
+                node.run(.sequence([
+                    .scale(to: 1.1, duration: 0.15),
+                    .scale(to: 1.0, duration: 0.1)
+                ]))
                 pigNodes[id] = node
             }
             if let node = pigNodes[id] {
@@ -47,8 +58,12 @@ extension FarmScene {
         let existingIDs = Set(facilityNodes.keys)
 
         for removedID in existingIDs.subtracting(currentIDs) {
-            facilityNodes[removedID]?.removeFromParent()
-            facilityNodes.removeValue(forKey: removedID)
+            if let node = facilityNodes.removeValue(forKey: removedID) {
+                node.run(.sequence([
+                    .group([.scale(to: 0, duration: 0.2), .fadeOut(withDuration: 0.2)]),
+                    .removeFromParent()
+                ]))
+            }
         }
 
         for (id, facility) in gameState.facilities {
@@ -57,7 +72,12 @@ extension FarmScene {
             } else {
                 let node = FacilityNode(facility: facility, scene: self)
                 node.zPosition = 5
+                node.setScale(0)
                 facilityLayer.addChild(node)
+                node.run(.sequence([
+                    .scale(to: 1.05, duration: 0.2),
+                    .scale(to: 1.0, duration: 0.1)
+                ]))
                 facilityNodes[id] = node
             }
             if let node = facilityNodes[id] {

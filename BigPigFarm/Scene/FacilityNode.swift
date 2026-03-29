@@ -103,7 +103,9 @@ class FacilityNode: SKSpriteNode {
         if let cgImage = OutlineShadow.loadCGImage(named: facilityAsset),
            let glowTex = GlowEffect.glowTexture(from: cgImage, color: glowColor) {
             let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
+            node.alpha = 0
             addChild(node)
+            node.run(.fadeIn(withDuration: 0.15))
             glowNode = node
         }
     }

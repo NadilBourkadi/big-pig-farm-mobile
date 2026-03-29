@@ -13,6 +13,8 @@ class PigNode: SKSpriteNode {
     private var shadowNode: SKSpriteNode?
     var isSelected: Bool = false { didSet { updateSelectionGlow() } }
     private var currentAnimationKey: String = ""
+    /// Target position set during tick-rate sync; `smoothMove()` lerps toward it each frame.
+    private(set) var targetPosition: CGPoint = .zero
 
     init(pig: GuineaPig, scene: FarmScene) {
         self.pigID = pig.id
@@ -61,13 +63,15 @@ class PigNode: SKSpriteNode {
         nameLabel.position = CGPoint(x: 0, y: -(nodeSize.height / 2) - 2)
         addChild(nameLabel)
 
-        position = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
+        let initialPos = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
+        position = initialPos
+        targetPosition = initialPos
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) not supported") }
 
     func update(from pig: GuineaPig, in scene: FarmScene) {
-        position = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
+        targetPosition = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
 
         let newState = pig.isBaby
             ? AnimationData.babyFallbackState(for: pig.displayState)
@@ -96,6 +100,25 @@ class PigNode: SKSpriteNode {
         nameLabel.text = pig.name
     }
 
+    /// Interpolates position toward `targetPosition` each render frame.
+    /// Called from `FarmScene.update()` at ~60fps for smooth movement between tick-rate syncs.
+    /// Skips Y interpolation while a treat bounce action is running so the
+    /// bounce SKAction owns vertical movement without being overwritten.
+    func smoothMove() {
+        let isBouncing = action(forKey: "treatBounce") != nil
+        let dx = targetPosition.x - position.x
+        let dy = targetPosition.y - position.y
+        let distSq = isBouncing ? dx * dx : dx * dx + dy * dy
+        guard distSq > 0.01 else {
+            position.x = targetPosition.x
+            if !isBouncing { position.y = targetPosition.y }
+            return
+        }
+        let factor: CGFloat = 0.25
+        position.x += dx * factor
+        if !isBouncing { position.y += dy * factor }
+    }
+
     func showIndicator(type: String, bright: Bool) {
         let texture = SpriteAssets.indicatorTexture(indicatorType: type, bright: bright)
         if let existing = indicatorNode {
@@ -108,14 +131,17 @@ class PigNode: SKSpriteNode {
             )
             node.position = CGPoint(x: 0, y: size.height / 2 + 14)
             node.zPosition = 3
+            node.alpha = 0
             addChild(node)
+            node.run(.fadeIn(withDuration: 0.15))
             indicatorNode = node
         }
     }
 
     func hideIndicator() {
-        indicatorNode?.removeFromParent()
+        guard let indicator = indicatorNode else { return }
         indicatorNode = nil
+        indicator.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
     }
 
     private func startAnimation(state: String, direction: String) {
@@ -168,8 +194,10 @@ class PigNode: SKSpriteNode {
                 regenerateGlow()
             }
         } else {
-            glowNode?.removeFromParent()
-            glowNode = nil
+            if let glow = glowNode {
+                glowNode = nil
+                glow.run(.sequence([.fadeOut(withDuration: 0.15), .removeFromParent()]))
+            }
         }
     }
 
@@ -183,7 +211,9 @@ class PigNode: SKSpriteNode {
         if let cgImage = OutlineShadow.loadCGImage(named: assetName),
            let glowTex = GlowEffect.glowTexture(from: cgImage, color: GlowEffect.pigSelectionColor) {
             let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
+            node.alpha = 0
             addChild(node)
+            node.run(.fadeIn(withDuration: 0.2))
             glowNode = node
         } else {
             glowNode = nil

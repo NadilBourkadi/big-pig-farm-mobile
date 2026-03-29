@@ -61,7 +61,16 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
     }
 
     func follow(_ position: CGPoint) {
-        camera.position = position
+        let dx = position.x - camera.position.x
+        let dy = position.y - camera.position.y
+        guard dx * dx + dy * dy > 0.01 else {
+            camera.position = position
+            clampCameraPosition()
+            return
+        }
+        let factor: CGFloat = 0.12
+        camera.position.x += dx * factor
+        camera.position.y += dy * factor
         clampCameraPosition()
     }
 
@@ -180,6 +189,19 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
         camera.position = CGPoint(x: contentRect.midX, y: contentRect.midY + centerBias)
     }
 
+    /// Animate the camera to a target position over `duration` seconds.
+    /// Used for one-shot jumps (e.g. "Follow" button) as opposed to
+    /// the per-frame `follow()` lerp used during continuous tracking.
+    func animateTo(_ position: CGPoint, duration: TimeInterval) {
+        camera.removeAction(forKey: "cameraMove")
+        let move = SKAction.move(to: position, duration: duration)
+        move.timingMode = .easeInEaseOut
+        let sequence = SKAction.sequence([move, .run { [weak self] in
+            self?.clampCameraPosition()
+        }])
+        camera.run(sequence, withKey: "cameraMove")
+    }
+
     func zoomTo(scale: CGFloat, duration: TimeInterval) {
         let clamped = max(SceneConstants.minCameraScale, min(effectiveMaxScale, scale))
         let action = SKAction.scale(to: clamped, duration: duration)
@@ -224,6 +246,11 @@ class CameraController: NSObject, UIGestureRecognizerDelegate {
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let scene = scene, let view = scene.view else { return }
+
+        // Cancel any in-flight animateTo so a manual pan takes over immediately.
+        if gesture.state == .began {
+            camera.removeAction(forKey: "cameraMove")
+        }
 
         // In edit mode, check if pan starts on a facility → enter drag mode.
         if gesture.state == .began, scene.isEditMode {
