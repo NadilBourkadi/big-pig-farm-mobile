@@ -128,12 +128,16 @@ struct PatternRendererTests {
 
     @Test func dalmatianSpotCoverageInRange() {
         let innerFur = SpriteFurMaps.adultInnerFur
-        let spots = PatternRenderer.generateDalmatianSpots(
-            pigID: UUID(), width: 14, height: 8, innerFurPixels: innerFur
-        )
-        let coverage = Double(spots.count) / Double(innerFur.count)
-        #expect(coverage >= 0.10 && coverage <= 0.60,
-                "Dalmatian coverage \(coverage) outside expected 10-60% range")
+        var totalCoverage = 0.0
+        for _ in 0..<20 {
+            let spots = PatternRenderer.generateDalmatianSpots(
+                pigID: UUID(), width: 14, height: 8, innerFurPixels: innerFur
+            )
+            totalCoverage += Double(spots.count) / Double(innerFur.count)
+        }
+        let meanCoverage = totalCoverage / 20.0
+        #expect(meanCoverage >= 0.25 && meanCoverage <= 0.65,
+                "Mean dalmatian coverage \(meanCoverage) outside expected 25-65% range")
     }
 
     @Test func dalmatianEmptyInnerFurProducesEmptySpots() {
