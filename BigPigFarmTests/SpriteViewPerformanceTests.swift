@@ -17,30 +17,28 @@ struct SpriteViewPerformanceTests {
 
     @Test("Presented scene update with 50 animated pigs: avg frame time under budget")
     func presentedFrameUpdate50Pigs() {
-        let (view, scene, state) = makePresentedScene(pigCount: 50)
-        _ = view // suppress unused-variable warning — view must stay alive to hold the scene
+        let presented = makePresentedScene(pigCount: 50)
 
-        let durations = measureUpdateFrames(scene: scene, state: state, frameCount: 60)
+        let durations = measureUpdateFrames(scene: presented.scene, state: presented.state, frameCount: 60)
         let avgMs = average(durations)
         let maxMs = durations.max() ?? 0
 
         print("[Perf] Presented update (50 pigs): avg=\(fmt(avgMs))ms max=\(fmt(maxMs))ms")
-        #expect(scene.pigNodes.count == 50, "Expected 50 PigNodes, got \(scene.pigNodes.count)")
+        #expect(presented.scene.pigNodes.count == 50, "Expected 50 PigNodes")
         #expect(avgMs < 500, "Avg frame time \(fmt(avgMs))ms exceeds regression budget (500ms)")
         #expect(maxMs < 2_000, "Max frame spike \(fmt(maxMs))ms exceeds regression budget (2s)")
     }
 
     @Test("Presented scene update with 100 animated pigs: avg frame time under budget")
     func presentedFrameUpdate100Pigs() {
-        let (view, scene, state) = makePresentedScene(pigCount: 100)
-        _ = view // suppress unused-variable warning
+        let presented = makePresentedScene(pigCount: 100)
 
-        let durations = measureUpdateFrames(scene: scene, state: state, frameCount: 60)
+        let durations = measureUpdateFrames(scene: presented.scene, state: presented.state, frameCount: 60)
         let avgMs = average(durations)
         let maxMs = durations.max() ?? 0
 
         print("[Perf] Presented update (100 pigs): avg=\(fmt(avgMs))ms max=\(fmt(maxMs))ms")
-        #expect(scene.pigNodes.count == 100, "Expected 100 PigNodes, got \(scene.pigNodes.count)")
+        #expect(presented.scene.pigNodes.count == 100, "Expected 100 PigNodes")
         #expect(avgMs < 1_000, "Avg frame time \(fmt(avgMs))ms exceeds regression budget (1s)")
         #expect(maxMs < 3_000, "Max frame spike \(fmt(maxMs))ms exceeds regression budget (3s)")
     }
@@ -49,23 +47,23 @@ struct SpriteViewPerformanceTests {
 
     @Test("Node hierarchy with 50 pigs: each PigNode has expected child count")
     func nodeHierarchy50Pigs() {
-        let (view, scene, _) = makePresentedScene(pigCount: 50)
-        _ = view // suppress unused-variable warning
+        let presented = makePresentedScene(pigCount: 50)
 
-        #expect(scene.pigNodes.count == 50)
+        #expect(presented.scene.pigNodes.count == 50)
 
         var totalChildren = 0
         var minChildren = Int.max
         var maxChildren = 0
-        for node in scene.pigNodes.values {
+        for node in presented.scene.pigNodes.values {
             let count = node.children.count
             totalChildren += count
             minChildren = min(minChildren, count)
             maxChildren = max(maxChildren, count)
         }
 
-        let avgChildren = Double(totalChildren) / Double(scene.pigNodes.count)
-        print("[Perf] Node hierarchy (50 pigs): total children=\(totalChildren) avg=\(fmt(avgChildren)) min=\(minChildren) max=\(maxChildren)")
+        let avgChildren = Double(totalChildren) / Double(presented.scene.pigNodes.count)
+        print("[Perf] Node hierarchy (50 pigs): total=\(totalChildren)"
+            + " avg=\(fmt(avgChildren)) min=\(minChildren) max=\(maxChildren)")
 
         // Each PigNode has at least a nameLabel. Shadow is conditional on image loading.
         // Indicator and glow are optional (off by default).
@@ -78,15 +76,17 @@ struct SpriteViewPerformanceTests {
     @Test("Mixed animation states (idle/walking/eating/sleeping) vs uniform idle: no performance cliff")
     func mixedAnimationStates() {
         // Baseline: all idle
-        let (viewUniform, sceneUniform, stateUniform) = makePresentedScene(pigCount: 50)
-        _ = viewUniform // suppress unused-variable warning
-        let uniformDurations = measureUpdateFrames(scene: sceneUniform, state: stateUniform, frameCount: 60)
+        let uniform = makePresentedScene(pigCount: 50)
+        let uniformDurations = measureUpdateFrames(
+            scene: uniform.scene, state: uniform.state, frameCount: 60
+        )
         let uniformAvg = average(uniformDurations)
 
         // Mixed: distribute across 4 animation states
-        let (viewMixed, sceneMixed, stateMixed) = makePresentedScene(pigCount: 50, mixedStates: true)
-        _ = viewMixed // suppress unused-variable warning
-        let mixedDurations = measureUpdateFrames(scene: sceneMixed, state: stateMixed, frameCount: 60)
+        let mixed = makePresentedScene(pigCount: 50, mixedStates: true)
+        let mixedDurations = measureUpdateFrames(
+            scene: mixed.scene, state: mixed.state, frameCount: 60
+        )
         let mixedAvg = average(mixedDurations)
 
         print("[Perf] Uniform idle (50 pigs): avg=\(fmt(uniformAvg))ms")
@@ -123,11 +123,18 @@ struct SpriteViewPerformanceTests {
 
 // MARK: - Private Helpers
 
+/// Bundles the three objects a presented scene test needs.
+private struct PresentedScene {
+    let view: SKView
+    let scene: FarmScene
+    let state: GameState
+}
+
 @MainActor
 private func makePresentedScene(
     pigCount: Int,
     mixedStates: Bool = false
-) -> (SKView, FarmScene, GameState) {
+) -> PresentedScene {
     let (state, _) = makeLargeIntegrationState(pigCount: pigCount)
 
     if mixedStates {
@@ -149,7 +156,7 @@ private func makePresentedScene(
     let view = SKView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
     view.presentScene(scene)
 
-    return (view, scene, state)
+    return PresentedScene(view: view, scene: scene, state: state)
 }
 
 @MainActor
