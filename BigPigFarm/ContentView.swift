@@ -88,6 +88,7 @@ struct ContentView: View {
                         onRemove: { viewModel.handleRemoveFacility() },
                         onAutoArrange: { viewModel.performAutoArrange() }
                     )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 StatusToolbar(
                     gameState: viewModel.gameState,
@@ -107,6 +108,7 @@ struct ContentView: View {
                     onSpeedTapped: { viewModel.cycleSpeed() }
                 )
             }
+            .animation(.spring(duration: 0.3, bounce: 0.15), value: viewModel.isEditMode)
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
         .sheet(isPresented: $viewModel.showShop) {

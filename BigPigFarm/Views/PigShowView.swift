@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - PigShowStep
 
 /// Linear progression through the Pig Show flow.
-enum PigShowStep: Sendable {
+enum PigShowStep: Sendable, Equatable {
     case judging
     case showroomPreview
     case confirmation
@@ -46,29 +46,32 @@ struct PigShowView: View {
     @MainActor
     @ViewBuilder
     private func flowContent(_ breakdown: RosetteBreakdown) -> some View {
-        switch flowStep {
-        case .judging:
-            JudgingScreenView(
-                gameState: gameState,
-                breakdown: breakdown,
-                onContinue: { flowStep = .showroomPreview }
-            )
+        Group {
+            switch flowStep {
+            case .judging:
+                JudgingScreenView(
+                    gameState: gameState,
+                    breakdown: breakdown,
+                    onContinue: { flowStep = .showroomPreview }
+                )
 
-        case .showroomPreview:
-            ShowroomPreviewView(
-                prestigeState: gameState.prestigeState,
-                pendingRosettes: breakdown.total,
-                onContinue: { flowStep = .confirmation }
-            )
+            case .showroomPreview:
+                ShowroomPreviewView(
+                    prestigeState: gameState.prestigeState,
+                    pendingRosettes: breakdown.total,
+                    onContinue: { flowStep = .confirmation }
+                )
 
-        case .confirmation:
-            NewPasturesConfirmation(
-                rosetteTotal: breakdown.total,
-                farmNumber: gameState.prestigeState.farmCount + 1,
-                onConfirm: { onPrestigeConfirmed(breakdown) },
-                onCancel: { dismiss() }
-            )
+            case .confirmation:
+                NewPasturesConfirmation(
+                    rosetteTotal: breakdown.total,
+                    farmNumber: gameState.prestigeState.farmCount + 1,
+                    onConfirm: { onPrestigeConfirmed(breakdown) },
+                    onCancel: { dismiss() }
+                )
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: flowStep)
     }
 
     // MARK: - Computation
