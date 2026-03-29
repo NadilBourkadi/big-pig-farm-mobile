@@ -51,8 +51,7 @@ class PigNode: SKSpriteNode {
             baseColor: pig.phenotype.baseColor, state: "idle",
             direction: "right", isBaby: pig.isBaby
         )
-        if let cgImage = OutlineShadow.loadCGImage(named: initAssetName),
-           let outlineTex = OutlineShadow.outlineTexture(from: cgImage) {
+        if let outlineTex = OutlineShadow.cachedOutlineTexture(assetName: initAssetName) {
             let shadow = OutlineShadow.makeShadowNode(texture: outlineTex, spriteSize: nodeSize)
             addChild(shadow)
             shadowNode = shadow
@@ -208,8 +207,9 @@ class PigNode: SKSpriteNode {
             baseColor: baseColor, state: "idle",
             direction: direction, isBaby: isBaby
         )
-        if let cgImage = OutlineShadow.loadCGImage(named: assetName),
-           let glowTex = GlowEffect.glowTexture(from: cgImage, color: GlowEffect.pigSelectionColor) {
+        if let glowTex = GlowEffect.cachedGlowTexture(
+            assetName: assetName, color: GlowEffect.pigSelectionColor
+        ) {
             let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
             node.alpha = 0
             addChild(node)

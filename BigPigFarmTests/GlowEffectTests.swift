@@ -79,6 +79,44 @@ struct GlowEffectTests {
         #expect(node.size.height == spriteSize.height + expansion)
     }
 
+    // MARK: - Glow Texture Cache
+
+    @Test func cachedGlowTextureReturnsSameInstance() throws {
+        GlowEffect.evictGlowCache()
+        let assetName = "Sprites/Pigs/pig_adult_black_idle_right"
+        let color = GlowEffect.pigSelectionColor
+        let tex1 = try #require(GlowEffect.cachedGlowTexture(assetName: assetName, color: color))
+        let tex2 = try #require(GlowEffect.cachedGlowTexture(assetName: assetName, color: color))
+        #expect(tex1 === tex2)
+    }
+
+    @Test func cachedGlowTextureDistinguishesByColor() throws {
+        GlowEffect.evictGlowCache()
+        let assetName = "Sprites/Pigs/pig_adult_black_idle_right"
+        let tex1 = try #require(
+            GlowEffect.cachedGlowTexture(assetName: assetName, color: GlowEffect.pigSelectionColor)
+        )
+        let tex2 = try #require(
+            GlowEffect.cachedGlowTexture(assetName: assetName, color: UIColor.red)
+        )
+        #expect(tex1 !== tex2)
+    }
+
+    @Test func evictGlowCacheClearsCachedTextures() throws {
+        GlowEffect.evictGlowCache()
+        let assetName = "Sprites/Pigs/pig_adult_black_idle_right"
+        let color = GlowEffect.pigSelectionColor
+        let tex1 = try #require(GlowEffect.cachedGlowTexture(assetName: assetName, color: color))
+        GlowEffect.evictGlowCache()
+        let tex2 = try #require(GlowEffect.cachedGlowTexture(assetName: assetName, color: color))
+        #expect(tex1 !== tex2)
+    }
+
+    @Test func cachedGlowTextureReturnsNilForMissingAsset() {
+        GlowEffect.evictGlowCache()
+        #expect(GlowEffect.cachedGlowTexture(assetName: "nonexistent_asset", color: .white) == nil)
+    }
+
     // MARK: - Constants
 
     @Test func glowPixelOffsetIsLargerThanShadow() {

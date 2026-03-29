@@ -150,6 +150,41 @@ struct OutlineShadowTests {
         #expect(OutlineShadow.shadowNodeZPosition > -1)
     }
 
+    // MARK: - Shadow Texture Cache
+
+    @Test func cachedOutlineTextureReturnsSameInstance() throws {
+        OutlineShadow.evictShadowCache()
+        let assetName = "Sprites/Pigs/pig_adult_black_idle_right"
+        let tex1 = try #require(OutlineShadow.cachedOutlineTexture(assetName: assetName))
+        let tex2 = try #require(OutlineShadow.cachedOutlineTexture(assetName: assetName))
+        #expect(tex1 === tex2)
+    }
+
+    @Test func cachedOutlineTextureReturnsDifferentInstancesForDifferentAssets() throws {
+        OutlineShadow.evictShadowCache()
+        let tex1 = try #require(
+            OutlineShadow.cachedOutlineTexture(assetName: "Sprites/Pigs/pig_adult_black_idle_right")
+        )
+        let tex2 = try #require(
+            OutlineShadow.cachedOutlineTexture(assetName: "Sprites/Pigs/pig_adult_cream_idle_right")
+        )
+        #expect(tex1 !== tex2)
+    }
+
+    @Test func evictShadowCacheClearsCachedTextures() throws {
+        OutlineShadow.evictShadowCache()
+        let assetName = "Sprites/Pigs/pig_adult_black_idle_right"
+        let tex1 = try #require(OutlineShadow.cachedOutlineTexture(assetName: assetName))
+        OutlineShadow.evictShadowCache()
+        let tex2 = try #require(OutlineShadow.cachedOutlineTexture(assetName: assetName))
+        #expect(tex1 !== tex2)
+    }
+
+    @Test func cachedOutlineTextureReturnsNilForMissingAsset() {
+        OutlineShadow.evictShadowCache()
+        #expect(OutlineShadow.cachedOutlineTexture(assetName: "nonexistent_asset") == nil)
+    }
+
     // MARK: - Alpha Diagnostics
 
     @Test func pigSpriteLoadedViaUIImageHasAlpha() throws {

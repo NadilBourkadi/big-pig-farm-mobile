@@ -56,8 +56,7 @@ class FacilityNode: SKSpriteNode {
         super.init(texture: texture, color: .clear, size: CGSize(width: nodeWidth, height: nodeHeight))
 
         let facilityAsset = "Sprites/Facilities/facility_\(facility.facilityType.rawValue)"
-        if let cgImage = OutlineShadow.loadCGImage(named: facilityAsset),
-           let outlineTex = OutlineShadow.outlineTexture(from: cgImage) {
+        if let outlineTex = OutlineShadow.cachedOutlineTexture(assetName: facilityAsset) {
             let shadow = OutlineShadow.makeShadowNode(
                 texture: outlineTex,
                 spriteSize: CGSize(width: nodeWidth, height: nodeHeight)
@@ -100,8 +99,9 @@ class FacilityNode: SKSpriteNode {
         }
 
         let facilityAsset = "Sprites/Facilities/facility_\(facilityType.rawValue)"
-        if let cgImage = OutlineShadow.loadCGImage(named: facilityAsset),
-           let glowTex = GlowEffect.glowTexture(from: cgImage, color: glowColor) {
+        if let glowTex = GlowEffect.cachedGlowTexture(
+            assetName: facilityAsset, color: glowColor
+        ) {
             let node = GlowEffect.makeGlowNode(texture: glowTex, spriteSize: size)
             node.alpha = 0
             addChild(node)

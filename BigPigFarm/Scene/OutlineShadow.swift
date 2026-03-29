@@ -38,6 +38,30 @@ enum OutlineShadow {
     /// Shared Core Image context for blur rendering.
     private static let ciContext = CIContext(options: [.useSoftwareRenderer: false])
 
+    /// Cached shadow textures keyed by asset name. Bounded at ~33 entries
+    /// (16 pig variants + 17 facility types). Permanent for app lifetime.
+    private static var shadowCache: [String: SKTexture] = [:]
+
+    // MARK: - Cached Texture Access
+
+    /// Get or create a cached shadow texture for the given asset name.
+    ///
+    /// Shadows are silhouette-based (shape only), so sprites sharing the same
+    /// base asset (e.g. all white adult pigs) produce identical shadows. This
+    /// avoids redundant CIGaussianBlur work when multiple nodes share an asset.
+    static func cachedOutlineTexture(assetName: String) -> SKTexture? {
+        if let cached = shadowCache[assetName] { return cached }
+        guard let cgImage = loadCGImage(named: assetName),
+              let texture = outlineTexture(from: cgImage) else { return nil }
+        shadowCache[assetName] = texture
+        return texture
+    }
+
+    /// Remove all cached shadow textures. Used by tests to reset state.
+    static func evictShadowCache() {
+        shadowCache.removeAll()
+    }
+
     // MARK: - Outline Texture Generation
 
     /// Generate a soft gradient shadow texture from a CGImage with proper alpha.

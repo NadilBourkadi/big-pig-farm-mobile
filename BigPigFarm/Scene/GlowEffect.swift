@@ -30,6 +30,40 @@ enum GlowEffect {
     /// Z-position for glow nodes (behind shadow at -0.5, behind sprite at 0).
     static let glowNodeZPosition: CGFloat = -1.0
 
+    // MARK: - Cache
+
+    /// Cached glow textures keyed by "assetName|colorHex". Bounded at ~98 entries
+    /// (64 pig variants: 16 colours x 2 directions x 2 ages; 34 facility variants:
+    /// 17 types x 2 glow colours). Permanent for app lifetime.
+    private static var glowCache: [String: SKTexture] = [:]
+
+    // MARK: - Cached Texture Access
+
+    /// Get or create a cached glow texture for the given asset and color.
+    static func cachedGlowTexture(assetName: String, color: UIColor) -> SKTexture? {
+        let key = "\(assetName)|\(colorKey(color))"
+        if let cached = glowCache[key] { return cached }
+        guard let cgImage = OutlineShadow.loadCGImage(named: assetName),
+              let texture = glowTexture(from: cgImage, color: color) else { return nil }
+        glowCache[key] = texture
+        return texture
+    }
+
+    /// Remove all cached glow textures. Used by tests to reset state.
+    static func evictGlowCache() {
+        glowCache.removeAll()
+    }
+
+    /// Stable string key for a UIColor (RGBA hex).
+    private static func colorKey(_ color: UIColor) -> String {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return color.description
+        }
+        return String(format: "%02X%02X%02X%02X",
+                      Int(red * 255), Int(green * 255), Int(blue * 255), Int(alpha * 255))
+    }
+
     // MARK: - Texture Generation
 
     /// Generate a colored silhouette glow texture from a CGImage.
