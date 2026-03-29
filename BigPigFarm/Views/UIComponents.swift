@@ -53,6 +53,7 @@ struct NeedBar: View {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(needColor)
                         .frame(width: max(0, geometry.size.width * min(1, max(0, value))))
+                        .animation(.easeInOut(duration: 0.3), value: value)
                 }
             }
             .frame(height: 8)
@@ -258,9 +259,18 @@ struct HUDButton: View {
             .foregroundStyle(isActive ? .yellow : Color(red: 0.95, green: 0.9, blue: 0.82))
             .opacity(isDisabled ? 0.4 : 1.0)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(HUDButtonStyle())
         .disabled(isDisabled)
         .accessibilityLabel(secondary.map { "\(label): \($0.label)" } ?? label)
+    }
+}
+
+/// Press-feedback button style: subtle scale-down on touch for tactile feel.
+private struct HUDButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
