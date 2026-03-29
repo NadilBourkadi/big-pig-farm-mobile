@@ -80,7 +80,8 @@ struct NeedBar: View {
 ///
 /// Replaces ad-hoc pill constructions in ShopView, AlmanacView,
 /// BreedingPairTab, and AdoptionView.
-struct StatusBadge: View, Sendable {
+struct StatusBadge: View {
+    @Environment(\.colorScheme) private var colorScheme
     let label: String
     let color: Color
     var style: Style = .opaque
@@ -91,11 +92,14 @@ struct StatusBadge: View, Sendable {
     }
 
     var body: some View {
+        let textStyle: AnyShapeStyle = style == .opaque
+            ? AnyShapeStyle(.white)
+            : AnyShapeStyle(color.darkenedForTintedBadge(scheme: colorScheme))
         Text(label)
             .font(style == .opaque ? .caption2.bold() : .caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .foregroundStyle(style == .opaque ? AnyShapeStyle(.white) : AnyShapeStyle(color))
+            .foregroundStyle(textStyle)
             .background(style == .opaque ? color : color.opacity(0.2))
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
