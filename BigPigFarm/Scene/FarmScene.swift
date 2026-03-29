@@ -223,6 +223,11 @@ extension FarmScene {
             syncAccessibilityElements()
         }
 
+        // Interpolate pig positions every frame for smooth movement between tick-rate syncs.
+        for node in pigNodes.values {
+            node.smoothMove()
+        }
+
         // Only track a selected pig when the viewport is small enough that the
         // pig could be off-screen. At fit-zoom the whole farm is visible, so
         // tracking would lock the camera to the pig's position and fight panning.
