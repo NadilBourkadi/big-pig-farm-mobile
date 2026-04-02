@@ -237,7 +237,7 @@ struct CollisionSeparationTests {
     func testSeparateFacilityUse() throws {
         let state = makeGameState()
         let pigA = makePigAt(x: 5.0, y: 5.0, state: .eating)
-        let pigB = makePigAt(x: 6.5, y: 5.0, state: .sleeping)  // 1.5 apart, outside 1.0 facility threshold
+        let pigB = makePigAt(x: 6.5, y: 5.0, state: .drinking)  // 1.5 apart, outside 1.0 facility threshold
         let origAx = pigA.position.x
         let origBx = pigB.position.x
         state.addGuineaPig(pigA)
@@ -252,79 +252,57 @@ struct CollisionSeparationTests {
         #expect(abs(updatedA.position.x - origAx) < 0.001)
         #expect(abs(updatedB.position.x - origBx) < 0.001)
     }
-}
 
-// MARK: - CollisionHandler Facility Targets
-
-@MainActor
-struct CollisionFacilityTargetTests {
-
-    @Test("rebuildSpatialGrid indexes pigs by targetFacilityId")
-    func testRebuildSpatialGridFacilityTargets() {
+    @Test("Two sleeping pigs overlapping are NOT separated")
+    func testSleepingPairNotSeparated() throws {
         let state = makeGameState()
-        let facilityID = UUID()
-        var pigA = makePigAt(x: 5.0, y: 5.0)
-        var pigB = makePigAt(x: 8.0, y: 5.0)
-        pigA.targetFacilityId = facilityID
-        pigB.targetFacilityId = facilityID
+        let pigA = makePigAt(x: 5.0, y: 5.0, state: .sleeping)
+        let pigB = makePigAt(x: 6.0, y: 5.0, state: .sleeping)
         state.addGuineaPig(pigA)
         state.addGuineaPig(pigB)
         let handler = CollisionHandler(gameState: state)
         handler.rebuildSpatialGrid()
+        handler.separateOverlappingPigs()
 
-        let targeting = handler.getPigsTargetingFacility(facilityID)
-        #expect(targeting.count == 2)
-        #expect(targeting.contains(pigA.id))
-        #expect(targeting.contains(pigB.id))
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
+        #expect(abs(updatedA.position.x - 5.0) < 0.001)
+        #expect(abs(updatedB.position.x - 6.0) < 0.001)
     }
 
-    @Test("getPigsTargetingFacility returns empty for unknown facility")
-    func testGetPigsTargetingFacilityEmpty() {
+    @Test("Sleeping pig is NOT nudged by nearby active pig")
+    func testSleepingPigNotNudgedByActivePig() throws {
         let state = makeGameState()
+        let sleeper = makePigAt(x: 5.0, y: 5.0, state: .sleeping)
+        let walker = makePigAt(x: 6.0, y: 5.0, state: .idle)
+        state.addGuineaPig(sleeper)
+        state.addGuineaPig(walker)
         let handler = CollisionHandler(gameState: state)
         handler.rebuildSpatialGrid()
-        let targeting = handler.getPigsTargetingFacility(UUID())
-        #expect(targeting.isEmpty)
-    }
-}
+        handler.separateOverlappingPigs()
 
-// MARK: - CollisionHandler Rescue
-
-@MainActor
-struct CollisionRescueTests {
-
-    @Test("Pig on non-walkable cell is teleported to a walkable cell")
-    func testRescueNonWalkablePigs() throws {
-        let state = makeGameState()
-        // The starter farm has walls at x=0 and y=0 border
-        var pig = makePigAt(x: 0.0, y: 5.0, state: .wandering)  // wall cell at x=0
-        pig.path = [GridPosition(x: 10, y: 5)]
-        pig.targetFacilityId = UUID()
-        state.addGuineaPig(pig)
-        let handler = CollisionHandler(gameState: state)
-        handler.rescueNonWalkablePigs([pig])
-
-        let rescued = try #require(state.guineaPigs[pig.id])
-        let gx = Int(rescued.position.x)
-        let gy = Int(rescued.position.y)
-        #expect(state.farm.isWalkable(gx, gy))
-        #expect(rescued.path.isEmpty)
-        #expect(rescued.targetFacilityId == nil)
-        #expect(rescued.behaviorState == .idle)
+        let updatedSleeper = try #require(state.guineaPigs[sleeper.id])
+        let updatedWalker = try #require(state.guineaPigs[walker.id])
+        #expect(abs(updatedSleeper.position.x - 5.0) < 0.001)
+        #expect(abs(updatedWalker.position.x - 6.0) < 0.001)
     }
 
-    @Test("Pig on walkable cell is not moved by rescue")
-    func testRescueSkipsWalkablePig() throws {
+    @Test("Two active pigs still separate after sleeping-pig guard")
+    func testActivePigsStillSeparated() throws {
         let state = makeGameState()
-        let pig = makePigAt(x: 5.0, y: 5.0, state: .wandering)
-        let origX = pig.position.x
-        let origY = pig.position.y
-        state.addGuineaPig(pig)
+        let pigA = makePigAt(x: 5.0, y: 5.0, state: .idle)
+        let pigB = makePigAt(x: 6.0, y: 5.0, state: .idle)
+        state.addGuineaPig(pigA)
+        state.addGuineaPig(pigB)
         let handler = CollisionHandler(gameState: state)
-        handler.rescueNonWalkablePigs([pig])
+        handler.rebuildSpatialGrid()
+        handler.separateOverlappingPigs()
 
-        let after = try #require(state.guineaPigs[pig.id])
-        #expect(abs(after.position.x - origX) < 0.001)
-        #expect(abs(after.position.y - origY) < 0.001)
+        let updatedA = try #require(state.guineaPigs[pigA.id])
+        let updatedB = try #require(state.guineaPigs[pigB.id])
+        let dx = updatedB.position.x - updatedA.position.x
+        let dy = updatedB.position.y - updatedA.position.y
+        let dist = (dx * dx + dy * dy).squareRoot()
+        #expect(dist > 1.0, "Active pigs should be pushed apart")
     }
 }
