@@ -208,7 +208,9 @@ struct BigPigFarmApp: App {
         }
         notificationManager.isSuppressed = false
 
-        if summary.hasMeaningfulEvents {
+        let showPopup = summary.hasMeaningfulEvents
+            || wallClockSeconds >= GameConfig.Offline.alwaysShowPopupSeconds
+        if showPopup {
             offlineSummary = summary
             // Engine stays paused — resumes when user taps "Continue"
         } else {

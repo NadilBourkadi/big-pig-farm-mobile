@@ -245,9 +245,12 @@ struct OfflineProgressView: View {
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
-            Text("Nothing happened while you were away.")
+            Text("Your pigs rested peacefully.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            Text("Needs were maintained and facilities restocked.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)

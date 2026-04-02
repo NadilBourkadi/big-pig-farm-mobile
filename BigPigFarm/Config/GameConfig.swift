@@ -198,6 +198,12 @@ enum GameConfig {
         static let consumptionRateMultiplier: Double = 0.40
         /// Health floor when facilities are empty. Pigs suffer but survive.
         static let healthMercyFloor: Double = 10.0
+        /// Wall-clock seconds after which the summary popup is always shown,
+        /// even if the catch-up produced no births, deaths, or sales.
+        /// Confirms to the player that catch-up ran (small herds or at-capacity
+        /// farms can legitimately produce zero visible events over hours).
+        static let alwaysShowPopupSeconds: Double = 1_800  // 30 minutes
+
         /// Breed only once every N checkpoints during offline catch-up.
         /// Prevents baby-heavy population after long absences — with only
         /// ~35 game-hours in a 24h session, babies born late can never reach
