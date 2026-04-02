@@ -205,9 +205,8 @@ enum GameConfig {
         static let alwaysShowPopupSeconds: Double = 1_800  // 30 minutes
 
         /// Breed only once every N checkpoints during offline catch-up.
-        /// Prevents baby-heavy population after long absences — with only
-        /// ~35 game-hours in a 24h session, babies born late can never reach
-        /// adultAgeDays (15 days = 360 game-hours) before catch-up ends.
+        /// Controls breeding frequency — one attempt every 6 game-hours,
+        /// roughly matching the natural breeding cadence in live play.
         static let breedingCheckpointInterval: Int = 6
 
         /// A single tier in the diminishing-returns offline speed curve.
@@ -221,12 +220,14 @@ enum GameConfig {
         /// Diminishing returns curve. Ordered by ascending realHoursCeiling.
         /// - Invariant: entries must be sorted ascending by `realHoursCeiling`;
         ///   `computeGameHours` produces incorrect results for unsorted input.
-        /// 24h offline produces 35 game-hours instead of the old flat 4,320.
+        /// Calibrated against live 1x speed (180 gh/rh). Tier 1 runs at 67%
+        /// of live speed; subsequent tiers decay to prevent offline farming
+        /// from dominating active play. 24h offline → ~840 game-hours (35 days).
         static let speedTiers: [SpeedTier] = [
-            SpeedTier(realHoursCeiling: 2, multiplier: 3.0),
-            SpeedTier(realHoursCeiling: 6, multiplier: 2.0),
-            SpeedTier(realHoursCeiling: 12, multiplier: 1.5),
-            SpeedTier(realHoursCeiling: 24, multiplier: 1.0),
+            SpeedTier(realHoursCeiling: 2, multiplier: 120.0),
+            SpeedTier(realHoursCeiling: 6, multiplier: 60.0),
+            SpeedTier(realHoursCeiling: 12, multiplier: 30.0),
+            SpeedTier(realHoursCeiling: 24, multiplier: 15.0),
         ]
     }
 
