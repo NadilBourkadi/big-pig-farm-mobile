@@ -25,12 +25,38 @@ enum OfflineProgressRunner {
         let gameHoursTotal = computeGameHours(wallClockSeconds: clampedSeconds)
         let checkpointCount = Int(gameHoursTotal / GameConfig.Offline.checkpointGameHours)
 
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        DebugLogger.shared.log(
+            category: .offline, level: .info,
+            message: "CatchUp start: wallClock=\(String(format: "%.1f", wallClockSeconds))s, "
+                + "clamped=\(String(format: "%.1f", clampedSeconds))s, "
+                + "gameHours=\(String(format: "%.2f", gameHoursTotal)), "
+                + "checkpoints=\(checkpointCount), "
+                + "pigCount=\(state.pigCount)",
+            payload: [
+                "wallClockSeconds": String(format: "%.1f", wallClockSeconds),
+                "gameHoursTotal": String(format: "%.2f", gameHoursTotal),
+                "checkpointCount": String(checkpointCount),
+                "pigCount": String(state.pigCount),
+            ]
+        )
+        #endif
+
         var summary = OfflineProgressSummary(
             wallClockElapsed: clampedSeconds,
             gameHoursElapsed: gameHoursTotal
         )
 
-        guard checkpointCount > 0 else { return summary }
+        guard checkpointCount > 0 else {
+            #if (DEBUG || INTERNAL) && canImport(UIKit)
+            DebugLogger.shared.log(
+                category: .offline, level: .warning,
+                message: "CatchUp skipped: 0 checkpoints "
+                    + "(gameHours=\(String(format: "%.4f", gameHoursTotal)), need >= 1.0)"
+            )
+            #endif
+            return summary
+        }
 
         let moneyBefore = state.money
         let emptyBefore = state.getFacilitiesList().filter(\.isEmpty).count
@@ -52,6 +78,28 @@ enum OfflineProgressRunner {
         summary.totalMoneyEarned = max(0, moneyAfterCheckpoints - moneyBefore)
         let emptyAfter = state.getFacilitiesList().filter(\.isEmpty).count
         summary.facilitiesEmptied = max(0, emptyAfter - emptyBefore)
+
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        DebugLogger.shared.log(
+            category: .offline, level: .info,
+            message: "CatchUp done: born=\(summary.pigsBorn.count), "
+                + "died=\(summary.pigsDied.count), "
+                + "sold=\(summary.pigsSold.count), "
+                + "pregnancies=\(summary.pregnanciesStarted.count), "
+                + "money=\(summary.totalMoneyEarned), "
+                + "facilitiesEmptied=\(summary.facilitiesEmptied), "
+                + "meaningful=\(summary.hasMeaningfulEvents)",
+            payload: [
+                "born": String(summary.pigsBorn.count),
+                "died": String(summary.pigsDied.count),
+                "sold": String(summary.pigsSold.count),
+                "pregnancies": String(summary.pregnanciesStarted.count),
+                "moneyEarned": String(summary.totalMoneyEarned),
+                "facilitiesEmptied": String(summary.facilitiesEmptied),
+                "hasMeaningfulEvents": String(summary.hasMeaningfulEvents),
+            ]
+        )
+        #endif
 
         return summary
     }
