@@ -129,30 +129,40 @@ struct OfflineProgressSummaryTests {
         #expect(summary.hasMeaningfulEvents)
     }
 
-    @Test func popupShownForLongAbsenceEvenWithoutEvents() {
+    @Test func shouldShowPopupForLongAbsenceWithoutEvents() {
         let summary = OfflineProgressSummary(wallClockElapsed: 7200, gameHoursElapsed: 22)
         #expect(!summary.hasMeaningfulEvents)
-        // Popup should be shown because wall clock exceeds alwaysShowPopupSeconds
-        let showPopup = summary.hasMeaningfulEvents
-            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
-        #expect(showPopup)
+        #expect(summary.shouldShowPopup)
     }
 
-    @Test func popupNotShownForShortAbsenceWithoutEvents() {
+    @Test func shouldNotShowPopupForShortAbsenceWithoutEvents() {
         let summary = OfflineProgressSummary(wallClockElapsed: 120, gameHoursElapsed: 0.1)
         #expect(!summary.hasMeaningfulEvents)
-        let showPopup = summary.hasMeaningfulEvents
-            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
-        #expect(!showPopup)
+        #expect(!summary.shouldShowPopup)
     }
 
-    @Test func popupShownForShortAbsenceWithEvents() {
+    @Test func shouldShowPopupForShortAbsenceWithEvents() {
         var summary = OfflineProgressSummary(wallClockElapsed: 120, gameHoursElapsed: 0.1)
         summary.pigsBorn.append(.init(name: "Baby", phenotype: "White"))
-        #expect(summary.hasMeaningfulEvents)
-        let showPopup = summary.hasMeaningfulEvents
-            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
-        #expect(showPopup)
+        #expect(summary.shouldShowPopup)
+    }
+
+    @Test func shouldShowPopupAtExactThreshold() {
+        let summary = OfflineProgressSummary(
+            wallClockElapsed: GameConfig.Offline.alwaysShowPopupSeconds,
+            gameHoursElapsed: 5
+        )
+        #expect(!summary.hasMeaningfulEvents)
+        #expect(summary.shouldShowPopup)
+    }
+
+    @Test func shouldNotShowPopupJustBelowThreshold() {
+        let summary = OfflineProgressSummary(
+            wallClockElapsed: GameConfig.Offline.alwaysShowPopupSeconds - 1,
+            gameHoursElapsed: 5
+        )
+        #expect(!summary.hasMeaningfulEvents)
+        #expect(!summary.shouldShowPopup)
     }
 }
 

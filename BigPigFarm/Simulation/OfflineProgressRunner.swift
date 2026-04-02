@@ -25,22 +25,8 @@ enum OfflineProgressRunner {
         let gameHoursTotal = computeGameHours(wallClockSeconds: clampedSeconds)
         let checkpointCount = Int(gameHoursTotal / GameConfig.Offline.checkpointGameHours)
 
-        #if (DEBUG || INTERNAL) && canImport(UIKit)
-        DebugLogger.shared.log(
-            category: .offline, level: .info,
-            message: "CatchUp start: wallClock=\(String(format: "%.1f", wallClockSeconds))s, "
-                + "clamped=\(String(format: "%.1f", clampedSeconds))s, "
-                + "gameHours=\(String(format: "%.2f", gameHoursTotal)), "
-                + "checkpoints=\(checkpointCount), "
-                + "pigCount=\(state.pigCount)",
-            payload: [
-                "wallClockSeconds": String(format: "%.1f", wallClockSeconds),
-                "gameHoursTotal": String(format: "%.2f", gameHoursTotal),
-                "checkpointCount": String(checkpointCount),
-                "pigCount": String(state.pigCount),
-            ]
-        )
-        #endif
+        logCatchUpStart(wallClockSeconds: wallClockSeconds, clampedSeconds: clampedSeconds,
+                        gameHoursTotal: gameHoursTotal, checkpointCount: checkpointCount, state: state)
 
         var summary = OfflineProgressSummary(
             wallClockElapsed: clampedSeconds,
@@ -48,13 +34,7 @@ enum OfflineProgressRunner {
         )
 
         guard checkpointCount > 0 else {
-            #if (DEBUG || INTERNAL) && canImport(UIKit)
-            DebugLogger.shared.log(
-                category: .offline, level: .warning,
-                message: "CatchUp skipped: 0 checkpoints "
-                    + "(gameHours=\(String(format: "%.4f", gameHoursTotal)), need >= 1.0)"
-            )
-            #endif
+            logCatchUpSkipped(gameHoursTotal: gameHoursTotal)
             return summary
         }
 
@@ -79,27 +59,7 @@ enum OfflineProgressRunner {
         let emptyAfter = state.getFacilitiesList().filter(\.isEmpty).count
         summary.facilitiesEmptied = max(0, emptyAfter - emptyBefore)
 
-        #if (DEBUG || INTERNAL) && canImport(UIKit)
-        DebugLogger.shared.log(
-            category: .offline, level: .info,
-            message: "CatchUp done: born=\(summary.pigsBorn.count), "
-                + "died=\(summary.pigsDied.count), "
-                + "sold=\(summary.pigsSold.count), "
-                + "pregnancies=\(summary.pregnanciesStarted.count), "
-                + "money=\(summary.totalMoneyEarned), "
-                + "facilitiesEmptied=\(summary.facilitiesEmptied), "
-                + "meaningful=\(summary.hasMeaningfulEvents)",
-            payload: [
-                "born": String(summary.pigsBorn.count),
-                "died": String(summary.pigsDied.count),
-                "sold": String(summary.pigsSold.count),
-                "pregnancies": String(summary.pregnanciesStarted.count),
-                "moneyEarned": String(summary.totalMoneyEarned),
-                "facilitiesEmptied": String(summary.facilitiesEmptied),
-                "hasMeaningfulEvents": String(summary.hasMeaningfulEvents),
-            ]
-        )
-        #endif
+        logCatchUpDone(summary: summary)
 
         return summary
     }
@@ -312,5 +272,64 @@ enum OfflineProgressRunner {
                 summary.pigdexDiscoveries.append(event.message)
             }
         }
+    }
+
+    // MARK: - Debug Logging
+
+    @MainActor
+    private static func logCatchUpStart(
+        wallClockSeconds: TimeInterval, clampedSeconds: TimeInterval,
+        gameHoursTotal: Double, checkpointCount: Int, state: GameState
+    ) {
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        DebugLogger.shared.log(
+            category: .offline, level: .info,
+            message: "CatchUp start: wallClock=\(String(format: "%.1f", wallClockSeconds))s, "
+                + "clamped=\(String(format: "%.1f", clampedSeconds))s, "
+                + "gameHours=\(String(format: "%.2f", gameHoursTotal)), "
+                + "checkpoints=\(checkpointCount), pigCount=\(state.pigCount)",
+            payload: [
+                "wallClockSeconds": String(format: "%.1f", wallClockSeconds),
+                "gameHoursTotal": String(format: "%.2f", gameHoursTotal),
+                "checkpointCount": String(checkpointCount),
+                "pigCount": String(state.pigCount),
+            ]
+        )
+        #endif
+    }
+
+    @MainActor
+    private static func logCatchUpSkipped(gameHoursTotal: Double) {
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        DebugLogger.shared.log(
+            category: .offline, level: .warning,
+            message: "CatchUp skipped: 0 checkpoints "
+                + "(gameHours=\(String(format: "%.4f", gameHoursTotal)), need >= 1.0)"
+        )
+        #endif
+    }
+
+    @MainActor
+    private static func logCatchUpDone(summary: OfflineProgressSummary) {
+        #if (DEBUG || INTERNAL) && canImport(UIKit)
+        DebugLogger.shared.log(
+            category: .offline, level: .info,
+            message: "CatchUp done: born=\(summary.pigsBorn.count), "
+                + "died=\(summary.pigsDied.count), sold=\(summary.pigsSold.count), "
+                + "pregnancies=\(summary.pregnanciesStarted.count), "
+                + "money=\(summary.totalMoneyEarned), "
+                + "facilitiesEmptied=\(summary.facilitiesEmptied), "
+                + "meaningful=\(summary.hasMeaningfulEvents)",
+            payload: [
+                "born": String(summary.pigsBorn.count),
+                "died": String(summary.pigsDied.count),
+                "sold": String(summary.pigsSold.count),
+                "pregnancies": String(summary.pregnanciesStarted.count),
+                "moneyEarned": String(summary.totalMoneyEarned),
+                "facilitiesEmptied": String(summary.facilitiesEmptied),
+                "hasMeaningfulEvents": String(summary.hasMeaningfulEvents),
+            ]
+        )
+        #endif
     }
 }

@@ -42,4 +42,11 @@ struct OfflineProgressSummary: Sendable, Identifiable {
         || !pregnanciesStarted.isEmpty || !pigdexDiscoveries.isEmpty
         || totalMoneyEarned != 0 || facilitiesEmptied > 0
     }
+
+    /// Whether the summary popup should be presented to the player.
+    /// Shows for meaningful events (any duration) or long absences (even if quiet).
+    var shouldShowPopup: Bool {
+        hasMeaningfulEvents
+            || wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
+    }
 }
