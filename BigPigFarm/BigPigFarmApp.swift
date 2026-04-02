@@ -117,6 +117,13 @@ struct BigPigFarmApp: App {
             // Prevents false catch-ups from notification center or phone call popups
             // (inactive → active without a background transition).
             guard didEnterBackground else {
+                #if DEBUG || INTERNAL
+                DebugLogger.shared.log(
+                    category: .offline, level: .info,
+                    message: "Foreground: skipped catch-up (no background transition, "
+                        + "oldPhase=\(oldPhase.debugLabel))"
+                )
+                #endif
                 engine.resume()
                 return
             }
@@ -128,6 +135,20 @@ struct BigPigFarmApp: App {
             VisitManager.processVisit(state: gameState)
 
             let duration = computeOfflineDuration()
+            #if DEBUG || INTERNAL
+            DebugLogger.shared.log(
+                category: .offline, level: .info,
+                message: "Foreground: lastSave=\(gameState.lastSave.map { "\($0)" } ?? "nil"), "
+                    + "duration=\(String(format: "%.1f", duration))s, "
+                    + "threshold=\(GameConfig.Offline.minThresholdSeconds)s, "
+                    + "triggered=\(duration >= GameConfig.Offline.minThresholdSeconds)",
+                payload: [
+                    "durationSeconds": String(format: "%.1f", duration),
+                    "lastSave": gameState.lastSave.map { "\($0)" } ?? "nil",
+                    "pigCount": String(gameState.pigCount),
+                ]
+            )
+            #endif
             if duration >= GameConfig.Offline.minThresholdSeconds {
                 runOfflineCatchUp(wallClockSeconds: duration)
             } else {
@@ -137,9 +158,14 @@ struct BigPigFarmApp: App {
             engine.pause()
         case .background:
             didEnterBackground = true
-            gameState.lastBackgroundDate = Date() // transient; crash fallback is lastSave
+            gameState.lastBackgroundDate = Date()
             lifecycleSave()
             #if DEBUG || INTERNAL
+            DebugLogger.shared.log(
+                category: .offline, level: .info,
+                message: "Background: saved, lastSave=\(gameState.lastSave.map { "\($0)" } ?? "nil"), "
+                    + "pigCount=\(gameState.pigCount)"
+            )
             DebugLogger.shared.flushBlocking()
             DebugLogger.shared.syncToiCloud()
             #endif
@@ -186,6 +212,12 @@ struct BigPigFarmApp: App {
             offlineSummary = summary
             // Engine stays paused — resumes when user taps "Continue"
         } else {
+            #if DEBUG || INTERNAL
+            DebugLogger.shared.log(
+                category: .offline, level: .info,
+                message: "No meaningful events — resuming engine without popup"
+            )
+            #endif
             engine.resume()
         }
     }
@@ -219,3 +251,16 @@ struct BigPigFarmApp: App {
 }
 
 // setupNewGame lives in Engine/NewGameSetup.swift (platform-agnostic, accessible from BigPigFarmCore)
+
+// MARK: - ScenePhase Debug Label
+
+extension ScenePhase {
+    var debugLabel: String {
+        switch self {
+        case .active: "active"
+        case .inactive: "inactive"
+        case .background: "background"
+        @unknown default: "unknown"
+        }
+    }
+}

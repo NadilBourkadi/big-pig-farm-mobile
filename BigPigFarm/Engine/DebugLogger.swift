@@ -40,6 +40,7 @@ enum DebugCategory: String, Codable, Sendable, CaseIterable {
     case simulation
     case facility
     case performance
+    case offline
 
     /// Map existing GameState eventType strings to debug categories.
     static func from(eventType: String) -> Self {
