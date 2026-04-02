@@ -182,6 +182,11 @@ final class CollisionHandler {
                 continue
             }
 
+            // Sleeping pigs must not be nudged — skip the pair if either is asleep.
+            if pigA.behaviorState == .sleeping || pigB.behaviorState == .sleeping {
+                continue
+            }
+
             let bothMoving = !pigA.path.isEmpty && !pigB.path.isEmpty
             let bothFacility = facilityUseStates.contains(pigA.behaviorState)
                 && facilityUseStates.contains(pigB.behaviorState)
