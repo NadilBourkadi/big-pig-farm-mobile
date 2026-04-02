@@ -79,9 +79,9 @@ struct OfflineCatchUpFlowTests {
         _ = state.addFacility(Facility.create(type: .foodBowl, x: 3, y: 3))
         _ = state.addFacility(Facility.create(type: .waterBottle, x: 8, y: 3))
 
-        // 3 game-hours via tier 1 = 3600 wall seconds — should trigger birth
-        // (pregnancy at 1.9/2.0 days, needs 0.1 day = 2.4 hours to complete)
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 3600)
+        // 3 game-hours via tier 1 (120x) = 90 wall seconds — should trigger birth
+        // (pregnancy at 9.9/10 days, needs 0.1 day = 2.4 hours to complete)
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 90)
         #expect(summary.hasMeaningfulEvents)
         #expect(!summary.pigsBorn.isEmpty)
     }

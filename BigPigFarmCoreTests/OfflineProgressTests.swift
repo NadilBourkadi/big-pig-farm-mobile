@@ -40,13 +40,13 @@ struct OfflineConfigTests {
         let tiers = GameConfig.Offline.speedTiers
         #expect(tiers.count == 4)
         #expect(tiers[0].realHoursCeiling == 2)
-        #expect(tiers[0].multiplier == 3.0)
+        #expect(tiers[0].multiplier == 120.0)
         #expect(tiers[1].realHoursCeiling == 6)
-        #expect(tiers[1].multiplier == 2.0)
+        #expect(tiers[1].multiplier == 60.0)
         #expect(tiers[2].realHoursCeiling == 12)
-        #expect(tiers[2].multiplier == 1.5)
+        #expect(tiers[2].multiplier == 30.0)
         #expect(tiers[3].realHoursCeiling == 24)
-        #expect(tiers[3].multiplier == 1.0)
+        #expect(tiers[3].multiplier == 15.0)
     }
 
     @Test func speedTiersAreOrderedAscending() {
@@ -66,45 +66,45 @@ struct OfflineDiminishingReturnsTests {
     }
 
     @Test func tier1Only() {
-        // 1 real hour = 3 game-hours (3x multiplier)
+        // 1 real hour at 120x = 120 game-hours
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 3600)
-        #expect(result == 3.0)
+        #expect(result == 120.0)
     }
 
     @Test func tier1Boundary() {
-        // 2 real hours = 6 game-hours
+        // 2 real hours at 120x = 240 game-hours (enough for a full pregnancy)
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 7200)
-        #expect(result == 6.0)
+        #expect(result == 240.0)
     }
 
     @Test func tier1PlusTier2() {
-        // 4 real hours: 2h at 3x (6) + 2h at 2x (4) = 10 game-hours
+        // 4h: 2h×120 (240) + 2h×60 (120) = 360 game-hours
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 14_400)
-        #expect(result == 10.0)
+        #expect(result == 360.0)
     }
 
-    @Test func eightRealHoursProducesSeventeen() {
-        // 8h: 2h×3 (6) + 4h×2 (8) + 2h×1.5 (3) = 17 game-hours
+    @Test func eightRealHoursOvernight() {
+        // 8h: 2h×120 (240) + 4h×60 (240) + 2h×30 (60) = 540 game-hours
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 28_800)
-        #expect(result == 17.0)
+        #expect(result == 540.0)
     }
 
-    @Test func twelveRealHoursProducesTwentyThree() {
-        // 12h: 2h×3 (6) + 4h×2 (8) + 6h×1.5 (9) = 23 game-hours
+    @Test func twelveRealHours() {
+        // 12h: 240 + 240 + 6h×30 (180) = 660 game-hours
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 43_200)
-        #expect(result == 23.0)
+        #expect(result == 660.0)
     }
 
-    @Test func twentyFourRealHoursProducesThirtyFive() {
-        // 24h: 6 + 8 + 9 + 12 = 35 game-hours
+    @Test func twentyFourRealHours() {
+        // 24h: 240 + 240 + 180 + 12h×15 (180) = 840 game-hours = 35 game-days
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 86_400)
-        #expect(result == 35.0)
+        #expect(result == 840.0)
     }
 
     @Test func beyondLastTierFallsBackToOneX() {
-        // 30 real hours: 35 game-hours (tiers 1-4) + 6h at 1x fallback = 41
+        // 30h: 840 game-hours (tiers 1-4) + 6h at 1x fallback = 846
         let result = OfflineProgressRunner.computeGameHours(wallClockSeconds: 108_000)
-        #expect(result == 41.0)
+        #expect(result == 846.0)
     }
 }
 
@@ -175,8 +175,8 @@ struct OfflineNeedsTests {
         let pig = state.getPigsList()[0]
         let hungerBefore = pig.needs.hunger
 
-        // 5 game-hours via tier 1: 5/3 real-hours = 6000 wall seconds
-        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 6000)
+        // 5 game-hours via tier 1 (120x): 5/120 real-hours = 150 wall seconds
+        let summary = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 150)
         #expect(summary.gameHoursElapsed == 5.0)
 
         let updated = try #require(state.getGuineaPig(pig.id))
@@ -192,8 +192,8 @@ struct OfflineNeedsTests {
         pig.needs.thirst = 20.0  // Below lowThreshold (40)
         state.updateGuineaPig(pig)
 
-        // 1 game-hour via tier 1: 1/3 real-hour = 1200 wall seconds
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
+        // 1 game-hour via tier 1 (120x): 1/120 real-hour = 30 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 30)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         // Thirst should have recovered (consumes from water bottle)
@@ -210,8 +210,8 @@ struct OfflineNeedsTests {
         let foodBowl = state.getFacilitiesByType(.foodBowl).first
         let stockBefore = foodBowl?.currentAmount ?? 0
 
-        // 1 game-hour via tier 1 — 10 pigs all consuming at 40% rate
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
+        // 1 game-hour via tier 1 (120x) — 10 pigs all consuming at 40% rate
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 30)
 
         let updatedBowl = foodBowl.flatMap { state.getFacility($0.id) }
         let stockAfter = updatedBowl?.currentAmount ?? 0
@@ -230,8 +230,8 @@ struct OfflineNeedsTests {
         pig.needs.thirst = 20.0
         state.updateGuineaPig(pig)
 
-        // 1 game-hour via tier 1
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
+        // 1 game-hour via tier 1 (120x) = 30 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 30)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         // Thirst should only decay — empty water bottle provides no recovery
@@ -246,8 +246,8 @@ struct OfflineNeedsTests {
         pig.needs.health = 30.0
         state.updateGuineaPig(pig)
 
-        // 6 game-hours via tier 1 (2 real hours) — health drains for 6 checkpoints
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 7200)
+        // 6 game-hours via tier 1 (120x): 6/120 real-hours = 180 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 180)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         #expect(updated.needs.health >= GameConfig.Offline.healthMercyFloor)
@@ -259,8 +259,8 @@ struct OfflineNeedsTests {
         pig.needs.thirst = 30.0
         state.updateGuineaPig(pig)
 
-        // 1 game-hour via tier 1
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
+        // 1 game-hour via tier 1 (120x) = 30 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 30)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         // Thirst only decays, no recovery without water bottle
@@ -277,8 +277,8 @@ struct OfflineNeedsTests {
         pig.needs.health = 100.0
         state.updateGuineaPig(pig)
 
-        // 1 game-hour via tier 1
-        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 1200)
+        // 1 game-hour via tier 1 (120x) = 30 wall seconds
+        _ = OfflineProgressRunner.runCatchUp(state: state, wallClockSeconds: 30)
 
         let updated = try #require(state.getGuineaPig(pig.id))
         #expect(updated.needs.hunger >= 0.0 && updated.needs.hunger <= 100.0)
