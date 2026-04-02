@@ -151,6 +151,7 @@
 - [x] Add sell button to pig detail sheet and multi-select batch sell to pig list (bead eu7s)
 - [x] Introduce view models for ContentView, PigListView, PigDetailView, ShopView (bead 1vd)
 - [x] Add section footers and color swatches to breeding program toggles (bead n6xy)
+- [x] Fix tinted StatusBadge WCAG AA contrast ratio compliance (bead tbe)
 
 ---
 
