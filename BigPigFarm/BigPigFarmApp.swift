@@ -113,52 +113,12 @@ struct BigPigFarmApp: App {
     private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
         switch newPhase {
         case .active:
-            // Only check for offline progress if we actually went to background.
-            // Prevents false catch-ups from notification center or phone call popups
-            // (inactive → active without a background transition).
-            guard didEnterBackground else {
-                #if DEBUG || INTERNAL
-                DebugLogger.shared.log(
-                    category: .offline, level: .info,
-                    message: "Foreground: skipped catch-up (no background transition, "
-                        + "oldPhase=\(oldPhase.debugLabel))"
-                )
-                #endif
-                engine.resume()
-                return
-            }
-            didEnterBackground = false
-
-            // Visit detection runs independently of offline catch-up.
-            // A 1-hour absence qualifies as a visit even if the offline
-            // catch-up threshold (shorter) is not met.
-            VisitManager.processVisit(state: gameState)
-
-            let duration = computeOfflineDuration()
-            #if DEBUG || INTERNAL
-            DebugLogger.shared.log(
-                category: .offline, level: .info,
-                message: "Foreground: lastSave=\(gameState.lastSave.map { "\($0)" } ?? "nil"), "
-                    + "duration=\(String(format: "%.1f", duration))s, "
-                    + "threshold=\(GameConfig.Offline.minThresholdSeconds)s, "
-                    + "triggered=\(duration >= GameConfig.Offline.minThresholdSeconds)",
-                payload: [
-                    "durationSeconds": String(format: "%.1f", duration),
-                    "lastSave": gameState.lastSave.map { "\($0)" } ?? "nil",
-                    "pigCount": String(gameState.pigCount),
-                ]
-            )
-            #endif
-            if duration >= GameConfig.Offline.minThresholdSeconds {
-                runOfflineCatchUp(wallClockSeconds: duration)
-            } else {
-                engine.resume()
-            }
+            handleBecameActive(oldPhase: oldPhase)
         case .inactive:
             engine.pause()
         case .background:
             didEnterBackground = true
-            gameState.lastBackgroundDate = Date()
+            gameState.lastBackgroundDate = Date() // transient; crash fallback is lastSave
             lifecycleSave()
             #if DEBUG || INTERNAL
             DebugLogger.shared.log(
@@ -171,6 +131,51 @@ struct BigPigFarmApp: App {
             #endif
         @unknown default:
             break
+        }
+    }
+
+    @MainActor
+    private func handleBecameActive(oldPhase: ScenePhase) {
+        // Only check for offline progress if we actually went to background.
+        // Prevents false catch-ups from notification center or phone call popups
+        // (inactive → active without a background transition).
+        guard didEnterBackground else {
+            #if DEBUG || INTERNAL
+            DebugLogger.shared.log(
+                category: .offline, level: .info,
+                message: "Foreground: skipped catch-up (no background transition, "
+                    + "oldPhase=\(oldPhase.debugLabel))"
+            )
+            #endif
+            engine.resume()
+            return
+        }
+        didEnterBackground = false
+
+        // Visit detection runs independently of offline catch-up.
+        // A 1-hour absence qualifies as a visit even if the offline
+        // catch-up threshold (shorter) is not met.
+        VisitManager.processVisit(state: gameState)
+
+        let duration = computeOfflineDuration()
+        #if DEBUG || INTERNAL
+        DebugLogger.shared.log(
+            category: .offline, level: .info,
+            message: "Foreground: lastSave=\(gameState.lastSave.map { "\($0)" } ?? "nil"), "
+                + "duration=\(String(format: "%.1f", duration))s, "
+                + "threshold=\(GameConfig.Offline.minThresholdSeconds)s, "
+                + "triggered=\(duration >= GameConfig.Offline.minThresholdSeconds)",
+            payload: [
+                "durationSeconds": String(format: "%.1f", duration),
+                "lastSave": gameState.lastSave.map { "\($0)" } ?? "nil",
+                "pigCount": String(gameState.pigCount),
+            ]
+        )
+        #endif
+        if duration >= GameConfig.Offline.minThresholdSeconds {
+            runOfflineCatchUp(wallClockSeconds: duration)
+        } else {
+            engine.resume()
         }
     }
 
@@ -208,9 +213,7 @@ struct BigPigFarmApp: App {
         }
         notificationManager.isSuppressed = false
 
-        let showPopup = summary.hasMeaningfulEvents
-            || wallClockSeconds >= GameConfig.Offline.alwaysShowPopupSeconds
-        if showPopup {
+        if summary.shouldShowPopup {
             offlineSummary = summary
             // Engine stays paused — resumes when user taps "Continue"
         } else {

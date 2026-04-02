@@ -248,9 +248,6 @@ struct OfflineProgressView: View {
             Text("Your pigs rested peacefully.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text("Needs were maintained and facilities restocked.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
