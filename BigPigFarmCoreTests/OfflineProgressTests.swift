@@ -33,6 +33,7 @@ struct OfflineConfigTests {
         #expect(GameConfig.Offline.maxDurationSeconds == 86_400)
         #expect(GameConfig.Offline.checkpointGameHours == 1.0)
         #expect(GameConfig.Offline.consumptionRateMultiplier == 0.40)
+        #expect(GameConfig.Offline.alwaysShowPopupSeconds == 1_800)
     }
 
     @Test func speedTiersAreConfigured() {
@@ -126,6 +127,32 @@ struct OfflineProgressSummaryTests {
         var summary = OfflineProgressSummary(wallClockElapsed: 100, gameHoursElapsed: 5)
         summary.totalMoneyEarned = 50
         #expect(summary.hasMeaningfulEvents)
+    }
+
+    @Test func popupShownForLongAbsenceEvenWithoutEvents() {
+        let summary = OfflineProgressSummary(wallClockElapsed: 7200, gameHoursElapsed: 22)
+        #expect(!summary.hasMeaningfulEvents)
+        // Popup should be shown because wall clock exceeds alwaysShowPopupSeconds
+        let showPopup = summary.hasMeaningfulEvents
+            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
+        #expect(showPopup)
+    }
+
+    @Test func popupNotShownForShortAbsenceWithoutEvents() {
+        let summary = OfflineProgressSummary(wallClockElapsed: 120, gameHoursElapsed: 0.1)
+        #expect(!summary.hasMeaningfulEvents)
+        let showPopup = summary.hasMeaningfulEvents
+            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
+        #expect(!showPopup)
+    }
+
+    @Test func popupShownForShortAbsenceWithEvents() {
+        var summary = OfflineProgressSummary(wallClockElapsed: 120, gameHoursElapsed: 0.1)
+        summary.pigsBorn.append(.init(name: "Baby", phenotype: "White"))
+        #expect(summary.hasMeaningfulEvents)
+        let showPopup = summary.hasMeaningfulEvents
+            || summary.wallClockElapsed >= GameConfig.Offline.alwaysShowPopupSeconds
+        #expect(showPopup)
     }
 }
 
