@@ -122,10 +122,7 @@ private extension SettingsView {
 
                 Button {
                     manager.backupToCloud()
-                    // Refresh the displayed timestamp after a short delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        backupState = iCloudBackupState.load()
-                    }
+                    backupState.lastBackupDate = Date()
                 } label: {
                     Label("Back Up Now", systemImage: "icloud.and.arrow.up")
                 }

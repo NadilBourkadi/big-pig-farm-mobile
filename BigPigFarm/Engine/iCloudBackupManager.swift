@@ -9,12 +9,13 @@ import Foundation
 
 // MARK: - iCloudBackupManager
 
-struct iCloudBackupManager: Sendable {
+struct iCloudBackupManager: @unchecked Sendable {
     static let containerIdentifier = "iCloud.com.nadilbourkadi.bigpigfarm"
     static let backupDirectoryName = "SaveBackup"
 
     let containerURL: URL?
     let saveManager: SaveManager
+    let defaults: UserDefaults
 
     var isAvailable: Bool { containerURL != nil }
 
@@ -66,9 +67,9 @@ struct iCloudBackupManager: Sendable {
                 label: "prestige"
             )
 
-            var state = iCloudBackupState.load()
+            var state = iCloudBackupState.load(from: defaults)
             state.lastBackupDate = Date()
-            state.save()
+            state.save(to: defaults)
         }
     }
 
