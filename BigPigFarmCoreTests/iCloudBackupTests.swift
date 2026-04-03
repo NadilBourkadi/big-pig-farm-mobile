@@ -10,8 +10,8 @@ import Foundation
     #expect(state.lastBackupDate == nil)
 }
 
-@Test func backupStatePersistenceRoundTrip() {
-    let defaults = UserDefaults(suiteName: "iCloudBackupTests-\(UUID().uuidString)")!
+@Test func backupStatePersistenceRoundTrip() throws {
+    let defaults = try #require(UserDefaults(suiteName: "iCloudBackupTests-\(UUID().uuidString)"))
     var state = iCloudBackupState()
     state.lastBackupDate = Date(timeIntervalSince1970: 1_700_000_000)
     state.save(to: defaults)
@@ -21,14 +21,14 @@ import Foundation
     #expect(loaded.lastBackupDate != nil)
 }
 
-@Test func backupStateLoadReturnsDefaultWhenNoData() {
-    let defaults = UserDefaults(suiteName: "iCloudBackupTests-empty-\(UUID().uuidString)")!
+@Test func backupStateLoadReturnsDefaultWhenNoData() throws {
+    let defaults = try #require(UserDefaults(suiteName: "iCloudBackupTests-empty-\(UUID().uuidString)"))
     let loaded = iCloudBackupState.load(from: defaults)
     #expect(loaded.lastBackupDate == nil)
 }
 
-@Test func backupStateLoadReturnsDefaultOnCorruptData() {
-    let defaults = UserDefaults(suiteName: "iCloudBackupTests-corrupt-\(UUID().uuidString)")!
+@Test func backupStateLoadReturnsDefaultOnCorruptData() throws {
+    let defaults = try #require(UserDefaults(suiteName: "iCloudBackupTests-corrupt-\(UUID().uuidString)"))
     defaults.set(Data("not valid json".utf8), forKey: "iCloudBackupState")
     let loaded = iCloudBackupState.load(from: defaults)
     #expect(loaded.lastBackupDate == nil)
@@ -45,16 +45,24 @@ private func makeTempDir() throws -> URL {
 }
 
 /// Write sample JSON data to simulate a local save file.
-private func writeSampleSave(to dir: URL, fileName: String = "save.json", content: String = "{}") throws {
+private func writeSampleSave(
+    to dir: URL, fileName: String = "save.json", content: String = "{}"
+) throws {
     let fileURL = dir.appendingPathComponent(fileName)
     try Data(content.utf8).write(to: fileURL)
+}
+
+/// Create an isolated UserDefaults suite for test isolation.
+private func makeTestDefaults() throws -> UserDefaults {
+    try #require(UserDefaults(suiteName: "iCloudBackupTests-mgr-\(UUID().uuidString)"))
 }
 
 @Test func managerIsUnavailableWhenContainerURLIsNil() throws {
     let localDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: nil,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     #expect(!manager.isAvailable)
 }
@@ -64,7 +72,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     #expect(manager.isAvailable)
 }
@@ -76,7 +85,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
 
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
 
@@ -100,7 +110,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
 
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
@@ -119,7 +130,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     try writeSampleSave(to: localDir)
     let manager = iCloudBackupManager(
         containerURL: nil,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.2)
@@ -129,10 +141,10 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
 @Test func backupNoOpsWhenNoLocalSave() throws {
     let localDir = try makeTempDir()
     let cloudDir = try makeTempDir()
-    // Don't create any save files
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
@@ -140,7 +152,6 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let backupDir = cloudDir
         .appendingPathComponent("Documents")
         .appendingPathComponent("SaveBackup")
-    // The directory may or may not exist, but save.json should not
     let saveBackup = backupDir.appendingPathComponent("save.json")
     #expect(!FileManager.default.fileExists(atPath: saveBackup.path))
 }
@@ -149,14 +160,15 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let localDir = try makeTempDir()
     let cloudDir = try makeTempDir()
     let sm = SaveManager(baseDirectoryURL: localDir)
+    let defaults = try makeTestDefaults()
 
-    // First backup
     try writeSampleSave(to: localDir, content: "{\"version\": 1}")
-    let manager = iCloudBackupManager(containerURL: cloudDir, saveManager: sm)
+    let manager = iCloudBackupManager(
+        containerURL: cloudDir, saveManager: sm, defaults: defaults
+    )
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
 
-    // Second backup with different content
     try Data("{\"version\": 2}".utf8).write(to: sm.saveFileURL)
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
@@ -172,16 +184,18 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
 @Test func backupUpdatesLastBackupDate() throws {
     let localDir = try makeTempDir()
     let cloudDir = try makeTempDir()
+    let defaults = try makeTestDefaults()
     try writeSampleSave(to: localDir)
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: defaults
     )
     let before = Date()
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
 
-    let state = iCloudBackupState.load()
+    let state = iCloudBackupState.load(from: defaults)
     #expect(state.lastBackupDate != nil)
     if let date = state.lastBackupDate {
         #expect(date >= before)
@@ -195,7 +209,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     #expect(!manager.hasCloudBackup())
 }
@@ -206,7 +221,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     try writeSampleSave(to: localDir)
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
     Thread.sleep(forTimeInterval: 0.5)
@@ -217,7 +233,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let localDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: nil,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     #expect(!manager.hasCloudBackup())
 }
@@ -228,7 +245,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     try writeSampleSave(to: localDir)
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     let before = Date()
     manager.backupToCloud()
@@ -246,14 +264,15 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let sm = SaveManager(baseDirectoryURL: localDir)
 
-    // Create a "cloud backup" directly
     let backupDir = cloudDir
         .appendingPathComponent("Documents")
         .appendingPathComponent("SaveBackup")
     try FileManager.default.createDirectory(at: backupDir, withIntermediateDirectories: true)
     try Data("{\"cloud\": true}".utf8).write(to: backupDir.appendingPathComponent("save.json"))
 
-    let manager = iCloudBackupManager(containerURL: cloudDir, saveManager: sm)
+    let manager = iCloudBackupManager(
+        containerURL: cloudDir, saveManager: sm, defaults: try makeTestDefaults()
+    )
     let success = try manager.restoreFromCloud()
     #expect(success)
 
@@ -266,7 +285,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: cloudDir,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     let success = try manager.restoreFromCloud()
     #expect(!success)
@@ -276,7 +296,8 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let localDir = try makeTempDir()
     let manager = iCloudBackupManager(
         containerURL: nil,
-        saveManager: SaveManager(baseDirectoryURL: localDir)
+        saveManager: SaveManager(baseDirectoryURL: localDir),
+        defaults: try makeTestDefaults()
     )
     let success = try manager.restoreFromCloud()
     #expect(!success)
@@ -287,17 +308,17 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let sm = SaveManager(baseDirectoryURL: localDir)
 
-    // Create existing local save
     try writeSampleSave(to: localDir, content: "{\"local\": true}")
 
-    // Create cloud backup with different data
     let backupDir = cloudDir
         .appendingPathComponent("Documents")
         .appendingPathComponent("SaveBackup")
     try FileManager.default.createDirectory(at: backupDir, withIntermediateDirectories: true)
     try Data("{\"cloud\": true}".utf8).write(to: backupDir.appendingPathComponent("save.json"))
 
-    let manager = iCloudBackupManager(containerURL: cloudDir, saveManager: sm)
+    let manager = iCloudBackupManager(
+        containerURL: cloudDir, saveManager: sm, defaults: try makeTestDefaults()
+    )
     let success = try manager.restoreFromCloud()
     #expect(success)
 
@@ -315,9 +336,13 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
         .appendingPathComponent("SaveBackup")
     try FileManager.default.createDirectory(at: backupDir, withIntermediateDirectories: true)
     try Data("{\"save\": true}".utf8).write(to: backupDir.appendingPathComponent("save.json"))
-    try Data("{\"prestige\": true}".utf8).write(to: backupDir.appendingPathComponent("prestige.json"))
+    try Data("{\"prestige\": true}".utf8).write(
+        to: backupDir.appendingPathComponent("prestige.json")
+    )
 
-    let manager = iCloudBackupManager(containerURL: cloudDir, saveManager: sm)
+    let manager = iCloudBackupManager(
+        containerURL: cloudDir, saveManager: sm, defaults: try makeTestDefaults()
+    )
     let success = try manager.restoreFromCloud()
     #expect(success)
 
@@ -332,17 +357,17 @@ private func writeSampleSave(to dir: URL, fileName: String = "save.json", conten
     let cloudDir = try makeTempDir()
     let sm = SaveManager(baseDirectoryURL: localDir)
 
-    // Only save.json in cloud, no prestige.json
     let backupDir = cloudDir
         .appendingPathComponent("Documents")
         .appendingPathComponent("SaveBackup")
     try FileManager.default.createDirectory(at: backupDir, withIntermediateDirectories: true)
     try Data("{\"save\": true}".utf8).write(to: backupDir.appendingPathComponent("save.json"))
 
-    let manager = iCloudBackupManager(containerURL: cloudDir, saveManager: sm)
+    let manager = iCloudBackupManager(
+        containerURL: cloudDir, saveManager: sm, defaults: try makeTestDefaults()
+    )
     let success = try manager.restoreFromCloud()
     #expect(success)
 
-    // Prestige file should not exist locally since it wasn't in cloud
     #expect(!FileManager.default.fileExists(atPath: sm.prestigeFileURL.path))
 }

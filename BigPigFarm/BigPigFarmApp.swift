@@ -65,7 +65,9 @@ struct BigPigFarmApp: App {
         Task {
             if let url = await iCloudBackupManager.resolveContainerURL() {
                 await MainActor.run {
-                    backupManager = iCloudBackupManager(containerURL: url, saveManager: sm)
+                    backupManager = iCloudBackupManager(
+                        containerURL: url, saveManager: sm, defaults: .standard
+                    )
                 }
             }
         }
