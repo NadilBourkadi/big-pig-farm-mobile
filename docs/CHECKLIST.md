@@ -152,6 +152,7 @@
 - [x] Introduce view models for ContentView, PigListView, PigDetailView, ShopView (bead 1vd)
 - [x] Add section footers and color swatches to breeding program toggles (bead n6xy)
 - [x] Fix tinted StatusBadge WCAG AA contrast ratio compliance (bead tbe)
+- [x] Add iCloud backup with manual restore for save persistence (bead uka)
 
 ---
 
