@@ -18,6 +18,8 @@ enum AlmanacTab: String, CaseIterable, Sendable {
 struct AlmanacView: View {
     let gameState: GameState
     let onResetFarm: () -> Void
+    let backupManager: iCloudBackupManager?
+    let onRestoreFromCloud: () -> Void
     @State private var selectedTab: AlmanacTab = .pigdex
     @State private var showingSettings = false
     @Environment(\.dismiss) private var dismiss
@@ -56,7 +58,12 @@ struct AlmanacView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(gameState: gameState, onResetFarm: onResetFarm)
+                SettingsView(
+                    gameState: gameState,
+                    onResetFarm: onResetFarm,
+                    backupManager: backupManager,
+                    onRestoreFromCloud: onRestoreFromCloud
+                )
             }
         }
     }

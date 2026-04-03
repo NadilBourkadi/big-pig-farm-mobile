@@ -17,6 +17,7 @@ struct BigPigFarmApp: App {
     /// Initialised to `true` when loading an existing save so that a cold start
     /// (app terminated by iOS or force-quit) triggers catch-up on the first `.active`.
     @State private var didEnterBackground: Bool
+    @State private var backupManager: iCloudBackupManager?
     private let saveManager: SaveManager
     #if DEBUG || INTERNAL
     @State private var debugServer: DebugServer?
@@ -58,6 +59,16 @@ struct BigPigFarmApp: App {
         server.start()
         _debugServer = State(initialValue: server)
         #endif
+
+        // Resolve iCloud container on a background thread.
+        // Until complete, backupManager stays nil and backup ops no-op.
+        Task {
+            if let url = await iCloudBackupManager.resolveContainerURL() {
+                await MainActor.run {
+                    backupManager = iCloudBackupManager(containerURL: url, saveManager: sm)
+                }
+            }
+        }
     }
 
     /// Build and wire the SimulationRunner and GameEngine from a loaded state.
@@ -101,7 +112,9 @@ struct BigPigFarmApp: App {
                 engine: engine,
                 notificationManager: notificationManager,
                 offlineSummary: $offlineSummary,
-                onResetFarm: { performFullReset() }
+                onResetFarm: { performFullReset() },
+                backupManager: backupManager,
+                onRestoreFromCloud: { performRestore() }
             )
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -120,6 +133,7 @@ struct BigPigFarmApp: App {
             didEnterBackground = true
             gameState.lastBackgroundDate = Date() // transient; crash fallback is lastSave
             lifecycleSave()
+            backupManager?.backupToCloud()
             #if DEBUG || INTERNAL
             DebugLogger.shared.log(
                 category: .offline, level: .info,
@@ -239,6 +253,26 @@ struct BigPigFarmApp: App {
         runner.resetAfterOffline()
         notificationManager.isSuppressed = false
         notificationManager.dismissAll()
+        engine.resume()
+    }
+
+    // MARK: - iCloud Restore
+
+    @MainActor
+    private func performRestore() {
+        engine.pause()
+        guard let loaded = saveManager.load() else {
+            engine.resume()
+            return
+        }
+        loaded.prestigeState = saveManager.loadPrestigeState() ?? PrestigeState()
+        let (sim, eng) = Self.buildSimulationAndEngine(state: loaded, saveManager: saveManager)
+        let notifications = NotificationManager()
+        loaded.notificationManager = notifications
+        gameState = loaded
+        engine = eng
+        runner = sim
+        notificationManager = notifications
         engine.resume()
     }
 
