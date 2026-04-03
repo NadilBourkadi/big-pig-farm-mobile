@@ -60,17 +60,6 @@ struct BigPigFarmApp: App {
         _debugServer = State(initialValue: server)
         #endif
 
-        // Resolve iCloud container on a background thread.
-        // Until complete, backupManager stays nil and backup ops no-op.
-        Task {
-            if let url = await iCloudBackupManager.resolveContainerURL() {
-                await MainActor.run {
-                    backupManager = iCloudBackupManager(
-                        containerURL: url, saveManager: sm, defaults: .standard
-                    )
-                }
-            }
-        }
     }
 
     /// Build and wire the SimulationRunner and GameEngine from a loaded state.
@@ -118,6 +107,15 @@ struct BigPigFarmApp: App {
                 backupManager: backupManager,
                 onRestoreFromCloud: { performRestore() }
             )
+            .task {
+                // Resolve iCloud container on a background thread.
+                // Until complete, backupManager stays nil and backup ops no-op.
+                if let url = await iCloudBackupManager.resolveContainerURL() {
+                    backupManager = iCloudBackupManager(
+                        containerURL: url, saveManager: saveManager, defaults: .standard
+                    )
+                }
+            }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(from: oldPhase, to: newPhase)
@@ -152,20 +150,33 @@ struct BigPigFarmApp: App {
 
     @MainActor
     private func handleBecameActive(oldPhase: ScenePhase) {
-        // Only check for offline progress if we actually went to background.
-        // Prevents false catch-ups from notification center or phone call popups
-        // (inactive → active without a background transition).
-        guard didEnterBackground else {
+        // Prefer the didEnterBackground flag, but fall back to lastSave duration
+        // for cases where iOS skips the .background phase entirely (e.g. screen
+        // lock on some devices goes inactive → suspended without .background).
+        let durationFallback = computeOfflineDuration()
+        let longAbsence = durationFallback >= GameConfig.Offline.backgroundBypassSeconds
+
+        guard didEnterBackground || longAbsence else {
             #if DEBUG || INTERNAL
             DebugLogger.shared.log(
                 category: .offline, level: .info,
                 message: "Foreground: skipped catch-up (no background transition, "
-                    + "oldPhase=\(oldPhase.debugLabel))"
+                    + "oldPhase=\(oldPhase.debugLabel), "
+                    + "duration=\(String(format: "%.1f", durationFallback))s)"
             )
             #endif
             engine.resume()
             return
         }
+        #if DEBUG || INTERNAL
+        if !didEnterBackground {
+            DebugLogger.shared.log(
+                category: .offline, level: .warning,
+                message: "Foreground: .background phase was skipped — "
+                    + "using duration fallback (\(String(format: "%.1f", durationFallback))s)"
+            )
+        }
+        #endif
         didEnterBackground = false
 
         // Visit detection runs independently of offline catch-up.

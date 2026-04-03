@@ -189,6 +189,11 @@ enum GameConfig {
     enum Offline {
         /// Minimum wall-clock seconds away before catch-up triggers.
         static let minThresholdSeconds: Double = 60
+        /// Duration threshold (seconds) for bypassing the didEnterBackground guard.
+        /// On some devices, iOS transitions to .inactive without ever reaching
+        /// .background (e.g. screen lock). If lastSave shows an absence >= this
+        /// value, catch-up runs regardless of the scene phase flag.
+        static let backgroundBypassSeconds: Double = 300  // 5 minutes
         /// Maximum wall-clock seconds of offline time to simulate.
         static let maxDurationSeconds: Double = 86_400  // 24 real hours
         /// Game-hours per checkpoint in the fast-forward loop.
