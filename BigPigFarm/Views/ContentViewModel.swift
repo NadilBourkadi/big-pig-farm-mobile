@@ -13,6 +13,8 @@ final class ContentViewModel: FarmSceneDelegate {
     let engine: GameEngine
     let scene: FarmScene
     private let resetFarmHandler: () -> Void
+    private let restoreFromCloudHandler: () -> Void
+    let backupManager: iCloudBackupManager?
 
     // MARK: - Sheet Presentation
 
@@ -46,12 +48,16 @@ final class ContentViewModel: FarmSceneDelegate {
         gameState: GameState,
         engine: GameEngine,
         scene: FarmScene,
-        onResetFarm: @escaping () -> Void
+        onResetFarm: @escaping () -> Void,
+        backupManager: iCloudBackupManager?,
+        onRestoreFromCloud: @escaping () -> Void
     ) {
         self.gameState = gameState
         self.engine = engine
         self.scene = scene
         self.resetFarmHandler = onResetFarm
+        self.backupManager = backupManager
+        self.restoreFromCloudHandler = onRestoreFromCloud
     }
 
     // MARK: - Scene Wiring
@@ -169,6 +175,12 @@ final class ContentViewModel: FarmSceneDelegate {
         selectedPig = nil
         showPigList = false
         scene.centerOnPig(pigID)
+    }
+
+    /// Dismiss all sheets, reset UI state, and reload state from a cloud restore.
+    func handleRestoreFromCloud() {
+        showAlmanac = false
+        restoreFromCloudHandler()
     }
 
     /// Dismiss all sheets, reset UI state, and perform the full farm reset.

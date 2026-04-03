@@ -1,16 +1,21 @@
-/// SettingsView — App settings with notification preferences and farm reset.
+/// SettingsView — App settings with notification preferences, iCloud backup, and farm reset.
 /// In Debug/Internal builds, includes a debug section for testing.
 import SwiftUI
 
 // MARK: - SettingsView
 
 /// Settings screen accessible from AlmanacView's gear button.
-/// Contains notification settings (via NavigationLink) and a destructive
-/// farm reset option with two-step confirmation.
+/// Contains notification settings (via NavigationLink), iCloud backup/restore,
+/// and a destructive farm reset option with two-step confirmation.
 struct SettingsView: View {
     let gameState: GameState
     let onResetFarm: () -> Void
+    let backupManager: iCloudBackupManager?
+    let onRestoreFromCloud: () -> Void
     @State private var showResetConfirmation = false
+    @State private var showRestoreConfirmation = false
+    @State private var restoreError: String?
+    @State private var backupState = iCloudBackupState.load()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -23,6 +28,8 @@ struct SettingsView: View {
                         Label("Notifications", systemImage: "bell.badge")
                     }
                 }
+
+                iCloudBackupSection
 
                 Section {
                     Button(role: .destructive) {
@@ -63,6 +70,113 @@ struct SettingsView: View {
                     "Pigdex discoveries, and contracts. This cannot be undone."
                 )
             }
+            .confirmationDialog(
+                "Restore from iCloud?",
+                isPresented: $showRestoreConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Restore", role: .destructive) {
+                    performRestore()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let date = backupManager?.cloudBackupDate() {
+                    Text(
+                        "This will replace your current farm with the cloud backup from " +
+                        "\(date.formatted(date: .abbreviated, time: .shortened)). " +
+                        "This cannot be undone."
+                    )
+                } else {
+                    Text(
+                        "This will replace your current farm with the cloud backup. " +
+                        "This cannot be undone."
+                    )
+                }
+            }
+            .alert("Restore Failed", isPresented: .init(
+                get: { restoreError != nil },
+                set: { if !$0 { restoreError = nil } }
+            )) {
+                Button("OK") { restoreError = nil }
+            } message: {
+                if let error = restoreError {
+                    Text(error)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - iCloud Backup Section
+
+private extension SettingsView {
+    var iCloudBackupSection: some View {
+        Section {
+            if let manager = backupManager, manager.isAvailable {
+                HStack {
+                    Label("Last Backup", systemImage: "clock")
+                    Spacer()
+                    Text(lastBackupLabel)
+                        .foregroundStyle(.secondary)
+                }
+
+                Button {
+                    manager.backupToCloud()
+                    // Refresh the displayed timestamp after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        backupState = iCloudBackupState.load()
+                    }
+                } label: {
+                    Label("Back Up Now", systemImage: "icloud.and.arrow.up")
+                }
+
+                Button {
+                    showRestoreConfirmation = true
+                } label: {
+                    Label("Restore from iCloud", systemImage: "icloud.and.arrow.down")
+                }
+                .disabled(!manager.hasCloudBackup())
+            } else {
+                HStack {
+                    Label("iCloud Backup", systemImage: "icloud.slash")
+                    Spacer()
+                    Text("Unavailable")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("iCloud Backup")
+        } footer: {
+            if backupManager?.isAvailable == true {
+                Text(
+                    "Your farm is backed up to iCloud automatically. " +
+                    "Use Restore to recover from a backup on this or another device."
+                )
+            } else {
+                Text("Sign in to iCloud in Settings to enable cloud backup.")
+            }
+        }
+    }
+
+    var lastBackupLabel: String {
+        guard let date = backupState.lastBackupDate else {
+            return "Never"
+        }
+        return date.formatted(.relative(presentation: .named))
+    }
+
+    func performRestore() {
+        guard let manager = backupManager else { return }
+        do {
+            let success = try manager.restoreFromCloud()
+            if success {
+                dismiss()
+                onRestoreFromCloud()
+            } else {
+                restoreError = "No cloud backup found."
+            }
+        } catch {
+            restoreError = error.localizedDescription
         }
     }
 }

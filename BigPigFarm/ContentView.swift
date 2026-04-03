@@ -32,11 +32,16 @@ struct ContentView: View {
         engine: GameEngine,
         notificationManager: NotificationManager,
         offlineSummary: Binding<OfflineProgressSummary?>,
-        onResetFarm: @escaping () -> Void
+        onResetFarm: @escaping () -> Void,
+        backupManager: iCloudBackupManager?,
+        onRestoreFromCloud: @escaping () -> Void
     ) {
         let scene = FarmScene(gameState: gameState)
         _viewModel = State(initialValue: ContentViewModel(
-            gameState: gameState, engine: engine, scene: scene, onResetFarm: onResetFarm
+            gameState: gameState, engine: engine, scene: scene,
+            onResetFarm: onResetFarm,
+            backupManager: backupManager,
+            onRestoreFromCloud: onRestoreFromCloud
         ))
         self.notificationManager = notificationManager
         _offlineSummary = offlineSummary
@@ -122,7 +127,10 @@ struct ContentView: View {
         }
         .sheet(isPresented: $viewModel.showAlmanac) {
             AlmanacView(
-                gameState: viewModel.gameState, onResetFarm: viewModel.handleResetFarm
+                gameState: viewModel.gameState,
+                onResetFarm: viewModel.handleResetFarm,
+                backupManager: viewModel.backupManager,
+                onRestoreFromCloud: viewModel.handleRestoreFromCloud
             )
         }
         .sheet(isPresented: $viewModel.showShowroom) {

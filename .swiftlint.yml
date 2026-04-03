@@ -97,6 +97,12 @@ identifier_name:
     - i
     - j
 
+# Type naming — allow iCloud-prefixed types (Apple brand convention)
+type_name:
+  excluded:
+    - iCloudBackupState
+    - iCloudBackupManager
+
 # Nesting
 nesting:
   type_level:
