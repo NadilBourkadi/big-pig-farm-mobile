@@ -103,7 +103,9 @@ class PigNode: SKSpriteNode {
     /// Called from `FarmScene.update()` at ~60fps for smooth movement between tick-rate syncs.
     /// Skips Y interpolation while a treat bounce action is running so the
     /// bounce SKAction owns vertical movement without being overwritten.
-    func smoothMove() {
+    /// - Parameter factor: Lerp factor from 0 (no movement) to 1 (instant snap).
+    ///   Higher game speeds pass larger factors to prevent visual lag.
+    func smoothMove(factor: CGFloat) {
         let isBouncing = action(forKey: "treatBounce") != nil
         let dx = targetPosition.x - position.x
         let dy = targetPosition.y - position.y
@@ -113,7 +115,6 @@ class PigNode: SKSpriteNode {
             if !isBouncing { position.y = targetPosition.y }
             return
         }
-        let factor: CGFloat = 0.25
         position.x += dx * factor
         if !isBouncing { position.y += dy * factor }
     }
