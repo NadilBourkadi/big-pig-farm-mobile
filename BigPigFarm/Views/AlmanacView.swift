@@ -75,6 +75,7 @@ struct AlmanacView: View {
 /// Maps from: almanac.py PigdexPanel class.
 private struct PigdexTab: View {
     let gameState: GameState
+    @State private var isPulsing = false
 
     var body: some View {
         List {
@@ -116,6 +117,8 @@ private struct PigdexTab: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .onAppear { isPulsing = true }
+        .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: isPulsing)
     }
 
     private var nextUnclaimedMilestone: Int? {
@@ -136,9 +139,16 @@ private struct PigdexTab: View {
             } label: {
                 Text("READY! \(threshold)%")
                     .font(.caption2.bold())
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
                     .foregroundStyle(.yellow)
+                    .background(Color.yellow.opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                    .opacity(isPulsing ? 1.0 : 0.7)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Claim \(threshold)% milestone reward")
+            .accessibilityHint("Double-tap to claim your Squeaks reward")
         } else {
             Text("\(threshold)%")
                 .font(.caption2)

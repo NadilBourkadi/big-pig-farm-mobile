@@ -126,6 +126,7 @@
 - [x] Fix gender display inconsistency: AdoptionView uses ♂/♀ in blue/pink matching PigListView (bead dfe)
 - [x] Replace AdoptionView inline detail panel with sheet presentation (bead 5fj)
 - [x] Fix inert Pigdex milestone "READY" label — make tappable with reward claim (bead a8c)
+- [x] Add pill-shape tap affordance to Pigdex READY milestone indicators (bead zx7q)
 - [x] Split oversized files using +Extension pattern: Breeding, BreedingProgram, Birth, FarmScene (bead wqr)
 - [x] Fix cryptic "TN" tier label — display "Tier N" in status HUD (bead 88v)
 - [x] Remove redundant speed indicator from StatusInfoRow — consolidated into StatusToolbar (bead b3s)
