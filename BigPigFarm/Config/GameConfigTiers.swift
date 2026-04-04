@@ -31,6 +31,23 @@ enum GameSpeed: Int, Codable, CaseIterable, Sendable {
         case .debugFast: "300x"
         }
     }
+
+    /// Interpolation factor for pig sprite movement toward their grid target.
+    /// At normal speed (~6 render frames between ticks), 0.25 gives smooth
+    /// motion. At higher speeds the per-tick grid displacement grows but the
+    /// frame budget stays the same, so the factor increases toward 1.0
+    /// (instant snap) to prevent visual lag.
+    var movementLerpFactor: Double {
+        switch self {
+        case .paused:    1.0 // target never changes while paused; value is irrelevant
+        case .normal:    0.25
+        case .fast:      0.5
+        case .faster:    0.8
+        case .fastest:   1.0
+        case .debug:     1.0
+        case .debugFast: 1.0
+        }
+    }
 }
 
 // MARK: - TierUpgrade

@@ -224,8 +224,11 @@ extension FarmScene {
         }
 
         // Interpolate pig positions every frame for smooth movement between tick-rate syncs.
+        // At higher game speeds, increase the lerp factor toward 1.0 (instant snap)
+        // so pigs don't visually drag behind their actual grid position.
+        let lerpFactor = CGFloat(gameState.speed.movementLerpFactor)
         for node in pigNodes.values {
-            node.smoothMove()
+            node.smoothMove(factor: lerpFactor)
         }
 
         // Only track a selected pig when the viewport is small enough that the
