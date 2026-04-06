@@ -31,6 +31,13 @@ extension DebugLogger {
 
     /// Checkpoint the WAL and copy the database to iCloud Drive.
     /// Called on background transition and periodic auto-save.
+    ///
+    /// The copy runs synchronously so it completes before the method
+    /// returns. This is critical on background transitions — iOS can
+    /// suspend the process immediately after the scene-phase callback,
+    /// so an async dispatch would race suspension and usually lose.
+    /// The copy is a local file operation (~22 MB on flash storage,
+    /// <50 ms) so blocking the caller is acceptable.
     func syncToiCloud() {
         guard isOpen, let db else { return }
         guard let containerURL = iCloudContainerURL else { return }
@@ -42,15 +49,12 @@ extension DebugLogger {
         let cloudDir = containerURL.appendingPathComponent("Documents")
         let cloudFile = cloudDir.appendingPathComponent("debug.sqlite")
         let sourceURL = URL(fileURLWithPath: dbPath)
-        // Copy on a background thread to avoid blocking the main thread
-        DispatchQueue.global(qos: .utility).async {
-            let fm = FileManager.default
-            try? fm.createDirectory(
-                at: cloudDir, withIntermediateDirectories: true
-            )
-            try? fm.removeItem(at: cloudFile)
-            try? fm.copyItem(at: sourceURL, to: cloudFile)
-        }
+        let fm = FileManager.default
+        try? fm.createDirectory(
+            at: cloudDir, withIntermediateDirectories: true
+        )
+        try? fm.removeItem(at: cloudFile)
+        try? fm.copyItem(at: sourceURL, to: cloudFile)
     }
 }
 #endif
