@@ -41,9 +41,12 @@ extension DebugLogger {
     func syncToiCloud() {
         guard isOpen, let db else { return }
         guard let containerURL = iCloudContainerURL else { return }
-        // Checkpoint WAL to merge pending writes into the main file
+        // Checkpoint WAL to merge all pending writes into the main file.
+        // FULL blocks until active readers finish, ensuring the copied file
+        // contains every event flushed before this call. flushBlocking()
+        // drains the write queue first, so no readers should be active.
         sqlite3_wal_checkpoint_v2(
-            db, nil, SQLITE_CHECKPOINT_PASSIVE, nil, nil
+            db, nil, SQLITE_CHECKPOINT_FULL, nil, nil
         )
         guard let dbPath = databasePath else { return }
         let cloudDir = containerURL.appendingPathComponent("Documents")
@@ -54,7 +57,11 @@ extension DebugLogger {
             at: cloudDir, withIntermediateDirectories: true
         )
         try? fm.removeItem(at: cloudFile)
-        try? fm.copyItem(at: sourceURL, to: cloudFile)
+        do {
+            try fm.copyItem(at: sourceURL, to: cloudFile)
+        } catch {
+            print("[DebugLogger] iCloud copy failed: \(error)")
+        }
     }
 }
 #endif
