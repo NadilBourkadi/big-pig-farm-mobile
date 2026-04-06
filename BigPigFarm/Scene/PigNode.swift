@@ -15,6 +15,8 @@ class PigNode: SKSpriteNode {
     private var currentAnimationKey: String = ""
     /// Target position set during tick-rate sync; `smoothMove()` lerps toward it each frame.
     private(set) var targetPosition: CGPoint = .zero
+    /// When true, `smoothMove()` snaps position instantly instead of lerping.
+    private var isSleeping = false
 
     init(pig: GuineaPig, scene: FarmScene) {
         self.pigID = pig.id
@@ -71,6 +73,7 @@ class PigNode: SKSpriteNode {
 
     func update(from pig: GuineaPig, in scene: FarmScene) {
         targetPosition = scene.gridToScene(CGFloat(pig.position.x), CGFloat(pig.position.y))
+        isSleeping = pig.behaviorState == .sleeping
 
         let newState = pig.isBaby
             ? AnimationData.babyFallbackState(for: pig.displayState)
@@ -106,6 +109,10 @@ class PigNode: SKSpriteNode {
     /// - Parameter factor: Lerp factor from 0 (no movement) to 1 (instant snap).
     ///   Higher game speeds pass larger factors to prevent visual lag.
     func smoothMove(factor: CGFloat) {
+        if isSleeping {
+            position = targetPosition
+            return
+        }
         let isBouncing = action(forKey: "treatBounce") != nil
         let dx = targetPosition.x - position.x
         let dy = targetPosition.y - position.y
