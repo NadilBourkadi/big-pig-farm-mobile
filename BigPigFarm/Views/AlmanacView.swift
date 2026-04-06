@@ -247,8 +247,8 @@ private struct EventLogTab: View {
         } else {
             List(gameState.events.reversed()) { event in
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: eventIcon(event.eventType))
-                        .foregroundStyle(eventColor(event.eventType))
+                    Image(systemName: NotificationCategory.icon(for: event.eventType))
+                        .foregroundStyle(NotificationCategory.color(for: event.eventType))
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(event.message)
@@ -260,36 +260,6 @@ private struct EventLogTab: View {
                 }
             }
             .listStyle(.plain)
-        }
-    }
-
-    private func eventIcon(_ type: String) -> String {
-        switch type {
-        case "birth": return "gift.fill"
-        case "death": return "heart.slash.fill"
-        case "sale": return "dollarsign.circle.fill"
-        case "purchase": return "cart.fill"
-        case "breeding": return "heart.fill"
-        case "mutation": return "sparkles"
-        case "pigdex": return "book.fill"
-        case "contract": return "doc.text.fill"
-        case "adoption": return "heart.circle.fill"
-        default: return "bell.fill"
-        }
-    }
-
-    private func eventColor(_ type: String) -> Color {
-        switch type {
-        case "birth": return .green
-        case "death": return .red
-        case "sale": return .yellow
-        case "purchase": return .blue
-        case "breeding": return .pink
-        case "mutation": return .purple
-        case "pigdex": return .orange
-        case "contract": return .teal
-        case "adoption": return .indigo
-        default: return .secondary
         }
     }
 }

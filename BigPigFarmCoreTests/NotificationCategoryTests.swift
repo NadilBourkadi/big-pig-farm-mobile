@@ -81,6 +81,14 @@ import Foundation
     #expect(NotificationCategory.from(eventType: "acclimation") == .system)
 }
 
+@Test func eventTypeMappingMilestone() {
+    #expect(NotificationCategory.from(eventType: "milestone") == .discoveries)
+}
+
+@Test func eventTypeMappingPrestige() {
+    #expect(NotificationCategory.from(eventType: "prestige") == .system)
+}
+
 @Test func eventTypeMappingUnknownFallsBackToSystem() {
     #expect(NotificationCategory.from(eventType: "nonexistent") == .system)
     #expect(NotificationCategory.from(eventType: "") == .system)
