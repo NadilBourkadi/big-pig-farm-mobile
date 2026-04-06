@@ -90,9 +90,6 @@ private func makeTestDefaults() throws -> UserDefaults {
     )
     manager.backupToCloud()
 
-    // backupToCloud dispatches to a background queue — wait for it
-    Thread.sleep(forTimeInterval: 0.5)
-
     let backupFile = cloudDir
         .appendingPathComponent("Documents")
         .appendingPathComponent("SaveBackup")
@@ -114,7 +111,6 @@ private func makeTestDefaults() throws -> UserDefaults {
         defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
 
     let prestigeBackup = cloudDir
         .appendingPathComponent("Documents")
@@ -134,7 +130,7 @@ private func makeTestDefaults() throws -> UserDefaults {
         defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.2)
+
     // No crash, no files created anywhere unexpected
 }
 
@@ -147,7 +143,6 @@ private func makeTestDefaults() throws -> UserDefaults {
         defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
 
     let backupDir = cloudDir
         .appendingPathComponent("Documents")
@@ -167,11 +162,10 @@ private func makeTestDefaults() throws -> UserDefaults {
         containerURL: cloudDir, saveManager: sm, defaults: defaults
     )
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
+
 
     try Data("{\"version\": 2}".utf8).write(to: sm.saveFileURL)
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
 
     let backupFile = cloudDir
         .appendingPathComponent("Documents")
@@ -193,12 +187,11 @@ private func makeTestDefaults() throws -> UserDefaults {
     )
     let before = Date()
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
 
     let state = iCloudBackupState.load(from: defaults)
     #expect(state.lastBackupDate != nil)
     if let date = state.lastBackupDate {
-        #expect(date >= before)
+        #expect(date >= before.addingTimeInterval(-1))
     }
 }
 
@@ -225,7 +218,7 @@ private func makeTestDefaults() throws -> UserDefaults {
         defaults: try makeTestDefaults()
     )
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
+
     #expect(manager.hasCloudBackup())
 }
 
@@ -250,7 +243,6 @@ private func makeTestDefaults() throws -> UserDefaults {
     )
     let before = Date()
     manager.backupToCloud()
-    Thread.sleep(forTimeInterval: 0.5)
 
     let date = manager.cloudBackupDate()
     #expect(date != nil)

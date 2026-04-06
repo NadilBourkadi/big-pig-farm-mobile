@@ -38,39 +38,38 @@ struct iCloudBackupManager: @unchecked Sendable {
     // MARK: - Backup
 
     /// Copy local save files to the iCloud ubiquity container.
-    /// Fire-and-forget — errors are logged, not thrown.
+    /// Runs synchronously — the file copy is a fast local operation (<50ms)
+    /// and both callsites (background transition, settings button) tolerate blocking.
+    /// Previously dispatched async, which raced with iOS background suspension
+    /// and caused flaky tests on CI.
     func backupToCloud() {
         guard let containerURL else { return }
         let backupDir = containerURL
             .appendingPathComponent("Documents")
             .appendingPathComponent(Self.backupDirectoryName)
         let fm = FileManager.default
-        let saveSource = saveManager.saveFileURL
-        let prestigeSource = saveManager.prestigeFileURL
 
-        DispatchQueue.global(qos: .utility).async {
-            do {
-                try fm.createDirectory(at: backupDir, withIntermediateDirectories: true)
-            } catch {
-                print("[iCloudBackup] Failed to create backup directory: \(error)")
-                return
-            }
-
-            Self.copyFile(
-                from: saveSource,
-                to: backupDir.appendingPathComponent(SaveManager.saveFileName),
-                label: "save"
-            )
-            Self.copyFile(
-                from: prestigeSource,
-                to: backupDir.appendingPathComponent(SaveManager.prestigeFileName),
-                label: "prestige"
-            )
-
-            var state = iCloudBackupState.load(from: defaults)
-            state.lastBackupDate = Date()
-            state.save(to: defaults)
+        do {
+            try fm.createDirectory(at: backupDir, withIntermediateDirectories: true)
+        } catch {
+            print("[iCloudBackup] Failed to create backup directory: \(error)")
+            return
         }
+
+        Self.copyFile(
+            from: saveManager.saveFileURL,
+            to: backupDir.appendingPathComponent(SaveManager.saveFileName),
+            label: "save"
+        )
+        Self.copyFile(
+            from: saveManager.prestigeFileURL,
+            to: backupDir.appendingPathComponent(SaveManager.prestigeFileName),
+            label: "prestige"
+        )
+
+        var state = iCloudBackupState.load(from: defaults)
+        state.lastBackupDate = Date()
+        state.save(to: defaults)
     }
 
     // MARK: - Restore
