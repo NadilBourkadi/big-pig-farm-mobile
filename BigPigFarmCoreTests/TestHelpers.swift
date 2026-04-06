@@ -37,6 +37,7 @@ func makePig(x: Double = 5.0, y: Double = 5.0) -> GuineaPig {
     var pig = GuineaPig.create(name: "Test", gender: .female)
     pig.position = Position(x: x, y: y)
     pig.behaviorState = .wandering
+    pig.personality = [] // Deterministic: no random traits (shy causes treat-seeking delays)
     return pig
 }
 
