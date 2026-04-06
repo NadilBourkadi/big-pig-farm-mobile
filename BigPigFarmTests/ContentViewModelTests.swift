@@ -14,7 +14,8 @@ private func makeViewModel(
     let engine = GameEngine(state: state)
     let scene = FarmScene(gameState: state)
     return ContentViewModel(
-        gameState: state, engine: engine, scene: scene, onResetFarm: onResetFarm
+        gameState: state, engine: engine, scene: scene, onResetFarm: onResetFarm,
+        backupManager: nil, onRestoreFromCloud: {}
     )
 }
 
