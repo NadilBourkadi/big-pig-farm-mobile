@@ -151,7 +151,7 @@ final class SimulationRunner {
             saveCounter = 0
             backgroundSave()
             #if (DEBUG || INTERNAL) && canImport(UIKit)
-            DebugLogger.shared.flush()
+            DebugLogger.shared.flushBlocking()
             DebugLogger.shared.syncToiCloud()
             #endif
         }
