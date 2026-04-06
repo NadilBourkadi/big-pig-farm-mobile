@@ -1,10 +1,11 @@
-/// VisitStreak -- Consecutive daily visits tracking with 24-hour rolling window.
+/// VisitStreak -- Consecutive daily visits tracking.
 /// Maps from: design-prestige-and-progression.md Section 6
 import Foundation
 
 // MARK: - VisitStreak
 
-/// Tracks consecutive visit streaks using a 24-hour rolling window.
+/// Tracks consecutive visit streaks. A new day is counted on the first visit
+/// of each calendar day; the 24-hour rolling window controls streak expiry only.
 struct VisitStreak: Codable, Sendable {
     /// Current streak count (consecutive days).
     var currentStreak: Int = 0
@@ -14,7 +15,8 @@ struct VisitStreak: Codable, Sendable {
 
     // MARK: - Computed Properties
 
-    /// Timestamp when the current streak window expires (lastVisitDate + 24h).
+    /// Timestamp when the current streak expires (lastVisitDate + 24h).
+    /// Controls whether the streak resets, not whether a new day is counted.
     var streakExpiresAt: Date? {
         guard let last = lastVisitDate else { return nil }
         return last.addingTimeInterval(GameConfig.Prestige.streakWindowSeconds)
@@ -33,9 +35,15 @@ struct VisitStreak: Codable, Sendable {
     }
 
     /// Record a visit. Updates streak count and last visit date.
+    /// Only increments the streak on the first visit of each calendar day.
     /// Returns the new streak count.
     @discardableResult
     mutating func recordVisit(at now: Date = Date()) -> Int {
+        // Device-local calendar so "same day" matches what the player's clock shows.
+        if let last = lastVisitDate, Calendar.current.isDate(last, inSameDayAs: now) {
+            lastVisitDate = now
+            return currentStreak
+        }
         if isStreakActive(at: now) {
             currentStreak += 1
         } else {

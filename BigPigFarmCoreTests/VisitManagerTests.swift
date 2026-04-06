@@ -118,15 +118,59 @@ import Foundation
     #expect(state.prestigeState.visitStreak.currentStreak == 1)
 }
 
-@Test @MainActor func recordVisitConsecutiveWithin24hIncrementsStreak() {
+@Test @MainActor func recordVisitConsecutiveDaysIncrementsStreak() {
     let state = GameState()
-    let now = Date()
-    VisitManager.recordVisit(state: state, now: now)
+    // Visits on different calendar days but within the 24h streak window
+    let day1 = Calendar.current.startOfDay(for: Date()).addingTimeInterval(23 * 3600) // 11 PM
+    let day2 = day1.addingTimeInterval(9 * 3600) // 8 AM next day (9h later, within 24h)
+
+    VisitManager.recordVisit(state: state, now: day1)
     #expect(state.prestigeState.visitStreak.currentStreak == 1)
 
-    let later = now.addingTimeInterval(12 * 3600) // 12 hours later
-    VisitManager.recordVisit(state: state, now: later)
+    VisitManager.recordVisit(state: state, now: day2)
     #expect(state.prestigeState.visitStreak.currentStreak == 2)
+}
+
+@Test func recordVisitSameDayDoesNotIncrementStreak() {
+    var streak = VisitStreak()
+    let morning = Calendar.current.startOfDay(for: Date()).addingTimeInterval(8 * 3600)
+    let evening = morning.addingTimeInterval(10 * 3600) // same day, 10h later
+
+    streak.recordVisit(at: morning)
+    #expect(streak.currentStreak == 1)
+
+    streak.recordVisit(at: evening)
+    #expect(streak.currentStreak == 1) // still 1 — same calendar day
+    #expect(streak.lastVisitDate == evening) // but lastVisitDate refreshed
+}
+
+@Test func recordVisitSameDayMultipleTimesStaysAt1() {
+    var streak = VisitStreak()
+    let base = Calendar.current.startOfDay(for: Date()).addingTimeInterval(6 * 3600)
+
+    streak.recordVisit(at: base)
+    streak.recordVisit(at: base.addingTimeInterval(3600))
+    streak.recordVisit(at: base.addingTimeInterval(7200))
+    streak.recordVisit(at: base.addingTimeInterval(10800))
+
+    #expect(streak.currentStreak == 1) // four visits, still day 1
+}
+
+@Test func recordVisitCrossDayThenSameDayDeduplicates() {
+    var streak = VisitStreak()
+    // day1 at 11 PM, day2 at 8 AM next day (within 24h window, different calendar day)
+    let day1 = Calendar.current.startOfDay(for: Date()).addingTimeInterval(23 * 3600)
+    let day2 = day1.addingTimeInterval(9 * 3600) // 8 AM next day
+    let day2Later = day2.addingTimeInterval(6 * 3600) // 2 PM same day
+
+    streak.recordVisit(at: day1)
+    #expect(streak.currentStreak == 1)
+
+    streak.recordVisit(at: day2)
+    #expect(streak.currentStreak == 2)
+
+    streak.recordVisit(at: day2Later) // same day as day2
+    #expect(streak.currentStreak == 2) // no double increment
 }
 
 @Test @MainActor func recordVisitAfter24hResetsStreak() {
