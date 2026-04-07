@@ -37,18 +37,51 @@ struct TreatNodeTests {
 struct ParticleEffectsTests {
 
     @Test("Heart burst creates emitter with particles")
-    @MainActor func heartBurstCreatesEmitter() {
-        let emitter = ParticleEffects.heartBurst(at: CGPoint(x: 50, y: 50))
+    @MainActor func heartBurstCreatesEmitter() throws {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let node = ParticleEffects.heartBurst(at: CGPoint(x: 50, y: 50))
+        let emitter = try #require(node as? SKEmitterNode)
         #expect(emitter.numParticlesToEmit == 5)
         #expect(emitter.position == CGPoint(x: 50, y: 50))
         #expect(emitter.zPosition == 20)
     }
 
     @Test("Sparkle burst creates emitter with particles")
-    @MainActor func sparkleBurstCreatesEmitter() {
-        let emitter = ParticleEffects.sparkleBurst(at: CGPoint(x: 30, y: 30))
+    @MainActor func sparkleBurstCreatesEmitter() throws {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let node = ParticleEffects.sparkleBurst(at: CGPoint(x: 30, y: 30))
+        let emitter = try #require(node as? SKEmitterNode)
         #expect(emitter.numParticlesToEmit == 8)
         #expect(emitter.position == CGPoint(x: 30, y: 30))
+    }
+
+    @Test("Heart burst returns static sprite when reduce motion is on")
+    @MainActor func heartBurstStaticUnderReduceMotion() throws {
+        MotionSettings.overrideForTesting = true
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let node = ParticleEffects.heartBurst(at: CGPoint(x: 50, y: 50))
+        // Static fallback is an SKSpriteNode, never an SKEmitterNode.
+        #expect(node as? SKEmitterNode == nil)
+        let sprite = try #require(node as? SKSpriteNode)
+        #expect(sprite.position == CGPoint(x: 50, y: 50))
+        #expect(sprite.zPosition == 20)
+    }
+
+    @Test("Sparkle burst returns static sprite when reduce motion is on")
+    @MainActor func sparkleBurstStaticUnderReduceMotion() throws {
+        MotionSettings.overrideForTesting = true
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let node = ParticleEffects.sparkleBurst(at: CGPoint(x: 30, y: 30))
+        #expect(node as? SKEmitterNode == nil)
+        let sprite = try #require(node as? SKSpriteNode)
+        #expect(sprite.position == CGPoint(x: 30, y: 30))
+        #expect(sprite.zPosition == 20)
     }
 }
 

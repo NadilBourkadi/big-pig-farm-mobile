@@ -18,6 +18,9 @@ struct PigNodeSmoothMoveTests {
 
     @Test("Factor 1.0 snaps position to target")
     func snapAtFullFactor() {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
         let scene = makeScene()
         let pig = makePig()
         let node = PigNode(pig: pig, scene: scene)
@@ -35,6 +38,9 @@ struct PigNodeSmoothMoveTests {
 
     @Test("Factor 0.25 partially closes gap")
     func partialMoveAtQuarterFactor() {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
         let scene = makeScene()
         let pig = makePig()
         let node = PigNode(pig: pig, scene: scene)
@@ -56,6 +62,9 @@ struct PigNodeSmoothMoveTests {
 
     @Test("Sleeping pig snaps position instead of lerping")
     func sleepingPigSnaps() {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
         let scene = makeScene()
         let pig = makePig()
         let node = PigNode(pig: pig, scene: scene)
@@ -76,6 +85,9 @@ struct PigNodeSmoothMoveTests {
 
     @Test("Pig resumes interpolation after waking from sleep")
     func resumesLerpAfterWaking() {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
         let scene = makeScene()
         let pig = makePig()
         let node = PigNode(pig: pig, scene: scene)
@@ -109,6 +121,9 @@ struct PigNodeSmoothMoveTests {
 
     @Test("Snaps when distance squared is below threshold")
     func snapsAtSmallDistance() {
+        MotionSettings.overrideForTesting = false
+        defer { MotionSettings.overrideForTesting = nil }
+
         let scene = makeScene()
         let pig = makePig()
         let node = PigNode(pig: pig, scene: scene)
@@ -119,5 +134,48 @@ struct PigNodeSmoothMoveTests {
         node.smoothMove(factor: 0.25)
         #expect(node.position.x == before.x)
         #expect(node.position.y == before.y)
+    }
+
+    @Test("Reduce Motion snaps position to target without lerping")
+    func reduceMotionSnapsToTarget() {
+        MotionSettings.overrideForTesting = true
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let scene = makeScene()
+        let pig = makePig()
+        let node = PigNode(pig: pig, scene: scene)
+
+        // Move target — pig is awake (idle), would normally lerp.
+        var movedPig = pig
+        movedPig.position = Position(x: 5, y: 5)
+        node.update(from: movedPig, in: scene)
+
+        // Even with a partial factor, reduce motion should snap to target.
+        node.smoothMove(factor: 0.25)
+
+        #expect(abs(node.position.x - node.targetPosition.x) < 0.01,
+                "Reduce motion should snap X to target")
+        #expect(abs(node.position.y - node.targetPosition.y) < 0.01,
+                "Reduce motion should snap Y to target")
+    }
+
+    @Test("Reduce Motion does not interfere with sleeping snap")
+    func reduceMotionAndSleepingBothSnap() {
+        MotionSettings.overrideForTesting = true
+        defer { MotionSettings.overrideForTesting = nil }
+
+        let scene = makeScene()
+        let pig = makePig()
+        let node = PigNode(pig: pig, scene: scene)
+
+        var sleepingPig = pig
+        sleepingPig.position = Position(x: 7, y: 7)
+        sleepingPig.behaviorState = .sleeping
+        node.update(from: sleepingPig, in: scene)
+
+        node.smoothMove(factor: 0.25)
+
+        #expect(abs(node.position.x - node.targetPosition.x) < 0.01)
+        #expect(abs(node.position.y - node.targetPosition.y) < 0.01)
     }
 }
