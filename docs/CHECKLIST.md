@@ -155,6 +155,7 @@
 - [x] Fix tinted StatusBadge WCAG AA contrast ratio compliance (bead tbe)
 - [x] Add iCloud backup with manual restore for save persistence (bead uka)
 - [x] Consolidate event log icon/color mappings via NotificationCategory (bead ya2j)
+- [x] Add sound effects for game events with mute toggle in Settings (bead 4qmj)
 
 ---
 
