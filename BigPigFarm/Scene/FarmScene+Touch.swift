@@ -25,6 +25,7 @@ extension FarmScene {
                 selectedPigID = pigNode.pigID
                 sceneDelegate?.farmScene(self, didSelectPig: pigNode.pigID)
                 HapticManager.pigSelected()
+                AudioManager.pigSelected()
             }
         } else {
             selectedPigID = nil

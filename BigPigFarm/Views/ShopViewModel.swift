@@ -37,13 +37,16 @@ final class ShopViewModel {
                 "No space available for \(item.name). Try selling or moving other facilities."
             )
             HapticManager.error()
+            AudioManager.error()
             return
         }
         if Shop.purchaseItem(state: gameState, item: item, position: position) {
             HapticManager.purchase()
+            AudioManager.purchase()
         } else {
             showError("Could not purchase \(item.name).")
             HapticManager.error()
+            AudioManager.error()
         }
     }
 
@@ -63,9 +66,11 @@ final class ShopViewModel {
     func purchasePerk(_ perk: UpgradeDefinition) {
         if Shop.purchasePerk(perkID: perk.id, state: gameState) {
             HapticManager.purchase()
+            AudioManager.purchase()
         } else {
             showError("Could not purchase \(perk.name).")
             HapticManager.error()
+            AudioManager.error()
         }
     }
 
@@ -89,18 +94,22 @@ final class ShopViewModel {
     func upgradeTier() {
         if Shop.purchaseTierUpgrade(state: gameState) {
             HapticManager.purchase()
+            AudioManager.purchase()
         } else {
             showError("Farm tier upgrade failed. Check requirements.")
             HapticManager.error()
+            AudioManager.error()
         }
     }
 
     func purchaseRoom(biome: BiomeType) {
         if Shop.purchaseNewRoom(state: gameState, biome: biome) {
             HapticManager.purchase()
+            AudioManager.purchase()
         } else {
             showError("Room purchase failed. Check your funds.")
             HapticManager.error()
+            AudioManager.error()
         }
     }
 
