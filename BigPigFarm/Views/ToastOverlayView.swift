@@ -10,6 +10,10 @@ import SwiftUI
 struct ToastOverlayView: View {
     let notificationManager: NotificationManager
 
+    /// System Reduce Motion accessibility setting. When true, replaces the
+    /// spring stack animation and slide-up transition with opacity-only fades.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         VStack(spacing: 6) {
             ForEach(notificationManager.visibleToasts) { toast in
@@ -18,12 +22,19 @@ struct ToastOverlayView: View {
                         notificationManager.dismiss(toast.id)
                     }
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(
+                    reduceMotion
+                        ? .opacity
+                        : .move(edge: .bottom).combined(with: .opacity)
+                )
             }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 4)
-        .animation(.spring(duration: 0.35, bounce: 0.2), value: notificationManager.visibleToasts.map(\.id))
+        .animation(
+            reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.35, bounce: 0.2),
+            value: notificationManager.visibleToasts.map(\.id)
+        )
         // Prevent invisible empty overlay from intercepting taps on the farm scene.
         .allowsHitTesting(!notificationManager.visibleToasts.isEmpty)
     }

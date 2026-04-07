@@ -10,8 +10,9 @@ extension PigNode {
     }
 
     /// Start a repeating vertical bounce animation (playful pigs seeking treats).
-    /// No-op if already bouncing.
+    /// No-op if already bouncing or if Reduce Motion is enabled.
     func startTreatBounce() {
+        guard !MotionSettings.isReduced else { return }
         guard action(forKey: "treatBounce") == nil else { return }
         let amplitude = CGFloat(GameConfig.Behavior.playfulTreatBounceAmplitude)
         let halfPeriod = GameConfig.Behavior.playfulTreatBouncePeriod / 2

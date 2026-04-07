@@ -25,6 +25,10 @@ struct ContentView: View {
     /// Non-nil while the offline progress summary popup is presented.
     @Binding var offlineSummary: OfflineProgressSummary?
 
+    /// System Reduce Motion accessibility setting. When true, replaces spring
+    /// animations and slide transitions with opacity-only fades.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // MARK: - Init
 
     init(
@@ -79,7 +83,11 @@ struct ContentView: View {
                     EmergencyBailoutBanner {
                         viewModel.openShop(tab: .pigs)
                     }
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .move(edge: .top).combined(with: .opacity)
+                    )
                 }
                 Spacer()
                 ToastOverlayView(notificationManager: notificationManager)
@@ -93,7 +101,11 @@ struct ContentView: View {
                         onRemove: { viewModel.handleRemoveFacility() },
                         onAutoArrange: { viewModel.performAutoArrange() }
                     )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .move(edge: .bottom).combined(with: .opacity)
+                    )
                 }
                 StatusToolbar(
                     gameState: viewModel.gameState,
@@ -113,7 +125,10 @@ struct ContentView: View {
                     onSpeedTapped: { viewModel.cycleSpeed() }
                 )
             }
-            .animation(.spring(duration: 0.3, bounce: 0.15), value: viewModel.isEditMode)
+            .animation(
+                reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.3, bounce: 0.15),
+                value: viewModel.isEditMode
+            )
             .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
         .sheet(isPresented: $viewModel.showShop) {

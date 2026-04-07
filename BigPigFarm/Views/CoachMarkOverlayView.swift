@@ -13,6 +13,10 @@ struct CoachMarkOverlayView: View {
     let gameState: GameState
     @Binding var coachState: CoachMarkState
 
+    /// System Reduce Motion accessibility setting. When true, replaces the
+    /// spring animation and slide-up transition with opacity-only fades.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         if let markID = CoachMarkTrigger.evaluate(state: gameState, coachState: coachState) {
             CoachMarkBubble(
@@ -27,8 +31,15 @@ struct CoachMarkOverlayView: View {
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 4)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-            .animation(.spring(duration: 0.35, bounce: 0.2), value: markID)
+            .transition(
+                reduceMotion
+                    ? .opacity
+                    : .move(edge: .bottom).combined(with: .opacity)
+            )
+            .animation(
+                reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.35, bounce: 0.2),
+                value: markID
+            )
         }
     }
 }

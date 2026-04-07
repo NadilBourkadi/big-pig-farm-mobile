@@ -106,10 +106,12 @@ class PigNode: SKSpriteNode {
     /// Called from `FarmScene.update()` at ~60fps for smooth movement between tick-rate syncs.
     /// Skips Y interpolation while a treat bounce action is running so the
     /// bounce SKAction owns vertical movement without being overwritten.
+    /// Snaps directly to target when Reduce Motion is enabled, eliminating
+    /// the per-frame spatial interpolation entirely.
     /// - Parameter factor: Lerp factor from 0 (no movement) to 1 (instant snap).
     ///   Higher game speeds pass larger factors to prevent visual lag.
     func smoothMove(factor: CGFloat) {
-        if isSleeping {
+        if isSleeping || MotionSettings.isReduced {
             position = targetPosition
             return
         }
