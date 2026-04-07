@@ -155,6 +155,7 @@ private struct PigdexTab: View {
             eventType: "pigdex"
         )
         HapticManager.pigdexDiscovery()
+        AudioManager.pigdexDiscovery()
     }
 }
 

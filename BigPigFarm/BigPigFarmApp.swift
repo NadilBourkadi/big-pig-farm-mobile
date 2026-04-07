@@ -60,6 +60,7 @@ struct BigPigFarmApp: App {
         _debugServer = State(initialValue: server)
         #endif
 
+        AudioManager.preloadAll()
     }
 
     /// Build and wire the SimulationRunner and GameEngine from a loaded state.
@@ -76,15 +77,19 @@ struct BigPigFarmApp: App {
         )
         sim.onPigSold = { _, _, contractBonus, _ in
             HapticManager.pigSold()
+            AudioManager.pigSold()
             if contractBonus > 0 {
                 HapticManager.contractCompleted()
+                AudioManager.contractCompleted()
             }
         }
         sim.onBirth = { _ in
             HapticManager.birth()
+            AudioManager.birth()
         }
         sim.onPigdexDiscovery = {
             HapticManager.pigdexDiscovery()
+            AudioManager.pigdexDiscovery()
         }
         let eng = GameEngine(state: state)
         eng.registerTickCallback { [weak sim] minutes in

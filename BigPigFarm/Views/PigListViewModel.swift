@@ -66,8 +66,10 @@ final class PigListViewModel {
         guard gameState.getGuineaPig(pig.id) != nil else { return }
         let result = Market.sellPig(state: gameState, pig: pig)
         HapticManager.pigSold()
+        AudioManager.pigSold()
         if result.contractBonus > 0 {
             HapticManager.contractCompleted()
+            AudioManager.contractCompleted()
         }
     }
 
@@ -79,7 +81,11 @@ final class PigListViewModel {
             if result.contractBonus > 0 { anyContractBonus = true }
         }
         HapticManager.pigSold()
-        if anyContractBonus { HapticManager.contractCompleted() }
+        AudioManager.pigSold()
+        if anyContractBonus {
+            HapticManager.contractCompleted()
+            AudioManager.contractCompleted()
+        }
         exitEditMode()
     }
 

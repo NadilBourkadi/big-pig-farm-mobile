@@ -70,6 +70,7 @@ extension FarmScene {
             _ = gameState.farm.placeFacility(facility)
             gameState.updateFacility(facility)
             HapticManager.error()
+            AudioManager.error()
         }
     }
 

@@ -80,6 +80,7 @@ final class ContentViewModel: FarmSceneDelegate {
             editModeSelectedFacilityID = facilityID
             scene.selectedFacilityID = facilityID
             HapticManager.pigSelected()
+            AudioManager.pigSelected()
         }
         scene.onTreatsExhausted = { [weak self] in
             self?.isTreatMode = false

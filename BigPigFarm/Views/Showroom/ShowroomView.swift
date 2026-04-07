@@ -96,9 +96,11 @@ private extension ShowroomView {
     func purchaseUpgrade(_ upgrade: ShowroomUpgrade) {
         guard gameState.prestigeState.purchaseUpgrade(upgrade) else {
             HapticManager.error()
+            AudioManager.error()
             return
         }
         HapticManager.purchase()
+        AudioManager.purchase()
         purchaseCount += 1
     }
 }

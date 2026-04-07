@@ -17,6 +17,7 @@ extension FarmScene {
 
         guard !fedPigIDs.isEmpty else {
             HapticManager.error()
+            AudioManager.error()
             return
         }
 
@@ -30,6 +31,7 @@ extension FarmScene {
         treatNode.animateSpawn()
 
         HapticManager.treatPlaced()
+        AudioManager.treatPlaced()
 
         // Dispatch pigs to treat via behavior AI
         dispatchPigsToTreat(treatNode, fedPigIDs: fedPigIDs)
@@ -82,6 +84,7 @@ extension FarmScene {
             if pigGridPos.manhattanDistance(to: treatGridPos) <= 1 {
                 pigNodes[pigID]?.playHeartParticle()
                 HapticManager.treatConsumed()
+                AudioManager.treatConsumed()
                 _ = treatNode.animatePickup {}
             }
         }

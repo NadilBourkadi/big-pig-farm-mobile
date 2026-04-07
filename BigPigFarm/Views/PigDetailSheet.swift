@@ -53,8 +53,10 @@ private struct PigDetailSheetContent: View {
     private func sellAndDismiss() {
         let result = Market.sellPig(state: gameState, pig: pig)
         HapticManager.pigSold()
+        AudioManager.pigSold()
         if result.contractBonus > 0 {
             HapticManager.contractCompleted()
+            AudioManager.contractCompleted()
         }
         onDismiss()
     }

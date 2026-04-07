@@ -200,6 +200,7 @@ extension AdoptionView {
             errorMessage = "Farm is at capacity! Upgrade or sell pigs."
             showError = true
             HapticManager.error()
+            AudioManager.error()
             return
         }
 
@@ -210,6 +211,7 @@ extension AdoptionView {
             errorMessage = "Not enough Squeaks!"
             showError = true
             HapticManager.error()
+            AudioManager.error()
             return
         }
 
@@ -217,6 +219,7 @@ extension AdoptionView {
             errorMessage = "No space for new pig!"
             showError = true
             HapticManager.error()
+            AudioManager.error()
             return
         }
 
@@ -238,6 +241,7 @@ extension AdoptionView {
         availablePigs.removeAll { $0.id == pig.id }
         selectedPig = nil
         HapticManager.purchase()
+        AudioManager.purchase()
     }
 
     /// Generate a fresh batch of adoption pigs.
