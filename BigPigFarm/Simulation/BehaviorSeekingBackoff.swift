@@ -49,6 +49,10 @@ extension BehaviorSeeking {
         controller.setUnreachableBackoff(pig.id, need: need, cycles: cycles)
         // Match cooldown to backoff duration so the failed set outlives the backoff
         controller.facilityManager.setFailedCooldown(pig.id, cycles)
+        // Clear the per-type failure counter so the pig gets a clean slate
+        // after the backoff expires — otherwise the bridge would re-fire on
+        // the next seek attempt and the pig would be permanently locked out.
+        controller.facilityManager.clearArrivalFailureCounters(pig.id)
         pig.logBehavior("No reachable \(need) facility, backing off")
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logSeekFailure(pig: pig, need: need, isCritical: isCritical, cycles: cycles)

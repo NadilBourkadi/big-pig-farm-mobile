@@ -83,7 +83,7 @@ extension GameConfig {
 
         /// Multiplier applied to the base arrival-failure cooldown per consecutive
         /// failure. Cooldown grows as: base, base*mult, base*mult*mult, … capped
-        /// at `arrivalFailureMaxCooldownCycles`. Default 2 → 3, 6, 12, 20, 20, …
+        /// at `arrivalFailureMaxCooldownCycles`. With base=3, mult=2: 3, 6, 12, 20, 20, …
         static let arrivalFailureEscalationMult: Int = 2
 
         /// Maximum cycles a pig can wait before retrying after repeated arrival

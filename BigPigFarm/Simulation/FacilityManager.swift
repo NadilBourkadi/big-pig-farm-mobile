@@ -229,6 +229,16 @@ final class FacilityManager {
         arrivalFailureByType[pigId]?[type.rawValue] ?? 0
     }
 
+    /// Reset only the escalation counters (global and per-type) without
+    /// touching the failed-facility set or cooldown. Called when the pig
+    /// transitions to an unreachable-backoff cycle so that the counter state
+    /// doesn't survive the backoff and immediately re-escalate on the next
+    /// seek attempt.
+    func clearArrivalFailureCounters(_ pigId: UUID) {
+        arrivalFailureCounts.removeValue(forKey: pigId)
+        arrivalFailureByType.removeValue(forKey: pigId)
+    }
+
     func getFailedCooldown(_ pigId: UUID) -> Int {
         failedCooldowns[pigId] ?? 0
     }
