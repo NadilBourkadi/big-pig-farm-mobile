@@ -351,7 +351,7 @@ extension BehaviorSeeking {
         )
     }
 
-    @MainActor private static func logSeekFailure(pig: GuineaPig, need: String, isCritical: Bool, cycles: Int) {
+    @MainActor static func logSeekFailure(pig: GuineaPig, need: String, isCritical: Bool, cycles: Int) {
         DebugLogger.shared.log(
             category: .behavior, level: .warning,
             message: "\(pig.name): no reachable \(need) facility",
