@@ -127,9 +127,12 @@ extension FacilityManager {
 
     private func handleArrivalPlay(pig: inout GuineaPig, facility: Facility) -> Bool {
         if facility.facilityType == .therapyGarden && pig.needs.happiness >= 50 {
+            // Pig no longer needs therapy — this is a "wrong target" arrival,
+            // not a facility-unusable failure, so don't tag the per-type counter
+            // (which would falsely escalate the bridge for therapyGarden seeks).
             pig.logBehavior("Happiness recovered, skipping \(facility.name)")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
+            setArrivalFailedCooldown(pig: pig)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil

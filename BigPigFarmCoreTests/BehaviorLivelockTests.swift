@@ -226,6 +226,25 @@ struct BehaviorLivelockTests {
         #expect(controller.facilityManager.getArrivalFailuresForType(pig.id, type: .foodBowl) == 0)
     }
 
+    @Test("Bridge escalation clears per-type counter so backoff doesn't immediately re-fire")
+    func bridgeEscalationClearsCounters() {
+        let (manager, state, controller) = makeManager()
+        let facility = emptyFoodBowl(at: 4, y: 9, state: state)
+
+        var pig = nonCriticalPig(at: 5.0, y: 9.0)
+        pig.targetFacilityId = facility.id
+        state.addGuineaPig(pig)
+
+        // Fail at the bowl, then trigger the bridge via seek
+        manager.checkArrivedAtFacility(pig: &pig)
+        BehaviorSeeking.seekFacilityForNeed(controller: controller, pig: &pig, need: "hunger")
+        #expect(controller.getUnreachableBackoff(pig.id, need: "hunger") > 0)
+
+        // The per-type counter must be cleared so that after the unreachable
+        // backoff expires, the pig isn't immediately re-escalated.
+        #expect(manager.getArrivalFailuresForType(pig.id, type: .foodBowl) == 0)
+    }
+
     @Test("Successful arrival clears per-type counter, allows future seek")
     func successfulArrivalResetsBridgeState() {
         let (manager, state, _) = makeManager()

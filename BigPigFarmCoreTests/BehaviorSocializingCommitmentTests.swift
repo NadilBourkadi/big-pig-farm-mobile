@@ -102,7 +102,9 @@ struct BehaviorSocializingCommitmentTests {
         controller.startSocializingCommitment(pig.id)
 
         let initialCommitment = controller.getSocializingCommitment(pig.id)
-        for _ in 0..<(initialCommitment - 1) {
+        // Cover all committed cycles, not just the first N-1 — the final
+        // committed cycle should also keep the pig in `.socializing`.
+        for _ in 0..<initialCommitment {
             BehaviorDecision.makeDecision(controller: controller, pig: &pig)
             #expect(pig.behaviorState == .socializing, "Pig should stay committed to socializing")
         }
