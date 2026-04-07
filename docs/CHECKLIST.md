@@ -141,6 +141,7 @@
 - [x] Fix StatusToolbar button alignment — equalize first-row button widths and center system control row (bead nqs9)
 - [x] Add VoiceOver accessibility elements to SpriteKit farm scene (bead d8vl)
 - [x] Replace fixed-size HUD fonts with Dynamic Type scaled text styles (bead l8oc)
+- [x] Respect Reduce Motion accessibility setting: skip particle bursts, spring HUD animations, pig sprite interpolation, and Pig Show transition motion when Reduce Motion is enabled (bead 044g)
 - [x] Standardize list styles across ShopView tabs and BiomeSelectView (bead mg2g)
 - [x] Replace embedded TabView in sheets with segmented picker controls (bead pq64)
 - [x] Remove Currency.addMoney/spendMoney/canAfford pass-through wrappers (bead bjsl)
