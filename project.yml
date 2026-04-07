@@ -37,6 +37,7 @@ targets:
     resources:
       - path: BigPigFarm/Resources/Assets.xcassets
       - path: BigPigFarm/PrivacyInfo.xcprivacy
+      - path: BigPigFarm/Resources/Audio
     entitlements:
       path: BigPigFarm/BigPigFarm.entitlements
       properties:
