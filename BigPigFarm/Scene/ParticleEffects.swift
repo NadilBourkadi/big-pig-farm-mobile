@@ -7,7 +7,17 @@ enum ParticleEffects {
     // MARK: - Heart Burst
 
     /// Creates a burst of small heart particles floating upward. Used for treat consumption.
-    static func heartBurst(at position: CGPoint) -> SKEmitterNode {
+    /// Returns a static fade-only sprite when Reduce Motion is enabled.
+    static func heartBurst(at position: CGPoint) -> SKNode {
+        if MotionSettings.isReduced {
+            return staticFade(
+                texture: heartTexture,
+                tint: .systemPink,
+                position: position,
+                scale: 0.3,
+                alpha: 0.9
+            )
+        }
         let emitter = SKEmitterNode()
         emitter.position = position
         emitter.zPosition = 20
@@ -38,7 +48,17 @@ enum ParticleEffects {
     // MARK: - Sparkle Burst
 
     /// Creates a radial burst of sparkle particles. Used for reunion boost and treat placement.
-    static func sparkleBurst(at position: CGPoint) -> SKEmitterNode {
+    /// Returns a static fade-only sprite when Reduce Motion is enabled.
+    static func sparkleBurst(at position: CGPoint) -> SKNode {
+        if MotionSettings.isReduced {
+            return staticFade(
+                texture: sparkleTexture,
+                tint: .yellow,
+                position: position,
+                scale: 0.5,
+                alpha: 1.0
+            )
+        }
         let emitter = SKEmitterNode()
         emitter.position = position
         emitter.zPosition = 20
@@ -61,6 +81,33 @@ enum ParticleEffects {
             SKAction.removeFromParent(),
         ]))
         return emitter
+    }
+
+    // MARK: - Reduce Motion Fallback
+
+    /// Builds a single static sprite that fades in, holds, fades out, and removes itself.
+    /// Used as the Reduce Motion replacement for particle bursts — no spatial movement.
+    private static func staticFade(
+        texture: SKTexture,
+        tint: UIColor,
+        position: CGPoint,
+        scale: CGFloat,
+        alpha: CGFloat
+    ) -> SKNode {
+        let sprite = SKSpriteNode(texture: texture)
+        sprite.position = position
+        sprite.zPosition = 20
+        sprite.setScale(scale)
+        sprite.alpha = 0
+        sprite.color = tint
+        sprite.colorBlendFactor = 1.0
+        sprite.run(SKAction.sequence([
+            SKAction.fadeAlpha(to: alpha, duration: 0.1),
+            SKAction.wait(forDuration: 0.4),
+            SKAction.fadeOut(withDuration: 0.2),
+            SKAction.removeFromParent(),
+        ]))
+        return sprite
     }
 
     // MARK: - Textures
