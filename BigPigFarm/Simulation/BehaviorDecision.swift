@@ -50,7 +50,7 @@ enum BehaviorDecision {
         if handleSleepGuard(pig: &pig) { return }
         if handleCourtGuard(controller: controller, pig: &pig) { return }
         if handleCommitmentGuard(controller: controller, pig: &pig) { return }
-        if handlePlaySocialGuard(controller: controller, pig: &pig) { return }
+        if behaviorHandlePlaySocialGuard(controller: controller, pig: &pig) { return }
         controller.tickDownUnreachableBackoffs(pig.id)
         if handleUrgentNeed(controller: controller, pig: &pig) { return }
         if handleLowPriorityBehaviors(controller: controller, pig: &pig) { return }
@@ -190,40 +190,12 @@ enum BehaviorDecision {
     }
 
     // MARK: - Phase 6 — Guard: Playing/Socializing Commitment
-
-    /// Returns true if the pig is playing or socializing (commitment managed, stops further phases).
-    @MainActor
-    private static func handlePlaySocialGuard(
-        controller: BehaviorController, pig: inout GuineaPig
-    ) -> Bool {
-        let criticalNeed = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
-            || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
-        let satisfactionThreshold = Double(GameConfig.Needs.satisfactionThreshold)
-        if pig.behaviorState == .playing {
-            if pig.needs.boredom > Double(GameConfig.Behavior.boredomKeepPlaying) {
-                if criticalNeed {
-                    pig.logBehavior("Stopped playing (hunger/thirst critical)")
-                    pig.behaviorState = .idle; pig.targetDescription = nil
-                } else { return true }
-            }
-        }
-        if pig.behaviorState == .socializing {
-            if pig.needs.social < satisfactionThreshold {
-                if criticalNeed {
-                    pig.logBehavior("Stopped socializing (hunger/thirst critical)")
-                    pig.behaviorState = .idle; pig.targetDescription = nil
-                } else { return true }
-            }
-        }
-        if pig.behaviorState == .playing || pig.behaviorState == .socializing {
-            pig.logBehavior("Finished \(pig.behaviorState.rawValue), wandering away")
-            if pig.behaviorState == .socializing { behaviorTrackSocialAffinity(controller: controller, pig: pig) }
-            pig.targetDescription = nil
-            BehaviorMovement.startWandering(controller: controller, pig: &pig)
-            return true
-        }
-        return false
-    }
+    //
+    // Implementation lives in `behaviorHandlePlaySocialGuard` in
+    // BehaviorDecisionHelpers.swift to keep this enum body within the type
+    // length limit. The guard honors a per-pig socializing commitment counter
+    // (set by `BehaviorSeeking.seekSocialInteraction`) to prevent partner-
+    // flipping livelock — see bead big-pig-farm-mobile-oxp8.
 
     // MARK: - Phase 8 — Urgent Need Evaluation
 

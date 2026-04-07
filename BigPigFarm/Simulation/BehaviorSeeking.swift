@@ -35,6 +35,17 @@ enum BehaviorSeeking {
             return
         }
 
+        // Bridge: if the pig has repeatedly arrived at facilities of these types
+        // and failed (full/empty), escalate to the unreachable-backoff path. This
+        // catches the "reachable but unusable" livelock where pigs arrive, fail,
+        // and immediately re-target the same facilities.
+        if shouldEscalateToBackoff(
+            controller: controller, pig: pig, facilityTypes: facilityTypes
+        ) {
+            applyUnreachableBackoff(controller: controller, pig: &pig, need: need)
+            return
+        }
+
         for facilityType in facilityTypes {
             let candidates = controller.facilityManager.getCandidateFacilitiesRanked(
                 pig: pig, facilityType: facilityType
@@ -61,19 +72,7 @@ enum BehaviorSeeking {
         }
 
         // No reachable facility — set backoff and wander
-        let isCritical = getNeedValue(pig, need: need) < Double(GameConfig.Needs.criticalThreshold)
-        let cycles = isCritical
-            ? GameConfig.Behavior.unreachableCriticalCycles
-            : GameConfig.Behavior.unreachableBackoffCycles
-        controller.setUnreachableBackoff(pig.id, need: need, cycles: cycles)
-        // Match cooldown to backoff duration so the failed set outlives the backoff
-        controller.facilityManager.setFailedCooldown(pig.id, cycles)
-        pig.logBehavior("No reachable \(need) facility, backing off")
-        #if (DEBUG || INTERNAL) && canImport(UIKit)
-        logSeekFailure(pig: pig, need: need, isCritical: isCritical, cycles: cycles)
-        #endif
-        pig.targetDescription = nil
-        BehaviorMovement.startWandering(controller: controller, pig: &pig)
+        applyUnreachableBackoff(controller: controller, pig: &pig, need: need)
     }
 
     /// Seek a sleep facility (hideout or hot spring).
@@ -181,6 +180,7 @@ enum BehaviorSeeking {
                 pig.behaviorState = .socializing
                 pig.targetFacilityId = nil
                 pig.targetDescription = "going to \(target.name)"
+                controller.startSocializingCommitment(pig.id)
                 return
             }
         }
@@ -267,6 +267,7 @@ enum BehaviorSeeking {
             pig.targetFacilityId = campfire.id
             pig.targetPosition = Position(x: Double(point.x), y: Double(point.y))
             pig.targetDescription = "going to campfire"
+            controller.startSocializingCommitment(pig.id)
             return true
         }
         return false

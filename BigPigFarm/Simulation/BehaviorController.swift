@@ -23,6 +23,11 @@ final class BehaviorController {
     private var unreachableNeeds: [UUID: [String: Int]] = [:]
     /// Remaining hesitation delay for shy pigs approaching treats (game-minutes).
     private var shyTreatDelays: [UUID: Double] = [:]
+    /// Per-pig socializing commitment counter (decision cycles).
+    /// When > 0, `BehaviorDecision.handlePlaySocialGuard` keeps the pig in
+    /// `.socializing` regardless of partner-distance changes. Critical needs
+    /// still override.
+    private var socializingCommitment: [UUID: Int] = [:]
 
     init(gameState: GameState) {
         self.gameState = gameState
@@ -89,6 +94,7 @@ final class BehaviorController {
         stuckTimers.removeValue(forKey: pigId)
         unreachableNeeds.removeValue(forKey: pigId)
         shyTreatDelays.removeValue(forKey: pigId)
+        socializingCommitment.removeValue(forKey: pigId)
         facilityManager.cleanupPig(pigId)
         guard let gameState else { return }
         for var pig in gameState.getPigsList() where pig.courtingPartnerId == pigId {
@@ -105,6 +111,7 @@ final class BehaviorController {
         stuckTimers.removeAll()
         unreachableNeeds.removeAll()
         shyTreatDelays.removeAll()
+        socializingCommitment.removeAll()
         facilityManager.resetAll()
     }
 
@@ -233,6 +240,39 @@ extension BehaviorController {
     /// Clear shy treat delay for a pig — call from any exit path out of `.seekingTreat`.
     func clearShyTreatDelay(_ pigId: UUID) {
         shyTreatDelays.removeValue(forKey: pigId)
+    }
+}
+
+// MARK: - Socializing commitment
+
+extension BehaviorController {
+    /// Remaining socializing commitment cycles for a pig.
+    /// Zero means the pig is free to re-evaluate (or is not socializing).
+    func getSocializingCommitment(_ pigId: UUID) -> Int {
+        socializingCommitment[pigId] ?? 0
+    }
+
+    /// Begin a fresh socializing commitment, replacing any existing value.
+    /// Called when a pig is dispatched into the `.socializing` state.
+    func startSocializingCommitment(_ pigId: UUID) {
+        socializingCommitment[pigId] = GameConfig.Behavior.socializingMinCommitmentCycles
+    }
+
+    /// Decrement the socializing commitment by 1; returns the new value.
+    @discardableResult
+    func decrementSocializingCommitment(_ pigId: UUID) -> Int {
+        let next = max(0, (socializingCommitment[pigId] ?? 0) - 1)
+        if next == 0 {
+            socializingCommitment.removeValue(forKey: pigId)
+        } else {
+            socializingCommitment[pigId] = next
+        }
+        return next
+    }
+
+    /// Clear commitment counter — call from any exit path out of `.socializing`.
+    func clearSocializingCommitment(_ pigId: UUID) {
+        socializingCommitment.removeValue(forKey: pigId)
     }
 }
 

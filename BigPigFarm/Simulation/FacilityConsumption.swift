@@ -9,27 +9,47 @@ extension FacilityManager {
     /// Transition a pig's behavior state based on the facility it just reached.
     func checkArrivedAtFacility(pig: inout GuineaPig) {
         let gridPos = pig.position.gridPosition
+        // Track whether any per-facility handler was invoked. If so, that
+        // handler is responsible for the failure cooldown — the catch-all
+        // path below must not double-count it (which would falsely escalate
+        // the per-pig failure counter on every arrival).
+        var handlerInvoked = false
 
         for facility in getCandidateFacilitiesForArrival(pig: pig) {
+            // Multi-cell facilities (e.g. 2x1 food bowls) have multiple
+            // interaction points. We only need to check adjacency to ANY of
+            // them — calling handleArrival once per matching point would
+            // double-count failures since the result is the same per facility.
+            var inRange = false
             for point in facility.interactionPoints {
                 let manhattan = abs(gridPos.x - point.x) + abs(gridPos.y - point.y)
-                guard manhattan <= GameConfig.FacilityInteraction.adjacencyDistance else { continue }
-
-                if handleArrival(pig: &pig, facility: facility) {
-                    #if (DEBUG || INTERNAL) && canImport(UIKit)
-                    logFacilityArrival(pig: pig, facility: facility)
-                    #endif
-                    return
+                if manhattan <= GameConfig.FacilityInteraction.adjacencyDistance {
+                    inRange = true
+                    break
                 }
+            }
+            guard inRange else { continue }
+
+            handlerInvoked = true
+            if handleArrival(pig: &pig, facility: facility) {
+                #if (DEBUG || INTERNAL) && canImport(UIKit)
+                logFacilityArrival(pig: pig, facility: facility)
+                #endif
+                return
             }
         }
 
-        // No suitable facility — go idle with cooldown to prevent re-seeking loop
+        // No suitable facility — go idle with cooldown to prevent re-seeking loop.
+        // Only set the cooldown when no handler ran at all; if a handler ran but
+        // returned false, it has already accounted for the failure (or chose to
+        // skip cooldown for the "wrong target" case).
         pig.logBehavior("Arrived but nothing to do, idling")
         #if (DEBUG || INTERNAL) && canImport(UIKit)
         logArrivalFailed(pig: pig)
         #endif
-        setArrivalFailedCooldown(pig: pig)
+        if !handlerInvoked {
+            setArrivalFailedCooldown(pig: pig)
+        }
         pig.behaviorState = .idle
         pig.targetPosition = nil
         pig.targetFacilityId = nil
@@ -67,7 +87,7 @@ extension FacilityManager {
         } else if facility.isEmpty {
             pig.logBehavior("\(facility.name) is empty")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
         }
         return false
     }
@@ -83,7 +103,7 @@ extension FacilityManager {
         } else if facility.isEmpty {
             pig.logBehavior("\(facility.name) is empty")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
         }
         return false
     }
@@ -109,7 +129,7 @@ extension FacilityManager {
         if facility.facilityType == .therapyGarden && pig.needs.happiness >= 50 {
             pig.logBehavior("Happiness recovered, skipping \(facility.name)")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -126,7 +146,7 @@ extension FacilityManager {
         } else {
             pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -146,7 +166,7 @@ extension FacilityManager {
         } else {
             pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil
@@ -167,7 +187,7 @@ extension FacilityManager {
         } else {
             pig.logBehavior("\(facility.name) is full")
             addFailedFacility(pig.id, facility.id)
-            setArrivalFailedCooldown(pig: pig)
+            setArrivalFailedCooldown(pig: pig, facilityType: facility.facilityType)
             pig.behaviorState = .idle
             pig.targetPosition = nil
             pig.targetFacilityId = nil

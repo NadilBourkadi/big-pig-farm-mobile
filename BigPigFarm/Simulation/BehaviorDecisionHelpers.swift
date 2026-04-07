@@ -35,6 +35,52 @@ func behaviorHandleDefaultWander(controller: BehaviorController, pig: inout Guin
     }
 }
 
+// MARK: - Play/Social Commitment Guard (Phase 6)
+
+/// Returns true if the pig is playing or socializing (commitment managed,
+/// caller stops further phases). Honors socializing-commitment counter to
+/// prevent rapid partner-flipping; critical needs always override.
+@MainActor
+func behaviorHandlePlaySocialGuard(
+    controller: BehaviorController, pig: inout GuineaPig
+) -> Bool {
+    let criticalNeed = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
+        || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
+    let satisfactionThreshold = Double(GameConfig.Needs.satisfactionThreshold)
+    if pig.behaviorState == .playing {
+        if pig.needs.boredom > Double(GameConfig.Behavior.boredomKeepPlaying) {
+            if criticalNeed {
+                pig.logBehavior("Stopped playing (hunger/thirst critical)")
+                pig.behaviorState = .idle; pig.targetDescription = nil
+            } else { return true }
+        }
+    }
+    if pig.behaviorState == .socializing {
+        if criticalNeed {
+            pig.logBehavior("Stopped socializing (hunger/thirst critical)")
+            controller.clearSocializingCommitment(pig.id)
+            pig.behaviorState = .idle; pig.targetDescription = nil
+        } else if controller.getSocializingCommitment(pig.id) > 0 {
+            // Stay committed regardless of social value or partner distance.
+            controller.decrementSocializingCommitment(pig.id)
+            return true
+        } else if pig.needs.social < satisfactionThreshold {
+            return true
+        }
+    }
+    if pig.behaviorState == .playing || pig.behaviorState == .socializing {
+        pig.logBehavior("Finished \(pig.behaviorState.rawValue), wandering away")
+        if pig.behaviorState == .socializing {
+            behaviorTrackSocialAffinity(controller: controller, pig: pig)
+            controller.clearSocializingCommitment(pig.id)
+        }
+        pig.targetDescription = nil
+        BehaviorMovement.startWandering(controller: controller, pig: &pig)
+        return true
+    }
+    return false
+}
+
 // MARK: - Social Affinity Tracking
 
 /// Increment social affinity between `pig` and any nearby socializing pigs.
