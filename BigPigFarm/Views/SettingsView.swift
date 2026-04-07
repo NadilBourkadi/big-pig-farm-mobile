@@ -16,6 +16,9 @@ struct SettingsView: View {
     @State private var showRestoreConfirmation = false
     @State private var restoreError: String?
     @State private var backupState = iCloudBackupState.load()
+    /// SettingsView is the only writer for AudioSettings, so a one-shot
+    /// load at view init is sufficient — no .onAppear refresh needed.
+    @State private var audioSettings = AudioSettings.load()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -28,6 +31,8 @@ struct SettingsView: View {
                         Label("Notifications", systemImage: "bell.badge")
                     }
                 }
+
+                soundSection
 
                 iCloudBackupSection
 
@@ -104,6 +109,31 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Sound Section
+
+private extension SettingsView {
+    var soundSection: some View {
+        Section {
+            Toggle(isOn: soundEnabledBinding) {
+                Label("Sound Effects", systemImage: "speaker.wave.2")
+            }
+        } header: {
+            Text("Sound")
+        }
+    }
+
+    var soundEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { audioSettings.isEnabled },
+            set: { newValue in
+                audioSettings.isEnabled = newValue
+                audioSettings.save()
+                AudioManager.reloadSettings()
+            }
+        )
     }
 }
 
