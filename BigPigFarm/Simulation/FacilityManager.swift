@@ -80,6 +80,14 @@ final class FacilityManager {
 
     private var failedFacilities: [UUID: Set<UUID>] = [:]
     private var failedCooldowns: [UUID: Int] = [:]
+    /// Per-pig consecutive arrival-failure counter (across ALL facility types).
+    /// Drives exponential cooldown escalation. Reset whenever the pig
+    /// successfully starts using any facility (via `clearFailedFacilities`).
+    private var arrivalFailureCounts: [UUID: Int] = [:]
+    /// Per-pig consecutive arrival-failure count for a SPECIFIC facility type.
+    /// Used by `BehaviorSeeking.seekFacilityForNeed` to escalate to the
+    /// unreachable-backoff system once a pig has exhausted facilities of a type.
+    private var arrivalFailureByType: [UUID: [String: Int]] = [:]
 
     // MARK: - Area Populations
 
@@ -208,6 +216,17 @@ final class FacilityManager {
 
     func clearFailedFacilities(_ pigId: UUID) {
         failedFacilities[pigId] = []
+        // Reset escalation counters too — every successful arrival path calls
+        // this, so the counter resets the moment the pig actually uses a facility.
+        arrivalFailureCounts.removeValue(forKey: pigId)
+        arrivalFailureByType.removeValue(forKey: pigId)
+    }
+
+    /// Number of consecutive arrival failures this pig has had for the given
+    /// facility type. Used by `BehaviorSeeking` to escalate to the unreachable-
+    /// backoff path once the pig has exhausted all facilities of a type.
+    func getArrivalFailuresForType(_ pigId: UUID, type: FacilityType) -> Int {
+        arrivalFailureByType[pigId]?[type.rawValue] ?? 0
     }
 
     func getFailedCooldown(_ pigId: UUID) -> Int {
@@ -229,16 +248,33 @@ final class FacilityManager {
         }
     }
 
-    /// Set arrival failure cooldown, using shorter cooldown for critical needs.
-    func setArrivalFailedCooldown(pig: GuineaPig) {
+    /// Set arrival failure cooldown, escalating exponentially on consecutive
+    /// failures. Critical-need pigs always use the short critical cooldown
+    /// (no escalation) so they can keep retrying when starving or dehydrated.
+    /// Pass `facilityType` so per-type escalation can also be tracked — used
+    /// by `BehaviorSeeking` to bridge to the unreachable-backoff system.
+    func setArrivalFailedCooldown(pig: GuineaPig, facilityType: FacilityType? = nil) {
         let isCritical = pig.needs.hunger < Double(GameConfig.Needs.criticalThreshold)
             || pig.needs.thirst < Double(GameConfig.Needs.criticalThreshold)
-        setFailedCooldown(
-            pig.id,
-            isCritical
-                ? GameConfig.Behavior.criticalFailedCooldownCycles
-                : GameConfig.Behavior.arrivalFailedCooldownCycles
-        )
+        if isCritical {
+            setFailedCooldown(pig.id, GameConfig.Behavior.criticalFailedCooldownCycles)
+            return
+        }
+        let count = (arrivalFailureCounts[pig.id] ?? 0) + 1
+        arrivalFailureCounts[pig.id] = count
+        if let facilityType {
+            arrivalFailureByType[pig.id, default: [:]][facilityType.rawValue, default: 0] += 1
+        }
+        let base = GameConfig.Behavior.arrivalFailedCooldownCycles
+        let mult = GameConfig.Behavior.arrivalFailureEscalationMult
+        let cap  = GameConfig.Behavior.arrivalFailureMaxCooldownCycles
+        var cooldown = base
+        // First failure (count == 1): loop runs 0 times → cooldown == base
+        for _ in 1..<count {
+            cooldown *= mult
+            if cooldown >= cap { cooldown = cap; break }
+        }
+        setFailedCooldown(pig.id, cooldown)
     }
 
     // MARK: - Lifecycle
@@ -246,11 +282,15 @@ final class FacilityManager {
     func cleanupPig(_ pigId: UUID) {
         failedFacilities.removeValue(forKey: pigId)
         failedCooldowns.removeValue(forKey: pigId)
+        arrivalFailureCounts.removeValue(forKey: pigId)
+        arrivalFailureByType.removeValue(forKey: pigId)
     }
 
     func resetAll() {
         failedFacilities.removeAll()
         failedCooldowns.removeAll()
+        arrivalFailureCounts.removeAll()
+        arrivalFailureByType.removeAll()
         pathCache.clear()
     }
 

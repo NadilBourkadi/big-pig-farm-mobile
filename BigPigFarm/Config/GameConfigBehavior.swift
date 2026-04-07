@@ -79,6 +79,28 @@ extension GameConfig {
 
         static let criticalFailedCooldownCycles: Int = 1
 
+        // MARK: - Livelock prevention (escalating backoff + social commitment)
+
+        /// Multiplier applied to the base arrival-failure cooldown per consecutive
+        /// failure. Cooldown grows as: base, base*mult, base*mult*mult, … capped
+        /// at `arrivalFailureMaxCooldownCycles`. Default 2 → 3, 6, 12, 20, 20, …
+        static let arrivalFailureEscalationMult: Int = 2
+
+        /// Maximum cycles a pig can wait before retrying after repeated arrival
+        /// failures. Caps the exponential growth so pigs don't get stuck forever.
+        static let arrivalFailureMaxCooldownCycles: Int = 20
+
+        /// After this many consecutive arrival failures of the same facility type,
+        /// the pig escalates to the unreachable-backoff path for that need (the
+        /// same path used when no facility is pathfindable). Default 2: try once,
+        /// escalate after the second failure regardless of facility count.
+        static let arrivalFailureEscalateThreshold: Int = 2
+
+        /// Minimum decision cycles a pig commits to socializing once dispatched.
+        /// Prevents partner-flipping when nearby pigs are wandering past each other.
+        /// 4 cycles ≈ 8 seconds of game time at the 2-second decision interval.
+        static let socializingMinCommitmentCycles: Int = 4
+
         // MARK: - Unreachable backoff
 
         static let unreachableBackoffCycles: Int = 5
