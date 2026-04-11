@@ -8,6 +8,10 @@ import UserNotifications
 
 enum PushNotificationScheduler {
 
+    /// Known identifier prefixes for game notifications.
+    private static let knownPrefixes = ["birth-", "facility-empty-", "facility-low-", "contract-"]
+    private static let knownExact = "return-reminder"
+
     /// Request notification authorization from the user. Call once at app launch.
     /// Returns true if authorization was granted.
     @discardableResult
@@ -43,13 +47,27 @@ enum PushNotificationScheduler {
                 trigger: trigger
             )
 
-            center.add(request)
+            center.add(request) { error in
+                #if DEBUG || INTERNAL
+                if let error {
+                    print("[PushNotificationScheduler] Failed to schedule \(plan.identifier): \(error)")
+                }
+                #endif
+            }
         }
     }
 
     /// Cancel all pending Big Pig Farm notifications.
     /// Called when the app returns to foreground (in-app toasts take over).
+    /// Only removes game-owned notifications, preserving any from extensions or system.
     static func cancelAll() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { requests in
+            let gameIds = requests.map(\.identifier).filter { id in
+                id == knownExact || knownPrefixes.contains(where: { id.hasPrefix($0) })
+            }
+            guard !gameIds.isEmpty else { return }
+            center.removePendingNotificationRequests(withIdentifiers: gameIds)
+        }
     }
 }

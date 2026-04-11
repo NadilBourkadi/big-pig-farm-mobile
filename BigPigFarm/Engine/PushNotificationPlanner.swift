@@ -36,12 +36,16 @@ enum PushNotificationPlanner {
         plans.append(contentsOf: planBirthNotifications(state: state))
         plans.append(contentsOf: planFacilityNotifications(state: state))
         plans.append(contentsOf: planContractNotifications(state: state))
-        plans.append(planReturnReminder())
 
         // Filter by category preferences and minimum delay
         plans = plans.filter { notification in
             preferences.isEnabled(notification.category)
                 && notification.delaySeconds >= GameConfig.PushNotification.minimumDelay
+        }
+
+        // Only add the return reminder when no specific event notifications survived
+        if plans.isEmpty, preferences.isEnabled(.system) {
+            plans.append(planReturnReminder())
         }
 
         // Sort by soonest first, cap at maximum
@@ -111,8 +115,9 @@ enum PushNotificationPlanner {
             )
             guard estimatedConsumptionPerHour > 0 else { continue }
 
-            let hoursUntilThreshold = facility.currentAmount
-                * (1.0 - GameConfig.PushNotification.facilityWarningThreshold / 100.0)
+            let targetAmount = facility.maxAmount
+                * (GameConfig.PushNotification.facilityWarningThreshold / 100.0)
+            let hoursUntilThreshold = max(0, facility.currentAmount - targetAmount)
                 / estimatedConsumptionPerHour
             let realSeconds = gameHoursToRealSeconds(hoursUntilThreshold)
 
@@ -193,9 +198,10 @@ enum PushNotificationPlanner {
 
     /// Estimate hourly consumption for a facility based on pig count.
     /// Uses the offline consumption rate multiplier since pigs are offline.
+    /// Intentionally uses a flat rate for all depletable facility types — the actual
+    /// per-type rates vary by pig behavior and need state, but a uniform approximation
+    /// is good enough for notification timing (within ±30 min over a typical absence).
     private static func estimateConsumption(facility: Facility, pigCount: Int) -> Double {
-        // Base consumption: each pig uses ~1 unit per game hour from food/water facilities.
-        // Offline rate is reduced by the consumption multiplier.
         let baseRatePerPig: Double = 1.0
         let offlineRate = baseRatePerPig * GameConfig.Offline.consumptionRateMultiplier
         return offlineRate * Double(pigCount)

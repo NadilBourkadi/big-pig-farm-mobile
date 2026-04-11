@@ -61,9 +61,6 @@ struct BigPigFarmApp: App {
         #endif
 
         AudioManager.preloadAll()
-
-        // Request push notification permission (non-blocking, fires once)
-        Task { await PushNotificationScheduler.requestAuthorization() }
     }
 
     /// Build and wire the SimulationRunner and GameEngine from a loaded state.
@@ -123,6 +120,9 @@ struct BigPigFarmApp: App {
                         containerURL: url, saveManager: saveManager, defaults: .standard
                     )
                 }
+            }
+            .task {
+                await PushNotificationScheduler.requestAuthorization()
             }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -301,10 +301,13 @@ struct BigPigFarmApp: App {
         engine.resume()
     }
 
-    // MARK: - Persistence
+}
 
+// MARK: - Persistence & Push Notifications
+
+extension BigPigFarmApp {
     @MainActor
-    private func lifecycleSave() {
+    func lifecycleSave() {
         do {
             try saveManager.save(gameState)
             try saveManager.savePrestigeState(gameState.prestigeState)
@@ -313,10 +316,8 @@ struct BigPigFarmApp: App {
         }
     }
 
-    // MARK: - Push Notifications
-
     @MainActor
-    private func schedulePushNotifications() {
+    func schedulePushNotifications() {
         let preferences = NotificationPreferences.load()
         let plans = PushNotificationPlanner.planNotifications(
             state: gameState, preferences: preferences

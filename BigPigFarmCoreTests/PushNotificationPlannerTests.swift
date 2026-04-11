@@ -349,3 +349,64 @@ import Foundation
     let result = PushNotificationPlanner.gameHoursToRealSeconds(0)
     #expect(result == 0)
 }
+
+// MARK: - Facility Depletion Uses maxAmount for Threshold
+
+@Test @MainActor func facilityDepletionUsesMaxAmountForThreshold() {
+    let state = GameState()
+    let pig = GuineaPig.create(name: "Piggy", gender: .male)
+    state.addGuineaPig(pig)
+
+    // Half-full facility: currentAmount=100, maxAmount=200
+    var facility = Facility.create(type: .foodBowl, x: 2, y: 2)
+    facility.currentAmount = 100.0
+    _ = state.addFacility(facility)
+
+    let plans = PushNotificationPlanner.planFacilityNotifications(state: state)
+
+    #expect(plans.count == 1)
+    // Target = 200 * 0.15 = 30. Amount to deplete = 100 - 30 = 70.
+    // Rate = 1.0 * 0.40 * 1 pig = 0.4/hr
+    // Hours = 70 / 0.4 = 175 game hours
+    let expectedGameHours = 175.0
+    let expectedRealSeconds = (expectedGameHours / 90.0) * 3600.0
+    #expect(abs(plans[0].delaySeconds - expectedRealSeconds) < 1.0)
+}
+
+// MARK: - Return Reminder Gating
+
+@Test @MainActor func returnReminderAbsentWhenOtherNotificationsExist() {
+    let state = GameState()
+    // Pregnant pig with enough time remaining (>5 min real) to survive the filter
+    var pig = GuineaPig.create(name: "Mama", gender: .female)
+    pig.isPregnant = true
+    pig.pregnancyDays = 5.0  // 5 days left → well above minimum delay
+    state.addGuineaPig(pig)
+
+    let preferences = NotificationPreferences.from(preset: .standard)
+    let plans = PushNotificationPlanner.planNotifications(
+        state: state, preferences: preferences
+    )
+
+    let returnReminders = plans.filter { $0.identifier == "return-reminder" }
+    #expect(returnReminders.isEmpty)
+}
+
+// MARK: - Speed Gestation Upgrade
+
+@Test @MainActor func birthNotificationUsesSpeedGestationWhenUpgraded() {
+    let state = GameState()
+    state.prestigeState.purchasedUpgrades.insert(.speedGestation)
+
+    var pig = GuineaPig.create(name: "Mama", gender: .female)
+    pig.isPregnant = true
+    pig.pregnancyDays = 5.0
+    state.addGuineaPig(pig)
+
+    let plans = PushNotificationPlanner.planBirthNotifications(state: state)
+
+    #expect(plans.count == 1)
+    // With speedGestation: gestationDays = 7.5, daysLeft = 7.5 - 5 = 2.5
+    let expectedDelay = (2.5 * 24.0 / 90.0) * 3600.0
+    #expect(abs(plans[0].delaySeconds - expectedDelay) < 1.0)
+}
