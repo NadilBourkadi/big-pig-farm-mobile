@@ -1,6 +1,33 @@
-/// PigListViewModel — Sort, sell, batch sell, and breeding lock logic for PigListView.
+/// PigListViewModel — Sort, search, filter, sell, and batch sell logic for PigListView.
 /// Maps from: ui/screens/pig_list_screen.py
 import Foundation
+
+// MARK: - PigListFilter
+
+/// Filter criteria for the pig list. OR within a dimension, AND across dimensions.
+enum PigListFilter: Hashable, Sendable {
+    case gender(Gender)
+    case ageGroup(AgeGroup)
+    case biome(BiomeType)
+    case pregnant
+    case rarity(Rarity)
+
+    var displayName: String {
+        switch self {
+        case .gender(let gender): gender.displayLabel
+        case .ageGroup(let age): age.rawValue.capitalized
+        case .biome(let biome): biomes[biome]?.displayName ?? biome.rawValue.capitalized
+        case .pregnant: "Pregnant"
+        case .rarity(let rarity):
+            switch rarity {
+            case .veryRare: "Very Rare"
+            default: rarity.rawValue.capitalized
+            }
+        }
+    }
+}
+
+// MARK: - PigListViewModel
 
 @MainActor @Observable
 final class PigListViewModel {
@@ -12,6 +39,11 @@ final class PigListViewModel {
     var selectedPig: GuineaPig?
     var pigToSell: GuineaPig?
 
+    // MARK: - Search & Filter State
+
+    var searchText: String = ""
+    var activeFilters: Set<PigListFilter> = []
+
     // MARK: - Batch Sell State
 
     var isSelecting = false
@@ -22,10 +54,66 @@ final class PigListViewModel {
         self.gameState = gameState
     }
 
-    // MARK: - Sorted Pigs
+    // MARK: - Filtered & Sorted Pigs
 
     var sortedPigs: [GuineaPig] {
         let pigs = gameState.getPigsList()
+        let filtered = applyFilters(pigs)
+        return applySort(filtered)
+    }
+
+    private func applyFilters(_ pigs: [GuineaPig]) -> [GuineaPig] {
+        var result = pigs
+
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            result = result.filter { $0.name.lowercased().contains(query) }
+        }
+
+        guard !activeFilters.isEmpty else { return result }
+        return applyDimensionFilters(result)
+    }
+
+    private func applyDimensionFilters(_ pigs: [GuineaPig]) -> [GuineaPig] {
+        var result = pigs
+
+        let genderFilters = activeFilters.compactMap {
+            if case .gender(let gender) = $0 { gender } else { nil }
+        }
+        let ageFilters = activeFilters.compactMap {
+            if case .ageGroup(let age) = $0 { age } else { nil }
+        }
+        let biomeFilters = activeFilters.compactMap {
+            if case .biome(let biome) = $0 { biome } else { nil }
+        }
+        let rarityFilters = activeFilters.compactMap {
+            if case .rarity(let rarity) = $0 { rarity } else { nil }
+        }
+
+        if !genderFilters.isEmpty {
+            result = result.filter { genderFilters.contains($0.gender) }
+        }
+        if !ageFilters.isEmpty {
+            result = result.filter { ageFilters.contains($0.ageGroup) }
+        }
+        if !biomeFilters.isEmpty {
+            result = result.filter { pig in
+                guard let areaId = pig.currentAreaId,
+                      let area = gameState.farm.getAreaByID(areaId) else { return false }
+                return biomeFilters.contains(area.biome)
+            }
+        }
+        if !rarityFilters.isEmpty {
+            result = result.filter { rarityFilters.contains($0.phenotype.rarity) }
+        }
+        if activeFilters.contains(.pregnant) {
+            result = result.filter { $0.isPregnant }
+        }
+
+        return result
+    }
+
+    private func applySort(_ pigs: [GuineaPig]) -> [GuineaPig] {
         switch sortBy {
         case .value:
             let values = Dictionary(uniqueKeysWithValues: pigs.map {
@@ -133,5 +221,29 @@ final class PigListViewModel {
             sortBy = criterion
             sortAscending = true
         }
+    }
+
+    // MARK: - Filter Actions
+
+    func toggleFilter(_ filter: PigListFilter) {
+        if activeFilters.contains(filter) {
+            activeFilters.remove(filter)
+        } else {
+            activeFilters.insert(filter)
+        }
+    }
+
+    func clearFilters() {
+        activeFilters.removeAll()
+        searchText = ""
+    }
+
+    var isFiltering: Bool {
+        !activeFilters.isEmpty || !searchText.isEmpty
+    }
+
+    var availableBiomes: [BiomeType] {
+        let biomeSet = Set(gameState.farm.areas.map(\.biome))
+        return BiomeType.allCases.filter { biomeSet.contains($0) }
     }
 }
