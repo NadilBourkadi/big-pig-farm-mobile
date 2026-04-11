@@ -40,6 +40,7 @@ let package = Package(
                 "Engine/NewGameSetup.swift",
                 "Engine/GridExpansion.swift",
                 "Engine/NotificationManager.swift",
+                "Engine/PushNotificationPlanner.swift",
                 "Engine/Pathfinding.swift",
                 "Engine/PigShowCalculator.swift",
                 "Engine/Protocols.swift",

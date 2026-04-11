@@ -238,9 +238,33 @@ enum GameConfig {
 
 }
 
-// MARK: - GameConfig (AutoArrange, Prestige, NewFarmer)
+// MARK: - GameConfig (PushNotification, AutoArrange, Prestige, NewFarmer)
 
 extension GameConfig {
+    enum PushNotification {
+        /// Minimum delay (seconds) before scheduling any notification.
+        /// Prevents spurious pings for brief background transitions.
+        static let minimumDelay: TimeInterval = 300  // 5 minutes
+
+        /// Facility stock percentage below which to warn.
+        static let facilityWarningThreshold: Double = 15.0
+
+        /// How far in advance (real seconds) to remind about contract deadlines.
+        static let contractReminderLeadSeconds: TimeInterval = 7200  // 2 hours
+
+        /// Delay (seconds) for "come back" nudge when no specific events are predicted.
+        static let returnReminderDelay: TimeInterval = 14400  // 4 hours
+
+        /// Maximum notifications to schedule per background transition.
+        /// iOS caps pending notifications at 64; leave headroom.
+        static let maxScheduled: Int = 20
+
+        /// Average offline speed multiplier (game-hours per real-hour) for prediction math.
+        /// Averaged from tier 1 (120) and tier 2 (60) since most relevant predictions
+        /// fall within the first 6 hours.
+        static let averageOfflineSpeedMultiplier: Double = 90.0
+    }
+
     enum AutoArrange {
         static let horizontalGap: Int = 2
         static let verticalGap: Int = 3
