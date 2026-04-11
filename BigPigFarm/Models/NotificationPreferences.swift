@@ -10,6 +10,10 @@ struct NotificationPreferences: Codable, Sendable, Equatable {
     /// Per-category enabled state. Missing keys default to the standard preset.
     var categoryEnabled: [NotificationCategory: Bool]
 
+    /// Master toggle for local push notifications. Independent of per-category toggles.
+    /// When false, no push notifications are scheduled regardless of category settings.
+    var pushNotificationsEnabled: Bool = true
+
     /// Whether notifications for the given category are enabled.
     func isEnabled(_ category: NotificationCategory) -> Bool {
         categoryEnabled[category] ?? true

@@ -121,6 +121,9 @@ struct BigPigFarmApp: App {
                     )
                 }
             }
+            .task {
+                await PushNotificationScheduler.requestAuthorization()
+            }
         }
         .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(from: oldPhase, to: newPhase)
@@ -138,6 +141,7 @@ struct BigPigFarmApp: App {
             didEnterBackground = true
             gameState.lastBackgroundDate = Date() // transient; crash fallback is lastSave
             lifecycleSave()
+            schedulePushNotifications()
             backupManager?.backupToCloud()
             #if DEBUG || INTERNAL
             DebugLogger.shared.log(
@@ -155,6 +159,9 @@ struct BigPigFarmApp: App {
 
     @MainActor
     private func handleBecameActive(oldPhase: ScenePhase) {
+        // Cancel scheduled push notifications — in-app toasts take over.
+        PushNotificationScheduler.cancelAll()
+
         // Prefer the didEnterBackground flag, but fall back to lastSave duration
         // for cases where iOS skips the .background phase entirely (e.g. screen
         // lock on some devices goes inactive → suspended without .background).
@@ -294,16 +301,28 @@ struct BigPigFarmApp: App {
         engine.resume()
     }
 
-    // MARK: - Persistence
+}
 
+// MARK: - Persistence & Push Notifications
+
+extension BigPigFarmApp {
     @MainActor
-    private func lifecycleSave() {
+    func lifecycleSave() {
         do {
             try saveManager.save(gameState)
             try saveManager.savePrestigeState(gameState.prestigeState)
         } catch {
             print("[BigPigFarmApp] lifecycleSave failed: \(error)")
         }
+    }
+
+    @MainActor
+    func schedulePushNotifications() {
+        let preferences = NotificationPreferences.load()
+        let plans = PushNotificationPlanner.planNotifications(
+            state: gameState, preferences: preferences
+        )
+        PushNotificationScheduler.schedule(plans)
     }
 }
 

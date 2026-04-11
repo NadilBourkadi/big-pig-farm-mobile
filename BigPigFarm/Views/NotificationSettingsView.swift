@@ -12,6 +12,7 @@ struct NotificationSettingsView: View {
 
     var body: some View {
         Form {
+            pushNotificationsSection
             presetSection
             categoriesSection
         }
@@ -23,6 +24,25 @@ struct NotificationSettingsView: View {
 // MARK: - Sections
 
 extension NotificationSettingsView {
+    private var pushNotificationsSection: some View {
+        Section {
+            Toggle(isOn: pushNotificationsBinding) {
+                Label {
+                    Text("Push Notifications")
+                } icon: {
+                    Image(systemName: "app.badge")
+                        .foregroundStyle(.blue)
+                }
+            }
+
+            Text("Receive notifications for births, low supplies, and contract deadlines when the app is closed.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Push Notifications")
+        }
+    }
+
     private var presetSection: some View {
         Section {
             Picker("Preset", selection: presetPickerBinding) {
@@ -70,6 +90,16 @@ extension NotificationSettingsView {
             get: { preferences.isEnabled(category) },
             set: { enabled in
                 preferences.setEnabled(category, enabled: enabled)
+                preferences.save()
+            }
+        )
+    }
+
+    private var pushNotificationsBinding: Binding<Bool> {
+        Binding(
+            get: { preferences.pushNotificationsEnabled },
+            set: { enabled in
+                preferences.pushNotificationsEnabled = enabled
                 preferences.save()
             }
         )
