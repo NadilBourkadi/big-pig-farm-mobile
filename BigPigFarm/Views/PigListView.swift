@@ -31,49 +31,58 @@ struct PigListView: View {
 
     var body: some View {
         @Bindable var viewModel = viewModel
+        let pigs = viewModel.sortedPigs
+        let pigCount = viewModel.gameState.pigCount
+        let title = viewModel.isFiltering
+            ? "Pigs (\(pigs.count)/\(pigCount))"
+            : "Pigs (\(pigCount))"
         NavigationStack {
-            List(selection: $viewModel.editModeSelection) {
-                ForEach(viewModel.sortedPigs) { pig in
-                    PigListRow(pig: pig)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if !viewModel.isSelecting { viewModel.selectedPig = pig }
-                        }
-                        .swipeActions(edge: .trailing) {
-                            if !viewModel.isSelecting {
-                                Button(role: .destructive) {
-                                    viewModel.pigToSell = pig
-                                } label: {
-                                    Label("Sell", systemImage: "dollarsign.circle.fill")
-                                }
-                                Button { onFollowPig(pig.id); dismiss() } label: {
-                                    Label("Follow", systemImage: "location.fill")
-                                }
-                                .tint(.blue)
+            VStack(spacing: 0) {
+                filterChipBar
+                List(selection: $viewModel.editModeSelection) {
+                    ForEach(pigs) { pig in
+                        PigListRow(pig: pig)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if !viewModel.isSelecting { viewModel.selectedPig = pig }
                             }
-                        }
-                        .swipeActions(edge: .leading) {
-                            if !viewModel.isSelecting {
-                                Button {
-                                    viewModel.toggleBreedingLock(pig.id)
-                                } label: {
-                                    Label(
-                                        pig.breedingLocked ? "Unlock" : "Lock",
-                                        systemImage: pig.breedingLocked
-                                            ? "lock.open.fill" : "lock.fill"
-                                    )
+                            .swipeActions(edge: .trailing) {
+                                if !viewModel.isSelecting {
+                                    Button(role: .destructive) {
+                                        viewModel.pigToSell = pig
+                                    } label: {
+                                        Label("Sell", systemImage: "dollarsign.circle.fill")
+                                    }
+                                    Button { onFollowPig(pig.id); dismiss() } label: {
+                                        Label("Follow", systemImage: "location.fill")
+                                    }
+                                    .tint(.blue)
                                 }
-                                .tint(pig.breedingLocked ? .green : .orange)
                             }
-                        }
+                            .swipeActions(edge: .leading) {
+                                if !viewModel.isSelecting {
+                                    Button {
+                                        viewModel.toggleBreedingLock(pig.id)
+                                    } label: {
+                                        Label(
+                                            pig.breedingLocked ? "Unlock" : "Lock",
+                                            systemImage: pig.breedingLocked
+                                                ? "lock.open.fill" : "lock.fill"
+                                        )
+                                    }
+                                    .tint(pig.breedingLocked ? .green : .orange)
+                                }
+                            }
+                    }
                 }
+                .listStyle(.plain)
             }
-            .listStyle(.plain)
             .environment(
                 \.editMode,
                 viewModel.isSelecting ? .constant(.active) : .constant(.inactive)
             )
-            .navigationTitle("Pigs (\(viewModel.gameState.pigCount))")
+            .navigationTitle(title)
+            .searchable(text: $viewModel.searchText, prompt: "Search by name")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if viewModel.isSelecting {
@@ -144,6 +153,46 @@ struct PigListView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial)
+    }
+
+    // MARK: - Filter Chip Bar
+
+    private var filterChipBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                if viewModel.isFiltering {
+                    PigFilterChip(label: "Clear All", isActive: true, activeColor: .red) {
+                        viewModel.clearFilters()
+                    }
+                    .accessibilityRemoveTraits(.isSelected)
+                    .accessibilityLabel("Clear all filters")
+                }
+                filterSection(Gender.allCases.map { .gender($0) })
+                filterSection(AgeGroup.allCases.map { .ageGroup($0) })
+                filterSection(viewModel.availableBiomes.map { .biome($0) })
+                PigFilterChip(
+                    label: PigListFilter.pregnant.displayName,
+                    isActive: viewModel.activeFilters.contains(.pregnant)
+                ) {
+                    viewModel.toggleFilter(.pregnant)
+                }
+                filterSection(Rarity.allCases.map { .rarity($0) })
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private func filterSection(_ filters: [PigListFilter]) -> some View {
+        ForEach(filters, id: \.self) { filter in
+            PigFilterChip(
+                label: filter.displayName,
+                isActive: viewModel.activeFilters.contains(filter)
+            ) {
+                viewModel.toggleFilter(filter)
+            }
+        }
     }
 
     // MARK: - Sort Menu
